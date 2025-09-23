@@ -4,28 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradlew" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradlew.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/App.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/configuration/StorageConfiguration.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/controller/webhook/WebhookController.java" afterDir="false" />
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ MinIO Webhook">
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/ConfigRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/GroupRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/ScheduleRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/TeacherRepository.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/Config.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/Group.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/Schedule.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/Teacher.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/service/storage/StorageService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,6 +29,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="Interface" />
       </list>
     </option>
   </component>
@@ -88,11 +77,43 @@
       <option name="presentableId" value="Default" />
       <updated>1758563374212</updated>
       <workItem from="1758563375653" duration="10637000" />
-      <workItem from="1758624371040" duration="6876000" />
+      <workItem from="1758624371040" duration="9247000" />
     </task>
+    <task id="LOCAL-00001" summary="+ MinIO Webhook">
+      <option name="closed" value="true" />
+      <created>1758654481741</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1758654481741</updated>
+    </task>
+    <task id="LOCAL-00002" summary="+ MinIO Webhook">
+      <option name="closed" value="true" />
+      <created>1758654502705</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1758654502705</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="+ MinIO Webhook" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ MinIO Webhook" />
   </component>
 </project>
