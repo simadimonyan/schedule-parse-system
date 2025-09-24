@@ -10,6 +10,7 @@ import app.service.excel.ExcelService;
 import app.service.storage.StorageService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -43,6 +44,7 @@ public class PersistenceService {
         this.groupRepository = groupRepository;
     }
 
+    @Async
     @Transactional
     public void persistSchedule(String fileName) throws IOException {
         InputStream excel = storageService.getObjectByName(fileName.split("/")[1]);
