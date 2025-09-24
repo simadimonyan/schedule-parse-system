@@ -1,6 +1,6 @@
 package app.repository.dao;
 
-import app.repository.models.Group;
+import app.repository.models.entity.Group;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

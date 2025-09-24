@@ -1,4 +1,4 @@
-package app.repository.models;
+package app.repository.models.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -13,11 +13,11 @@ public class Schedule {
     @Column(name = "schedule_id")
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "group_id")
     private Group group;
 

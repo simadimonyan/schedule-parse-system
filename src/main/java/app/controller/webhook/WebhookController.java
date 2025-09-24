@@ -1,6 +1,8 @@
 package app.controller.webhook;
 
-import io.minio.MinioClient;
+import app.repository.models.dto.MinioEvent;
+import app.service.persistence.PersistenceService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,17 +16,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/minio-webhook")
 public class WebhookController {
 
-    private final MinioClient minioClient;
+    private final PersistenceService persistenceService;
 
     @Autowired
-    public WebhookController(MinioClient minioClient) {
-        this.minioClient = minioClient;
+    public WebhookController(PersistenceService persistenceService) {
+        this.persistenceService = persistenceService;
     }
 
     @PostMapping
     public ResponseEntity<String> handleEvent(@RequestBody String body) {
         try {
             log.info(body);
+            ObjectMapper mapper = new ObjectMapper();
+            MinioEvent event = mapper.readValue(body, MinioEvent.class);
+            log.info(event.getKey());
+
+            persistenceService.persistSchedule(event.getKey());
         }
         catch (Exception e) {
             log.error(e.toString());

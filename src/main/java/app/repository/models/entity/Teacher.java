@@ -1,5 +1,6 @@
-package app.repository.models;
+package app.repository.models.entity;
 
+import app.repository.models.entity.Schedule;
 import jakarta.persistence.*;
 import lombok.Data;
 
