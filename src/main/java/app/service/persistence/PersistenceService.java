@@ -53,14 +53,14 @@ public class PersistenceService {
         for (Schedule schedule : newSchedules) {
             Teacher teacher = schedule.getTeacher();
             if (teacher != null) {
-                Teacher managedTeacher = teacherRepository.findAllByLabel(teacher.getLabel())
+                Teacher managedTeacher = teacherRepository.findByLabel(teacher.getLabel())
                         .orElseGet(() -> teacherRepository.saveAndFlush(teacher));
                 schedule.setTeacher(managedTeacher);
             }
 
             Group group = schedule.getGroup();
             if (group != null) {
-                Group managedGroup = groupRepository.findAllByName(group.getName())
+                Group managedGroup = groupRepository.findByName(group.getName())
                         .orElseGet(() -> groupRepository.saveAndFlush(group));
                 schedule.setGroup(managedGroup);
             }

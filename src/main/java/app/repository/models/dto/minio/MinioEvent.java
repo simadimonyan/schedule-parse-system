@@ -1,4 +1,4 @@
-package app.repository.models.dto;
+package app.repository.models.dto.minio;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -1,6 +1,6 @@
 package app.controller.webhook;
 
-import app.repository.models.dto.MinioEvent;
+import app.repository.models.dto.minio.MinioEvent;
 import app.service.persistence.PersistenceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class WebhookController {
             MinioEvent event = mapper.readValue(body, MinioEvent.class);
             log.info(event.getKey());
 
-            persistenceService.persistSchedule(event.getKey());
+            if (event.getKey().contains(".xls") || event.getKey().contains(".xlsx")) persistenceService.persistSchedule(event.getKey());
         }
         catch (Exception e) {
             log.error(e.toString());

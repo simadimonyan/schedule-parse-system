@@ -2,15 +2,20 @@ package app.repository.dao;
 
 import app.repository.models.entity.Group;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface GroupRepository extends JpaRepository<Group, Long> {
 
-    Optional<Group> findAllByName(String name);
+    Optional<Group> findByName(String name);
 
-    Optional<Group> findAllByCourse(Integer course);
+    Optional<List<Group>> findAllByCourse(Integer course);
 
-    Optional<Group> findAllByCourseAndLevel(Integer course, String level);
+    Optional<List<Group>> findAllByCourseAndLevel(Integer course, String level);
+
+    @Query("SELECT DISTINCT g.level FROM Group g")
+    Optional<List<String>> findDistinctLevels();
 
 }
