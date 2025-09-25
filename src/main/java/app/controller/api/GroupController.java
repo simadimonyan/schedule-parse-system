@@ -10,6 +10,7 @@ import app.repository.models.dto.mappers.GroupMapper;
 import app.repository.models.dto.mappers.ScheduleMapper;
 import app.repository.models.entity.Group;
 import app.repository.models.entity.Schedule;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/groups")
+@SecurityRequirement(name = "Authorization")
 public class GroupController {
 
     private final GroupRepository groupRepository;

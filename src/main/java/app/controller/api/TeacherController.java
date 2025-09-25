@@ -9,6 +9,7 @@ import app.repository.models.dto.mappers.ScheduleMapper;
 import app.repository.models.dto.mappers.TeacherMapper;
 import app.repository.models.entity.Schedule;
 import app.repository.models.entity.Teacher;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/teachers/")
+@SecurityRequirement(name = "Authorization")
 public class TeacherController {
 
     private final TeacherRepository teacherRepository;
