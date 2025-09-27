@@ -11,6 +11,7 @@ import app.repository.models.entity.Schedule;
 import app.repository.models.entity.Teacher;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/teachers/")
 @SecurityRequirement(name = "Authorization")
@@ -50,6 +52,7 @@ public class TeacherController {
 
     @GetMapping("/search")
     public ResponseEntity<TeachersResponse> search(@RequestParam(value = "department", required = false) String department) {
+        log.info("1234567812345678");
         List<Teacher> teachers;
         if (department == null)
             teachers = teacherRepository.findAll();

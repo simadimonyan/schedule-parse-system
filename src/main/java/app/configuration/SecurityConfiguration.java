@@ -30,7 +30,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
     bearerFormat = "JWT"
 )
 @Configuration
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity(debug = false)
 public class SecurityConfiguration {
 
     private final TokenAuthenticationProvider tokenAuthenticationProvider;
