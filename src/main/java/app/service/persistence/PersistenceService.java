@@ -1,19 +1,20 @@
 package app.service.persistence;
 
 import app.repository.dao.ConfigRepository;
+import app.repository.dao.GroupRepository;
 import app.repository.dao.ScheduleRepository;
 import app.repository.dao.TeacherRepository;
-import app.repository.dao.GroupRepository;
 import app.repository.models.entity.Config;
+import app.repository.models.entity.Group;
 import app.repository.models.entity.Schedule;
 import app.repository.models.entity.Teacher;
-import app.repository.models.entity.Group;
-import app.service.cache.CacheService;
 import app.service.excel.ExcelService;
 import app.service.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class PersistenceService {
 
@@ -121,6 +123,42 @@ public class PersistenceService {
         Config pair = configRepository.findAllByKey(key).orElse(null);
         if (pair == null) throw new EntityNotFoundException("База не содержит конфигурации с ключем: " + key);
         return pair;
+    }
+
+    @CacheEvict(value = "configs", allEntries = true)
+    public void swapWeek() {
+        try {
+            Config pair = configRepository.findAllByKey("weekCount").orElse(null);
+            if (pair == null) {
+                log.info("Инициализация параметра: weekCount - присвоено значение 1");
+                setConfig("weekCount", "1");
+            }
+            else if (pair.getValue().equals("1")) {
+                log.info("Переключение четности недели: старое значение = {}, новое значение = 2", pair.getValue());
+                setConfig("weekCount", "2");
+            }
+            else {
+                log.info("Переключение четности недели: старое значение = {}, новое значение = 1", pair.getValue());
+                setConfig("weekCount", "1");
+            }
+        }
+        catch (Exception e) {
+            log.error("Ошибка при переключении четности недели", e);
+        }
+    }
+
+    @CacheEvict(value = "configs", allEntries = true)
+    public void setConfig(String key, String value) {
+        Config pair = configRepository.findAllByKey(key).orElse(null);
+        if (pair == null) {
+            Config savable = new Config();
+            savable.setKey(key);
+            savable.setValue(value);
+            configRepository.save(savable);
+            return;
+        }
+        pair.setValue(value);
+        configRepository.save(pair);
     }
 
     @Async

@@ -21,8 +21,8 @@ public class CacheService {
         log.info("Очистка кеша по ключам: {}", names);
         for (String name : names) {
             var cache = cacheManager.getCache(name);
-            log.info("Чистка '{}', native cache = {}", name, cache.getNativeCache());
-
+            log.info("Чистка '{}'", name);
+            cache.clear();
         }
         log.info("Кеш очищен");
     }

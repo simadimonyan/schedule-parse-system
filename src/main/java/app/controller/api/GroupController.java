@@ -34,7 +34,6 @@ public class GroupController {
         return ResponseEntity.ok(groupMapper.toGroupResponse(persistenceService.getGroup(groupName)));
     }
 
-
     @GetMapping("/search")
     public ResponseEntity<GroupsResponse> search(@RequestParam("course") Integer course, @RequestParam(value = "level", required = false) String level) {
         log.info("GET Запрос: /api/v1/groups/search?course={}&level={}", course, level);
