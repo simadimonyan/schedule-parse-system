@@ -3,12 +3,13 @@ package app.repository.models.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
 @Entity
 @Table(name = "group_table")
-public class Group {
+public class Group implements Serializable {
 
     @Id
     @GeneratedValue

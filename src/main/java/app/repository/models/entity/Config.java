@@ -3,10 +3,12 @@ package app.repository.models.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
 @Entity
 @Table(name = "config_table")
-public class Config {
+public class Config implements Serializable {
 
     @Id
     @GeneratedValue

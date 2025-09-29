@@ -1,15 +1,15 @@
 package app.repository.models.entity;
 
-import app.repository.models.entity.Schedule;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
 @Entity
 @Table(name = "teacher_table")
-public class Teacher {
+public class Teacher implements Serializable {
 
     @Id
     @GeneratedValue

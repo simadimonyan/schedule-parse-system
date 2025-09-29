@@ -49,26 +49,13 @@ dependencies {
     // Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
+    // OTLP Logs & Traces
     implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter:2.14.0")
     runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:2.14.0-alpha")
 
-//    // OTLP BOM
-//    implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.20.1"))
-//    implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter:2.20.1")
-//
-//    // OTLP API
-//    implementation("io.opentelemetry:opentelemetry-api")
-//    implementation("io.opentelemetry:opentelemetry-sdk")
-//    implementation("io.opentelemetry:opentelemetry-common")
-//    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
-//    implementation("io.opentelemetry.semconv:opentelemetry-semconv")
-//    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-//
-//    // SLF4J / Logback (мост для логов)
-//    implementation("org.slf4j:slf4j-api:2.0.17")
-//    implementation("ch.qos.logback:logback-core:1.5.18")
-//    implementation("ch.qos.logback:logback-classic:1.5.18")
-//    implementation("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:2.20.1-alpha")
+    // OLTP Metrics
+    implementation(platform("io.micrometer:micrometer-bom:1.15.4"))
+    implementation("io.micrometer:micrometer-registry-otlp")
 
 }
 

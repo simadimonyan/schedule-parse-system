@@ -3,10 +3,12 @@ package app.repository.models.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
 @Entity
 @Table(name = "schedule_table")
-public class Schedule {
+public class Schedule implements Serializable {
 
     @Id
     @GeneratedValue

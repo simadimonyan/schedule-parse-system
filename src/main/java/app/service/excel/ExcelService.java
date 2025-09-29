@@ -22,6 +22,8 @@ import java.util.stream.IntStream;
 @Service
 public class ExcelService {
 
+    private record CellWrapper(boolean merged, String value) {}
+
     private static final Map<String, Integer> lessonNumberMap = Map.of(
             "08.00-09.30", 1,
             "09.40-11.10", 2,
@@ -53,7 +55,7 @@ public class ExcelService {
 
                     for (Cell cell : row) {
 
-                        log.debug("Строка {}, колонка {}, значение: '{}'", row.getRowNum(), cell.getColumnIndex(), cell.toString());
+                        log.debug("Строка {}, колонка {}, значение: '{}'", row.getRowNum(), cell.getColumnIndex(), cell);
 
                         // перебор групп на курсе | индексация с 3 колонки
                         if (cell.getColumnIndex() >= 2 && row.getRowNum() == 5 && !cell.getStringCellValue().isBlank()) {
@@ -83,7 +85,12 @@ public class ExcelService {
                             log.info("Индексирована группа: {}", group.getName());
                             groups.add(group);
                         }
-                        else if (cell.getColumnIndex() >= 2 && !cell.getStringCellValue().isBlank()) { // перебор расписания
+                        else if (cell.getColumnIndex() >= 2) { // перебор расписания
+
+                            // получить данные ячейки (merged и нет)
+                            CellWrapper currentCell = getCellValueWithMerge(sheet, row.getRowNum(), cell.getColumnIndex());
+
+                            if (currentCell.value.isBlank() || currentCell.value.isEmpty()) continue;
 
                             log.debug("Парсинг ячейки (строка {}, колонка {}): {}", row.getRowNum(), cell.getColumnIndex(), cell.getStringCellValue());
 
@@ -102,7 +109,7 @@ public class ExcelService {
                              */
 
                             Schedule schedule = new Schedule();
-                            String[] lines = cell.getStringCellValue().split("\n");
+                            String[] lines = currentCell.value.split("\n");
                             String firstLine = lines[0].trim();
                             String type = firstLine.substring(0, firstLine.indexOf(".")).trim().equals("л") ? "Лекция" : "Практика";
                             String subject = firstLine.substring(firstLine.indexOf(".") + 1).trim();
@@ -138,11 +145,11 @@ public class ExcelService {
                             }
 
                             // день недели
-                            String dayWeek = getCellValueWithMerge(sheet, row.getRowNum(), 0).trim();
+                            String dayWeek = getCellValueWithMerge(sheet, row.getRowNum(), 0).value.trim();
                             if (!dayWeek.isBlank()) dayWeek = dayWeek.substring(0, 1).toUpperCase() + dayWeek.substring(1).toLowerCase();
 
                             // время занятия
-                            String timePeriod = getCellValueWithMerge(sheet, row.getRowNum(), 1).trim();
+                            String timePeriod = getCellValueWithMerge(sheet, row.getRowNum(), 1).value.trim();
 
                             schedule.setGroup(groups.get(cell.getColumnIndex() - 2));
                             schedule.setLessonType(type);
@@ -164,9 +171,10 @@ public class ExcelService {
                                     schedule.getTeacher() == null ? "Нет преподавателя" : schedule.getTeacher().getLabel(),
                                     schedule.getAuditory() == null ? "Нет аудитории" : schedule.getAuditory()
                             );
-                            weekOdd = !weekOdd;
+
                         }
                     }
+                    if (row.getRowNum() != 5) weekOdd = !weekOdd;
                 }
             }
         } catch(IOException e) {
@@ -184,20 +192,25 @@ public class ExcelService {
      * @param colIndex индекс ячейки
      * @return String
      */
-    private String getCellValueWithMerge(Sheet sheet, int rowIndex, int colIndex) {
-        Cell cell = sheet.getRow(rowIndex).getCell(colIndex);
-        if (cell != null && cell.getCellType() != CellType.BLANK) {
-            return cell.toString();
-        }
-        // если пустая, ищем merged region
+    private CellWrapper getCellValueWithMerge(Sheet sheet, int rowIndex, int colIndex) {
+        // является ли ячейка частью объединённого диапазона
         for (int i = 0; i < sheet.getNumMergedRegions(); i++) {
             CellRangeAddress range = sheet.getMergedRegion(i);
             if (range.isInRange(rowIndex, colIndex)) {
-                Cell firstCell = sheet.getRow(range.getFirstRow()).getCell(range.getFirstColumn());
-                return firstCell != null ? firstCell.toString() : "";
+                Row firstRow = sheet.getRow(range.getFirstRow());
+                Cell firstCell = firstRow.getCell(range.getFirstColumn());
+                return new CellWrapper(true, firstCell != null ? firstCell.toString() : "");
             }
         }
-        return "";
+        // если ячейка не является частью объединённого диапазона, возвращаем её собственное значение
+        Row row = sheet.getRow(rowIndex);
+        if (row != null) {
+            Cell cell = row.getCell(colIndex);
+            if (cell != null && (cell.getCellType() != CellType.BLANK || !cell.getStringCellValue().isEmpty())) {
+                return new CellWrapper(false, cell.toString());
+            }
+        }
+        return new CellWrapper(false, "");
     }
 
 }
