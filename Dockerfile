@@ -13,7 +13,7 @@ RUN wget https://services.gradle.org/distributions/gradle-8.7-bin.zip -O /tmp/gr
 ENV GRADLE_HOME=/opt/gradle
 ENV PATH=$GRADLE_HOME/bin:$PATH
 
-COPY . /service
+COPY . /service/schedule-parse-service
 WORKDIR /service/schedule-parse-service
 
 # Запуск сборки и запускаем Spring Boot приложение
