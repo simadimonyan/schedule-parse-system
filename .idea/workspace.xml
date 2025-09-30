@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ schedule week change &amp; cache fix">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ configuration">
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -119,7 +118,7 @@
       <workItem from="1759067345199" duration="5393000" />
       <workItem from="1759134436080" duration="25669000" />
       <workItem from="1759222322215" duration="2114000" />
-      <workItem from="1759234268702" duration="158000" />
+      <workItem from="1759234268702" duration="1045000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />
@@ -201,7 +200,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759174199694</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="+ configuration">
+      <option name="closed" value="true" />
+      <created>1759234597797</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1759234597797</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -228,6 +235,7 @@
     <MESSAGE value="+ open telemetry" />
     <MESSAGE value="+ redis &amp; excel service fix" />
     <MESSAGE value="+ schedule week change &amp; cache fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ schedule week change &amp; cache fix" />
+    <MESSAGE value="+ configuration" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ configuration" />
   </component>
 </project>
