@@ -15,7 +15,7 @@ services:
 
   minio:
     restart: always
-    image: bitnami/minio:latest
+    image: minio/minio:latest
     container_name: minio
     hostname: minio.local
     # в данном случае мы обязательно выбрасываем порты, по которым будем
