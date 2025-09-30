@@ -1,0 +1,162 @@
+
+services:
+
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: ./schedule-parse-service/Dockerfile
+    volumes: 
+      - ./:/service/schedule-parse-service
+    ports:
+      - 8080:8080
+    networks:
+      - schedule_net
+
+  minio:
+    restart: always
+    image: bitnami/minio:latest
+    container_name: minio
+    hostname: minio.local
+    # в данном случае мы обязательно выбрасываем порты, по которым будем
+    # взаимодействовать с нашим minio
+    # 9001 - webuil 9000 - api
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      - MINIO_NOTIFY_WEBHOOK_ENABLE_1=on
+      - MINIO_NOTIFY_WEBHOOK_ENDPOINT_1=${MINIO_WEBHOOK_ENDPOINT}
+      - MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_1=${MINIO_WEBHOOK_AUTH_TOKEN}
+      - MINIO_NOTIFY_WEBHOOK_QUEUE_DIR=./volumes/minio/events
+      # также указываем login & password
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_SKIP_CLIENT=yes
+      # указываем использование https
+      - MINIO_SCHEME=http
+      # указываем порт для web-ui
+      - MINIO_CONSOLE_PORT_NUMBER=9001
+      - MINIO_LOG_LEVEL=debug
+    extra_hosts:
+      # вносим в /etc/hosts данного контейнера связку minio.local c 192.168.0.199
+      - "minio.local:192.168.0.199"
+    volumes:
+      - ./volumes/minio/minio:/bitnami/minio/data
+      - ./volumes/minio/certs:/certs
+      - ./minio-init.sh:/minio-init.sh
+    healthcheck:
+      test: [ "CMD", "curl", "-k", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - schedule_net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "15432:80"
+    networks:
+      - schedule_net
+    volumes:
+      - ./volumes/pgadmin-data:/var/lib/pgadmin
+
+  app_db:
+    image: postgres:17.6
+    container_name: app_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./volumes/app_db/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - schedule_net
+
+  redis:
+    image: redis:8.2.1
+    container_name: redis
+    environment:
+      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./volumes/redis:/data
+    networks:
+      - schedule_net
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.9
+    container_name: clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    environment:
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+    ports:
+      - "8123:8123"    # HTTP интерфейс ClickHouse
+      - "9090:9000"    # Native клиент, если нужен
+    volumes:
+      - ./volumes/clickhouse/data:/var/lib/clickhouse
+      - ./volumes/clickhouse/logs:/var/log/clickhouse-server
+    networks:
+      - schedule_net
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: open-telemetry
+    restart: always
+    depends_on:
+      - clickhouse
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8888:8888"
+    volumes:
+      - ./configs/opentelemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    networks:
+      - schedule_net
+    
+  hyperdx:
+    image: docker.hyperdx.io/hyperdx/hyperdx-all-in-one
+    container_name: hyperdx-ui
+    depends_on:
+      - clickhouse
+      - otel-collector
+    ports:
+      - "8081:8080"
+    volumes:
+      - './volumes/hyperdx/data:/data/db'
+    networks:
+      - schedule_net
+
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: always
+    depends_on:
+      - clickhouse
+      - otel-collector
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - '3000:3000'
+    volumes:
+      - './volumes/grafana:/var/lib/grafana'
+    networks:
+      - schedule_net
+
+networks:
+  schedule_net:
+    driver: bridge
