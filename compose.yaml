@@ -5,7 +5,7 @@ services:
     container_name: app
     build:
       context: .
-      dockerfile: ./schedule-parse-service/Dockerfile
+      dockerfile: ./Dockerfile
     volumes: 
       - ./:/service/schedule-parse-service
     ports:
