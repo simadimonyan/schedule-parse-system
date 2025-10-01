@@ -1,7 +1,7 @@
-FROM bellsoft/liberica-runtime-container:jdk-21-glibc
+FROM eclipse-temurin:21-jdk
 
-# Устанавливаем bash и необходимые зависимости
-RUN /bin/sh -c "if [ ! -f /usr/bin/bash ]; then apk add --no-cache bash; fi"
+RUN apt-get update && apt-get install -y bash wget unzip \
+    && rm -rf /var/lib/apt/lists/*
 
 # Скачиваем и устанавливаем Gradle
 RUN wget https://services.gradle.org/distributions/gradle-8.7-bin.zip -O /tmp/gradle.zip \
