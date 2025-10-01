@@ -1,4 +1,3 @@
-
 services:
 
   app:
@@ -18,29 +17,26 @@ services:
     image: minio/minio:latest
     container_name: minio
     hostname: minio.local
-    # в данном случае мы обязательно выбрасываем порты, по которым будем
-    # взаимодействовать с нашим minio
-    # 9001 - webuil 9000 - api
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - '9000:9000' #cli
+      - '9001:9001' #ui
     environment:
       - MINIO_NOTIFY_WEBHOOK_ENABLE_1=on
       - MINIO_NOTIFY_WEBHOOK_ENDPOINT_1=${MINIO_WEBHOOK_ENDPOINT}
       - MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_1=${MINIO_WEBHOOK_AUTH_TOKEN}
-      - MINIO_NOTIFY_WEBHOOK_QUEUE_DIR=./volumes/minio/events
-      # также указываем login & password
+      - MINIO_NOTIFY_WEBHOOK_QUEUE_DIR=/data/events
+    
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MINIO_SKIP_CLIENT=yes
-      # указываем использование https
+
       - MINIO_SCHEME=http
-      # указываем порт для web-ui
+
       - MINIO_CONSOLE_PORT_NUMBER=9001
       - MINIO_LOG_LEVEL=debug
     volumes:
-      - ./volumes/minio/data:/data
-      - ./volumes/minio/certs:/certs
+      - minio_data:/data
+      - minio_certs:/certs
       - ./minio-init.sh:/minio-init.sh
       - ./minio-generate-keys.sh:/minio-generate-keys.sh
     command: ["server", "/data", "--console-address", ":9001"]
@@ -63,7 +59,7 @@ services:
     networks:
       - schedule_net
     volumes:
-      - ./volumes/pgadmin-data:/var/lib/pgadmin
+      - pgadmin_data:/var/lib/pgadmin
 
   app_db:
     image: postgres:17.6
@@ -74,7 +70,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - ./volumes/app_db/postgres:/var/lib/postgresql/data
+      - app_db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
@@ -88,7 +84,7 @@ services:
     ports:
       - "6380:6379"
     volumes:
-      - ./volumes/redis:/data
+      - redis_data:/data
     networks:
       - schedule_net
 
@@ -106,8 +102,8 @@ services:
       - "8123:8123"    # HTTP интерфейс ClickHouse
       - "9090:9000"    # Native клиент, если нужен
     volumes:
-      - ./volumes/clickhouse/data:/var/lib/clickhouse
-      - ./volumes/clickhouse/logs:/var/log/clickhouse-server
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
     networks:
       - schedule_net
 
@@ -135,7 +131,7 @@ services:
     ports:
       - "8081:8080"
     volumes:
-      - './volumes/hyperdx/data:/data/db'
+      - hyperdx_data:/data/db
     networks:
       - schedule_net
 
@@ -152,10 +148,66 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - './volumes/grafana:/var/lib/grafana'
+      - grafana_data:/var/lib/grafana
     networks:
       - schedule_net
 
 networks:
   schedule_net:
     driver: bridge
+
+volumes:
+  minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/minio/data
+  minio_certs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/minio/certs
+  pgadmin_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/pgadmin
+  app_db_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/app_db
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/redis
+  clickhouse_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/clickhouse/data
+  clickhouse_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/clickhouse/logs
+  hyperdx_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/hyperdx
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/grafana
