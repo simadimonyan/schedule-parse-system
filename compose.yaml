@@ -8,6 +8,9 @@ services:
       dockerfile: ./Dockerfile
     volumes: 
       - ./:/service/schedule-parse-service
+    depends_on:
+      - app_db
+      - otel-collector
     ports:
       - 8080:8080
     networks:
@@ -38,7 +41,7 @@ services:
     volumes:
       - ./volumes/minio/data:/data
       - ./volumes/minio/certs:/certs
-      - ./minio-init.sh:/minio-init.sh
+      - ./minio-init-webhook.sh:/minio-init-webhook.sh
       - ./minio-generate-keys.sh:/minio-generate-keys.sh
     command: ["server", "/data", "--console-address", ":9001"]
     healthcheck:
@@ -100,8 +103,8 @@ services:
       - CLICKHOUSE_USER=${CLICKHOUSE_USER}
       - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
     ports:
-      - "8123:8123"    # HTTP интерфейс ClickHouse
-      - "9090:9000"    # Native клиент, если нужен
+      - "8123:8123"    # http
+      - "9090:9000"    # native
     volumes:
       - ./volumes/clickhouse/data:/var/lib/clickhouse
       - ./volumes/clickhouse/logs:/var/log/clickhouse-server
@@ -129,6 +132,9 @@ services:
     depends_on:
       - clickhouse
       - otel-collector
+    environment:
+      - HYPERDX_APP_URL=${HYPERDX_APP_URL}
+      - FRONTEND_URL=${HYPERDX_FRONTEND_URL}
     ports:
       - "8081:8080"
     volumes:
