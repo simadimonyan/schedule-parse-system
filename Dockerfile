@@ -17,4 +17,4 @@ COPY . /service/schedule-parse-service
 WORKDIR /service/schedule-parse-service
 
 # Запуск сборки и запускаем Spring Boot приложение
-CMD gradle bootRun
+CMD ["gradle", "bootRun"]

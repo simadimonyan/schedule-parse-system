@@ -4,19 +4,19 @@ echo "=== Start minio-init.sh ==="
 
 # Если MINIO_ACCESS_KEY пуст, запрашиваем ввод
 if [ -z "$MINIO_ACCESS_KEY" ]; then
-  read -p "Enter MinIO access key: " MINIO_ACCESS_KEY
+  read -p "Введите MinIO access key: " MINIO_ACCESS_KEY
 fi
 
 # Если MINIO_SECRET_KEY пуст, запрашиваем ввод 
 if [ -z "$MINIO_SECRET_KEY" ]; then
-  read -s -p "Enter MinIO secret key: " MINIO_SECRET_KEY
+  read -s -p "Введите MinIO secret key: " MINIO_SECRET_KEY
   echo
 fi
 
 echo "Using ACCESS_KEY='$MINIO_ACCESS_KEY', SECRET_KEY='******'"
 
 # Alias set с логированием
-echo "Running: mc alias set myminio http://localhost:9000 \"$MINIO_ACCESS_KEY\" \"******************\" --api S3v4"
+echo "Выполняем: mc alias set myminio http://localhost:9000 \"$MINIO_ACCESS_KEY\" \"******************\" --api S3v4"
 mc alias set myminio http://localhost:9000 "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}" --api S3v4
 if [ $? -ne 0 ]; then
   echo "ERROR: alias set failed"
@@ -25,7 +25,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Создание бакета
-echo "Running: mc mb myminio/schedule"
+echo "Выполняем: mc mb myminio/schedule"
 mc mb myminio/schedule
 if [ $? -ne 0 ]; then
   echo "ERROR: mb failed"
@@ -33,7 +33,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Добавление события для вебхука
-echo "Running: mc event add myminio/schedule arn:minio:sqs::1:webhook --event put"
+echo "Выполняем: mc event add myminio/schedule arn:minio:sqs::1:webhook --event put"
 mc event add myminio/schedule arn:minio:sqs::1:webhook --event put
 if [ $? -ne 0 ]; then
   echo "ERROR: event add failed"

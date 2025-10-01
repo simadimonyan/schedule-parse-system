@@ -15,7 +15,7 @@ services:
 
   minio:
     restart: always
-    image: bitnami/minio:latest
+    image: minio/minio:latest
     container_name: minio
     hostname: minio.local
     # в данном случае мы обязательно выбрасываем порты, по которым будем
@@ -38,15 +38,14 @@ services:
       # указываем порт для web-ui
       - MINIO_CONSOLE_PORT_NUMBER=9001
       - MINIO_LOG_LEVEL=debug
-    extra_hosts:
-      # вносим в /etc/hosts данного контейнера связку minio.local c 192.168.0.199
-      - "minio.local:192.168.0.199"
     volumes:
-      - ./volumes/minio/minio:/bitnami/minio/data
+      - ./volumes/minio/data:/data
       - ./volumes/minio/certs:/certs
       - ./minio-init.sh:/minio-init.sh
+      - ./minio-generate-keys.sh:/minio-generate-keys.sh
+    command: ["server", "/data", "--console-address", ":9001"]
     healthcheck:
-      test: [ "CMD", "curl", "-k", "http://localhost:9000/minio/health/live" ]
+      test: [ "CMD", "curl", "-k", "http://minio:9000/minio/health/live" ]
       interval: 30s
       timeout: 20s
       retries: 3
