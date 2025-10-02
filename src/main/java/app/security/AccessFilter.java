@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 public class AccessFilter extends OncePerRequestFilter {
 
     private final AuthenticationManager authenticationManager;
@@ -42,6 +44,7 @@ public class AccessFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authResult);
             } catch (AuthenticationException ex) {
                 SecurityContextHolder.clearContext();
+                log.warn("Выполнен FORBIDDEN запрос: {}", path);
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid API token");
                 return;
             }

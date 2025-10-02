@@ -118,6 +118,10 @@
       "pluginVersion": "12.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
+          },
           "editorType": "sql",
           "format": 1,
           "meta": {
@@ -133,11 +137,7 @@
           "pluginVersion": "4.10.2",
           "queryType": "table",
           "rawSql": "SELECT\n  MetricName,\n  avg(Value) * 100 AS avg_pct,\n  toDateTime64( toUInt64( TimeUnix ) / 60 * 60, 9 ) AS minute_bucket\nFROM default.otel_metrics_gauge\nWHERE MetricName = 'system.cpu.usage'\n  AND TimeUnix >= now() - INTERVAL 1 MINUTE\nGROUP BY MetricName, minute_bucket\nORDER BY minute_bucket DESC, MetricName;",
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
-          }
+          "refId": "A"
         }
       ],
       "title": "CPU %",
@@ -230,6 +230,10 @@
       "pluginVersion": "12.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
+          },
           "editorType": "sql",
           "format": 1,
           "meta": {
@@ -245,11 +249,7 @@
           "pluginVersion": "4.10.2",
           "queryType": "table",
           "rawSql": "SELECT\n    toStartOfSecond(Timestamp) AS sec,\n    count() AS requests_per_sec\nFROM default.otel_traces\nWHERE SpanName LIKE '%/api/%'\nGROUP BY sec\nORDER BY sec;",
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
-          }
+          "refId": "A"
         }
       ],
       "title": "RPS (Request Per Second)",
@@ -362,6 +362,10 @@
       "pluginVersion": "12.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
+          },
           "editorType": "sql",
           "format": 1,
           "meta": {
@@ -377,11 +381,7 @@
           "pluginVersion": "4.10.2",
           "queryType": "table",
           "rawSql": "SELECT\n    toStartOfInterval(Timestamp, INTERVAL 1 HOUR) AS time_interval,\n    SeverityText,\n    COUNT(*) AS log_count\nFROM default.otel_logs\nWHERE SeverityText IN ('INFO', 'ERROR', 'WARN')\nGROUP BY time_interval, SeverityText\nORDER BY time_interval DESC, SeverityText",
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
-          }
+          "refId": "A"
         }
       ],
       "title": "Logs Activity",
@@ -487,6 +487,10 @@
       "pluginVersion": "12.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
+          },
           "editorType": "sql",
           "format": 1,
           "meta": {
@@ -502,11 +506,7 @@
           "pluginVersion": "4.10.2",
           "queryType": "table",
           "rawSql": "SELECT\n    toStartOfInterval(Timestamp, INTERVAL 1 HOUR) AS time_interval,\n    SeverityText,\n    COUNT(*) AS error_count\nFROM default.otel_logs\nWHERE SeverityText = 'ERROR'\nGROUP BY time_interval, SeverityText\nORDER BY time_interval DESC, SeverityText",
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
-          }
+          "refId": "A"
         }
       ],
       "title": "Error Tracker",
@@ -745,6 +745,30 @@
                 }
               }
             ]
+          },
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "p50_ms"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": true,
+                  "viz": true
+                }
+              }
+            ]
           }
         ]
       },
@@ -774,6 +798,10 @@
       "pluginVersion": "12.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
+          },
           "editorType": "sql",
           "format": 1,
           "meta": {
@@ -788,12 +816,8 @@
           },
           "pluginVersion": "4.10.2",
           "queryType": "table",
-          "rawSql": "SELECT\n  toStartOfInterval(Timestamp, INTERVAL 1 MINUTE) AS minute,\n  avg(Duration / 1000000) AS mean,\n  quantile(0.50)(Duration / 1000000) AS p50_ms,\n  quantile(0.75)(Duration / 1000000) AS p75_ms,\n  quantile(0.95)(Duration / 1000000) AS p95_ms,\n  quantile(0.99)(Duration / 1000000) AS p99_ms\nFROM default.otel_traces\nWHERE SpanName LIKE '%/api/%'\nGROUP BY minute\nORDER BY minute;",
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
-          }
+          "rawSql": "SELECT\n  toStartOfInterval(Timestamp, INTERVAL 1 MINUTE) AS minute,\n  avg(Duration / 1000000) AS mean,\n  quantileExact(0.50)(Duration / 1000000) AS p50_ms,\n  quantileExact(0.75)(Duration / 1000000) AS p75_ms,\n  quantileExact(0.95)(Duration / 1000000) AS p95_ms,\n  quantileExact(0.99)(Duration / 1000000) AS p99_ms\nFROM default.otel_traces\nWHERE SpanName LIKE '%/api/%'\nGROUP BY minute\nORDER BY minute;",
+          "refId": "A"
         }
       ],
       "title": "Mean Response Time:  50, 75, 95, 99 Percentiles (ms)",
@@ -853,6 +877,10 @@
       "pluginVersion": "12.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
+          },
           "editorType": "sql",
           "format": 1,
           "meta": {
@@ -868,11 +896,7 @@
           "pluginVersion": "4.10.2",
           "queryType": "table",
           "rawSql": "SELECT \n    SpanName,\n    COUNT(*) AS cnt\nFROM default.otel_traces\nWHERE SpanName LIKE '%/api/%'\nGROUP BY SpanName\nORDER BY cnt DESC",
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
-          }
+          "refId": "A"
         }
       ],
       "title": "Top Requests",
@@ -988,6 +1012,10 @@
       "pluginVersion": "12.2.0",
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
+          },
           "editorType": "sql",
           "format": 1,
           "meta": {
@@ -1003,11 +1031,7 @@
           "pluginVersion": "4.10.2",
           "queryType": "table",
           "rawSql": "-- Подзапрос для агрегации каждой метрики по временным бакетам\nWITH\n  agg AS (\n    SELECT\n      MetricName,\n      toDateTime64(toUInt64(TimeUnix) / 60 * 60, 9) AS minute_bucket,\n      avg(Value) AS avg_value\n    FROM default.otel_metrics_gauge\n    WHERE MetricName IN (\n      'jvm.memory.committed',\n      'jvm.memory.max',\n      'jvm.memory.usage.after.gc',\n      'jvm.memory.used'\n    )\n    GROUP BY MetricName, minute_bucket\n  )\n\nSELECT\n  a.minute_bucket,\n  maxIf(a.avg_value, a.MetricName = 'jvm.memory.used') / 1024 / 1024 AS used_mib,\n  maxIf(a.avg_value, a.MetricName = 'jvm.memory.max') / 1024 / 1024 AS max_mem_mib,\n  maxIf(a.avg_value, a.MetricName = 'jvm.memory.committed') / 1024 / 1024 AS committed_mib,\n  maxIf(a.avg_value, a.MetricName = 'jvm.memory.usage.after.gc') / 1024 / 1024  AS usage_after_gc_mib,\n  -- вычисление процента использования: used / max_mem * 100\n  if(max_mem_mib > 0,\n     (maxIf(a.avg_value, a.MetricName = 'jvm.memory.used') / max_mem_mib) * 100,\n     NULL\n  ) AS used_pct_of_max,\n  -- другое отношение: used / committed * 100\n  if(committed_mib > 0,\n     (maxIf(a.avg_value, a.MetricName = 'jvm.memory.used') / committed_mib) * 100,\n     NULL\n  ) AS used_pct_of_committed\nFROM agg a\nGROUP BY a.minute_bucket\nORDER BY a.minute_bucket DESC;",
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_GRAFANA-CLICKHOUSE-DATASOURCE}"
-          }
+          "refId": "A"
         }
       ],
       "title": "Heap Memory Usage (Mb)",
@@ -1020,14 +1044,14 @@
     "list": []
   },
   "time": {
-    "from": "2025-09-29T09:00:00.000Z",
-    "to": "2025-09-29T17:00:00.000Z"
+    "from": "2025-10-02T05:46:12.933Z",
+    "to": "2025-10-02T10:35:11.997Z"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Monitor",
   "uid": "adsrfv7",
-  "version": 16,
+  "version": 3,
   "weekStart": "",
   "id": null
 }
