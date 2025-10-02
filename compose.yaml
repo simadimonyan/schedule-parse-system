@@ -1,6 +1,8 @@
 
 services:
 
+# ========= Комментировать при локальном тесте ===========
+
   nginx:
     image: nginx:stable
     container_name: nginx
@@ -29,6 +31,8 @@ services:
       - ./volumes/certbot/www:/var/www/certbot
     networks:
       - schedule_net
+
+# ==========================================================
 
   app:
     container_name: app
@@ -67,6 +71,9 @@ services:
 
       - MINIO_CONSOLE_PORT_NUMBER=9001
       - MINIO_LOG_LEVEL=debug
+
+      - MINIO_SERVER_URL=${MINIO_SERVER_URL}
+      - MINIO_BROWSER_REDIRECT_URL=${MINIO_BROWSER_REDIRECT_URL}
     volumes:
       - ./volumes/minio/data:/data
       - ./volumes/minio/certs:/certs
