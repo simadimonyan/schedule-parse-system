@@ -5,11 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ configuration">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/configs/grafana/MonitorDashboard.json" beforeDir="false" afterPath="$PROJECT_DIR$/configs/grafana/MonitorDashboard.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/security/AccessFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/security/AccessFilter.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,7 +118,7 @@
       <workItem from="1759134436080" duration="25669000" />
       <workItem from="1759222322215" duration="2114000" />
       <workItem from="1759234268702" duration="3325000" />
-      <workItem from="1759310012203" duration="9756000" />
+      <workItem from="1759310012203" duration="9761000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />
