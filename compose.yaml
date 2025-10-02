@@ -3,6 +3,8 @@ services:
 
   nginx:
     image: nginx:stable
+    container_name: nginx
+    restart: always
     ports:
       - "80:80"
       - "443:443"
@@ -21,7 +23,7 @@ services:
 
   certbot:
     image: certbot/certbot
-    restart: unless-stopped
+    container_name: certbot
     volumes:
       - ./volumes/certbot/conf:/etc/letsencrypt
       - ./volumes/certbot/www:/var/www/certbot
