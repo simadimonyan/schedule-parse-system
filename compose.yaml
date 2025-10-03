@@ -167,8 +167,10 @@ services:
       - HYPERDX_API_PORT=${HYPERDX_API_PORT}
       - HYPERDX_APP_URL=${HYPERDX_APP_URL}
       - HYPERDX_APP_PORT=${HYPERDX_APP_PORT}
+      #- FRONTEND_URL=${FRONTEND_URL} - для production
     ports:
       - "8081:8080"
+      - "8000:8000"
     volumes:
       - './volumes/hyperdx/data:/data/db'
     networks:
