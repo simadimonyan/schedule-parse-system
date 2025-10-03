@@ -22,7 +22,7 @@ services:
     networks:
       - schedule_net
 
-# ==========================================================
+# ========================================================
 
   app:
     container_name: app
@@ -48,8 +48,6 @@ services:
       - '9000:9000' #cli
       - '9001:9001' #ui
     environment:
-      - MINIO_NOTIFY_WEBHOOK_ENABLE_1=on
-      - MINIO_NOTIFY_WEBHOOK_ENDPOINT_1=${MINIO_WEBHOOK_ENDPOINT}
       - MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_1=${MINIO_WEBHOOK_AUTH_TOKEN}
       - MINIO_NOTIFY_WEBHOOK_QUEUE_DIR=./volumes/minio/events
     
