@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ configuration">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,7 +120,7 @@
       <workItem from="1759134436080" duration="25669000" />
       <workItem from="1759222322215" duration="2114000" />
       <workItem from="1759234268702" duration="3325000" />
-      <workItem from="1759310012203" duration="21318000" />
+      <workItem from="1759310012203" duration="23736000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />

@@ -1,56 +1,146 @@
 # Schedule Parse Service
 
-## Описание
-
-Schedule Parse Service — это сервис для парсинга расписаний и интеграции с облачным хранилищем MinIO. Сервис автоматически обрабатывает расписания и сохраняет результаты в указанный бакет MinIO.
+Сервис автоматически парсит расписания и сохраняет их в указанный бакет MinIO. Для интеграции с другими сервисами используйте вебхук, указав соответствующие параметры подключения.
 
 ## Установка и настройка
 
 1. Клонируйте репозиторий:
-    ```bash
+    ```
     git clone <repo-url>
     cd schedule-parse-service
     ```
 
-2. Предварительно настройте файлы `application.properties` и `.env`:
-    - Укажите параметры подключения к MinIO и другие необходимые настройки.
+2. Отредактируйте `.env` и `application.properties`. Для production дополнительно настройте `grafana.ini` и `compose.yaml`. Следуйте комментариям в коде.
+3. Если используется HTTP, закомментируйте строки для nginx в `compose.yaml`. Для HTTPS (если у вас нет сертификатов):
 
-3. Разверните сервис и MinIO с помощью Docker Compose:
-    ```bash
-    docker-compose up -d
-    ```
+Создайте сертификаты через certbot и локальный nginx вне Docker.
+Поместите сертификаты в `volumes/nginx/ssl` (обновлять каждые 3 месяца).
+Отредактируйте `configs/nginx/nginx.conf`.
+Настройте автообновление сертификатов через crontab. Откройте файл crontab. Выполните следующую команду в терминале:
 
-## Настройка MinIO
-
-1. Запустите MinIO через Docker Compose.
-2. Создайте бакет вручную через веб-интерфейс или CLI.
-3. Сгенерируйте ключи доступа (Access Key и Secret Key) для подключения к MinIO через интерфейс.
-4. Добавьте полученные ключи и имя бакета в `application.properties`:
-    ```
-    minio.endpoint=<minio-host>:<port>
-    minio.access-key=<your-access-key>
-    minio.secret-key=<your-secret-key>
-    minio.bucket=<your-bucket-name>
-    ```
-
-5. Для настройки вебхука используйте скрипт `minio-init.sh`, передав ему ключи доступа и имя бакета после их создания:
-    ```bash
-    docker exec -it <minio-container-name> bash
-    ./minio-init.sh <your-access-key> <your-secret-key> <your-bucket-name>
-    ```
-
-## Запуск
-
-После настройки и запуска MinIO, убедитесь, что ключи и параметры указаны в конфиге, затем запустите сервис:
-```bash
-docker exec -it <service-container-name> java -jar schedule-parse-service.jar
+```
+crontab -e
+```
+Это откроет файл crontab в текстовом редакторе. Добавьте строку. В самом низу файла добавьте вашу команду:
+```
+0 0,12 * * * /usr/bin/certbot renew --cert-path /schedule-parse-service/volumes/nginx/ssl/fullchain.pem --key-path /schedule-parse-service/volumes/nginx/ssl/privkey.pem --post-hook "docker exec nginx nginx -s reload"
 ```
 
-## Использование
+### Настройка Grafana для работы с subpath (production)
 
-Сервис автоматически парсит расписания и сохраняет их в указанный бакет MinIO. Для интеграции с другими сервисами используйте вебхук, указав соответствующие параметры подключения.
+1. Откройте файл `configs/grafana/grafana.ini`.
+2. Найдите и отредактируйте параметры:
+    - Установите параметр `root_url` с subpath `/grafana`:
+          ```
+          [server]
+            root_url = http://grafana:3000/grafana
+            serve_from_sub_path = true
+          ```
+    - Убедитесь, что `serve_from_sub_path = true`.
+3. Для production:
+    - Откройте `compose.yaml`.
+    - Удалите строки с портами, чтобы исключить прямой доступ и повысить безопасность соединений.
 
-## Контакты
+### Переменные окружения
 
-Для вопросов и поддержки обращайтесь к разработчику.
+Ниже приведены основные переменные окружения, используемые сервисом. Укажите их значения в файле `.env` или соответствующих конфигурациях.
+
+| Переменная | Описание |
+|------------|----------|
+| `POSTGRES_USER` | Имя пользователя для подключения к PostgreSQL |
+| `POSTGRES_PASSWORD` | Пароль пользователя PostgreSQL |
+| `POSTGRES_DB` | Имя базы данных PostgreSQL |
+| `REDIS_USER_PASSWORD` | Пароль для подключения к Redis |
+| `MINIO_ROOT_USER` | Имя root-пользователя MinIO |
+| `MINIO_ROOT_PASSWORD` | Пароль root-пользователя MinIO (должен содержать цифры, спецсимволы и буквы разных регистров) |
+| `MINIO_WEBHOOK_AUTH_TOKEN` | Токен авторизации для вебхука MinIO (используется для интеграции с сервисом) |
+| `PGADMIN_DEFAULT_EMAIL` | Email для входа в pgAdmin |
+| `PGADMIN_DEFAULT_PASSWORD` | Пароль для входа в pgAdmin |
+| `CLICKHOUSE_USER` | Имя пользователя ClickHouse |
+| `CLICKHOUSE_PASSWORD` | Пароль пользователя ClickHouse |
+| `HYPERDX_API_URL` | URL для подключения к HyperDX API (заменить на доменное имя в production) |
+| `HYPERDX_API_PORT` | Порт HyperDX API |
+| `HYPERDX_APP_URL` | URL для подключения к приложению HyperDX (заменить на доменное имя в production) |
+| `HYPERDX_APP_PORT` | Порт приложения HyperDX |
+| `FRONTEND_URL` | URL фронтенда (указать доменное имя в production) |
+| `MINIO_SERVER_URL` | URL сервера MinIO |
+| `MINIO_BROWSER_REDIRECT_URL` | URL для доступа к веб-интерфейсу MinIO (`/console` для production) |
+| `GF_SECURITY_ADMIN_USER` | Имя администратора Grafana |
+| `GF_SECURITY_ADMIN_PASSWORD` | Пароль администратора Grafana |
+
+### Запуск
+
+```bash
+sudo docker compose up
+```
+При проблемах с правами доступа, где pgadmin и grafana бесконечно перезапускаются, выполните:
+```bash
+sudo chmod -R 777 ./volumes
+```
+
+### Настройка MinIO и приложения
+
+1. `docker exec -it minio /bin/sh`
+2. `bash minio-generate-keys.sh`
+3. Перейдите в `/src/main/resources`
+4. Отредактируйте `application.properties` с новыми ключами.
+5. Перезапустите приложение: `docker restart app`
+6. Дождитесь запуска сервиса `app`
+7. `docker exec -it minio /bin/sh`
+8. `bash minio-init-webhook.sh` (повторять с шага 7 при перезапуске app)
+
+### Настройка API
+
+Инициализируйте четность недели через Swagger:
+```
+POST /api/v1/configuration/week/swap
+Authorization: Bearer <access-token> (application.properties)
+
+Body:
+Bearer <admin-token> (application.properties)
+```
+
+### Настройка PGAdmin
+
+- Подключитесь к базе данных через интерфейс pgAdmin.
+
+### Настройка HyperDX
+
+- Измените доменное имя в `.env`.
+- Подключите ClickHouse.
+- При ошибках подключения к базе — перезапустите сервис `clickhouse`.
+
+### Настройка Grafana
+
+- Добавьте плагин ClickHouse.
+- Импортируйте дашборд из `/configs/grafana/MonitorDashboard.json`.
+- При ошибках подключения — перезапустите сервис базы.
+
+### Адреса для production (пример: schedule-imsit.ru)
+
+- Логи: https://schedule-imsit.ru
+- S3: https://schedule-imsit.ru/console/
+- СУБД: https://schedule-imsit.ru/pgadmin/
+- Мониторинг: https://schedule-imsit.ru/grafana/
+- API: https://schedule-imsit.ru/schedule/
+- Redis: tcp://schedule-imsit.ru:6379
+
+### Адреса для теста
+
+- Swagger API: http://localhost:8080
+- HyperDX: http://localhost:8081
+- MinIO: http://localhost:9001
+- Grafana: http://localhost:3000
+- pgAdmin: http://localhost:15432
+- Redis: http://localhost:6380
+- PostgreSQL: http://localhost:5432
+
+### Ограничения
+
+- Запросы с одного IP: 10 r/s
+- TCP соединения с одного IP: 2
+- Кеширование ответов с кодом 200: 10 минут
+
+
+
 
