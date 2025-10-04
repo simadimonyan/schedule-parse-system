@@ -1,16 +1,28 @@
 # Schedule Parse Service
 
-Сервис автоматически парсит расписания и сохраняет их в указанный бакет MinIO. Для интеграции с другими сервисами используйте вебхук, указав соответствующие параметры подключения.
+Сервис автоматически парсит расписание когда вы сохраняете их в указанный бакет MinIO. Предоставляет API для интеграции с [клиентом](https://github.com/simadimonyan/electronic-schedule-app) по защищенному соединению. Позволяет отслеживать состояние нагрузки системы в реальном времени.
+
+## Стек технологий
+
+1. Java 
+2. Spring: Web, Data, Security, Actuator
+3. ApachePOI
+4. PostgreSQL
+5. Redis
+6. MinIO
+7. Open Telemetry 
+8. Micrometer
+9. ClickHouse
 
 ## Установка и настройка
 
 1. Клонируйте репозиторий:
     ```
-    git clone <repo-url>
+    git clone https://github.com/simadimonyan/schedule-parse-system.git
     cd schedule-parse-service
     ```
 
-2. Отредактируйте `.env` и `application.properties`. Для production дополнительно настройте `grafana.ini` и `compose.yaml`. Следуйте комментариям в коде.
+2. Отредактируйте `.env` и `application.properties`. Для production дополнительно настройте `grafana.ini` и `compose.yaml`. Следуйте комментариям в коде. При наличии доменного имени указывать его по url в соответствии с комментариями.
 3. Если используется HTTP, закомментируйте строки для nginx в `compose.yaml`. Для HTTPS (если у вас нет сертификатов):
 
 Создайте сертификаты через certbot и локальный nginx вне Docker.
@@ -25,21 +37,6 @@ crontab -e
 ```
 0 0,12 * * * /usr/bin/certbot renew --cert-path /schedule-parse-service/volumes/nginx/ssl/fullchain.pem --key-path /schedule-parse-service/volumes/nginx/ssl/privkey.pem --post-hook "docker exec nginx nginx -s reload"
 ```
-
-### Настройка Grafana для работы с subpath (production)
-
-1. Откройте файл `configs/grafana/grafana.ini`.
-2. Найдите и отредактируйте параметры:
-    - Установите параметр `root_url` с subpath `/grafana`:
-          ```
-          [server]
-            root_url = http://grafana:3000/grafana
-            serve_from_sub_path = true
-          ```
-    - Убедитесь, что `serve_from_sub_path = true`.
-3. Для production:
-    - Откройте `compose.yaml`.
-    - Удалите строки с портами, чтобы исключить прямой доступ и повысить безопасность соединений.
 
 ### Переменные окружения
 
@@ -100,7 +97,7 @@ Body:
 Bearer <admin-token> (application.properties)
 ```
 
-### Настройка PGAdmin
+### Настройка pgAdmin
 
 - Подключитесь к базе данных через интерфейс pgAdmin.
 
@@ -110,19 +107,34 @@ Bearer <admin-token> (application.properties)
 - Подключите ClickHouse.
 - При ошибках подключения к базе — перезапустите сервис `clickhouse`.
 
-### Настройка Grafana
+### Настройка Grafana для работы с subpath (production)
+
+1. Откройте файл `configs/grafana/grafana.ini`.
+2. Найдите и отредактируйте параметры:
+    - Установите параметр `root_url` с subpath `/grafana`:
+          ```
+          [server]
+            root_url = http://grafana:3000/grafana
+            serve_from_sub_path = true
+          ```
+    - Убедитесь, что `serve_from_sub_path = true`.
+3. Для production:
+    - Откройте `compose.yaml`.
+    - Удалите строки с портами, чтобы исключить прямой доступ и повысить безопасность соединений.
 
 - Добавьте плагин ClickHouse.
 - Импортируйте дашборд из `/configs/grafana/MonitorDashboard.json`.
 - При ошибках подключения — перезапустите сервис базы.
 
+## URL
+
 ### Адреса для production (пример: schedule-imsit.ru)
 
-- Логи: https://schedule-imsit.ru
-- S3: https://schedule-imsit.ru/console/
-- СУБД: https://schedule-imsit.ru/pgadmin/
-- Мониторинг: https://schedule-imsit.ru/grafana/
-- API: https://schedule-imsit.ru/schedule/
+- HyperDX: https://schedule-imsit.ru
+- MinIO: https://schedule-imsit.ru/console/
+- pgAdmin: https://schedule-imsit.ru/pgadmin/
+- Grafana: https://schedule-imsit.ru/grafana/
+- API Swagger: https://schedule-imsit.ru/schedule/
 - Redis: tcp://schedule-imsit.ru:6379
 
 ### Адреса для теста
@@ -135,12 +147,8 @@ Bearer <admin-token> (application.properties)
 - Redis: http://localhost:6380
 - PostgreSQL: http://localhost:5432
 
-### Ограничения
+### Безопасность
 
 - Запросы с одного IP: 10 r/s
 - TCP соединения с одного IP: 2
 - Кеширование ответов с кодом 200: 10 минут
-
-
-
-
