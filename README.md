@@ -15,6 +15,7 @@
 7. Open Telemetry 
 8. Micrometer
 9. ClickHouse
+10. Docker
 
 ## Установка и настройка
 
@@ -35,7 +36,7 @@
 ```
 crontab -e
 ```
-Это откроет файл crontab в текстовом редакторе. Добавьте строку. В самом низу файла добавьте вашу команду:
+Это откроет файл crontab в текстовом редакторе. Добавьте строку. В самом низу файла добавьте команду для cron проверки обновления сертификатов дважды в день:
 ```
 0 0,12 * * * /usr/bin/certbot renew --cert-path /schedule-parse-service/volumes/nginx/ssl/fullchain.pem --key-path /schedule-parse-service/volumes/nginx/ssl/privkey.pem --post-hook "docker exec nginx nginx -s reload"
 ```
@@ -74,7 +75,7 @@ crontab -e
 ```bash
 sudo docker compose up
 ```
-При проблемах с правами доступа, где pgadmin и grafana бесконечно перезапускаются, выполните:
+При проблемах с правами доступа, где pgAdmin и grafana бесконечно перезапускаются, выполните:
 ```bash
 sudo chmod -R 777 ./volumes
 ```
@@ -121,12 +122,7 @@ Bearer <admin-token> (application.properties)
 
 1. Откройте файл `configs/grafana/grafana.ini`.
 2. Найдите и отредактируйте параметры:
-    - Установите параметр `root_url` с subpath `/grafana`:
-          ```
-          [server]
-            root_url = http://grafana:3000/grafana
-            serve_from_sub_path = true
-          ```
+    - Установите параметр `root_url` с subpath `/grafana`
     - Убедитесь, что `serve_from_sub_path = true`.
 3. Для production:
     - Откройте `compose.yaml`.
