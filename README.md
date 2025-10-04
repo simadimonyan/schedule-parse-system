@@ -2,6 +2,8 @@
 
 Сервис автоматически парсит расписание когда вы сохраняете их в указанный бакет MinIO. Предоставляет API для интеграции с [клиентом](https://github.com/simadimonyan/electronic-schedule-app) по защищенному соединению. Позволяет отслеживать состояние нагрузки системы в реальном времени.
 
+![api](/docs/api.png)
+
 ## Стек технологий
 
 1. Java 
@@ -101,15 +103,21 @@ Bearer <admin-token> (application.properties)
 
 ### Настройка pgAdmin
 
+![db](./docs/db.png)
+
 - Подключитесь к базе данных через интерфейс pgAdmin.
 
 ### Настройка HyperDX
+
+![logs](./docs/logs.png)
 
 - Измените доменное имя в `.env`.
 - Подключите ClickHouse.
 - При ошибках подключения к базе — перезапустите сервис `clickhouse`.
 
 ### Настройка Grafana для работы с subpath (production)
+
+![monitor](./docs/monitoring.jpg)
 
 1. Откройте файл `configs/grafana/grafana.ini`.
 2. Найдите и отредактируйте параметры:
