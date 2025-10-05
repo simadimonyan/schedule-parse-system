@@ -106,14 +106,14 @@ Bearer <admin-token> (application.properties)
 
 ![db](./docs/db.png)
 
-- Подключитесь к базе данных через интерфейс pgAdmin.
+- Подключитесь к базе данных через интерфейс pgAdmin. (адрес: app_db)
 
 ### Настройка HyperDX
 
 ![logs](./docs/logs.png)
 
 - Измените доменное имя в `.env`.
-- Подключите ClickHouse.
+- Подключите ClickHouse. (адрес: http://clickhouse:8123)
 - При ошибках подключения к базе — перезапустите сервис `clickhouse`.
 
 ### Настройка Grafana для работы с subpath (production)
@@ -129,8 +129,9 @@ Bearer <admin-token> (application.properties)
     - Удалите строки с портами, чтобы исключить прямой доступ и повысить безопасность соединений.
 
 - Добавьте плагин ClickHouse.
+- Добавьте datasource (адрес: clickhouse)
 - Импортируйте дашборд из `/configs/grafana/MonitorDashboard.json`.
-- При ошибках подключения — перезапустите сервис базы.
+- При ошибках подключения — перезапустите сервис базы `clickhouse`.
 
 ## URL
 
