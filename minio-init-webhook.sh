@@ -41,8 +41,8 @@ echo "Вебхук endpoint: http://${APP_HOST}:${APP_PORT}${ENDPOINT_PREFIX}"
 echo "===================="
 
 # Alias set с логированием
-echo "Выполняем: mc alias set myminio http://localhost:9000 \"$MINIO_ACCESS_KEY\" \"******************\" --api S3v4"
-mc alias set myminio http://localhost:9000 "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}" --api S3v4
+echo "Выполняем: mc alias set myminio http://minio:9000 \"$MINIO_ACCESS_KEY\" \"******************\" --api S3v4"
+mc alias set myminio http://minio:9000 "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}" --api S3v4
 if [ $? -ne 0 ]; then
   echo "ERROR: alias set failed"
   mc alias list

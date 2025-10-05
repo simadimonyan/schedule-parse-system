@@ -83,7 +83,7 @@ sudo chmod -R 777 ./volumes
 ### Настройка MinIO и приложения
 
 1. `docker exec -it minio /bin/sh`
-2. `bash minio-generate-keys.sh`
+2. `bash minio-generate-keys.sh` (адрес сервера: http://minio:9000)
 3. Перейдите в `/src/main/resources`
 4. Отредактируйте `application.properties` с новыми ключами.
 5. Перезапустите приложение: `docker restart app`
