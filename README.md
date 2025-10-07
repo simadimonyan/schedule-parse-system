@@ -43,8 +43,7 @@ crontab -e
 
 6. Отредактируйте конфигурационный файл journald (для предотвращения переполнения памяти диска):
 
-```
-bash
+```bash
 sudo nano /etc/systemd/journald.conf
 ```
 
