@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ configuration">
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/group/GroupCoursesResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/dao/GroupRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/GroupRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/persistence/PersistenceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/persistence/PersistenceService.java" afterDir="false" />
-    </list>
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ updated /levels &amp; added /courses requests" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -123,7 +118,7 @@
       <workItem from="1759234268702" duration="3325000" />
       <workItem from="1759310012203" duration="25804000" />
       <workItem from="1759768273871" duration="4000" />
-      <workItem from="1759935399769" duration="362000" />
+      <workItem from="1759935399769" duration="1236000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />
@@ -213,7 +208,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759234597797</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="+ updated /levels &amp; added /courses requests">
+      <option name="closed" value="true" />
+      <created>1759935912975</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1759935912975</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -241,6 +244,7 @@
     <MESSAGE value="+ redis &amp; excel service fix" />
     <MESSAGE value="+ schedule week change &amp; cache fix" />
     <MESSAGE value="+ configuration" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ configuration" />
+    <MESSAGE value="+ updated /levels &amp; added /courses requests" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ updated /levels &amp; added /courses requests" />
   </component>
 </project>
