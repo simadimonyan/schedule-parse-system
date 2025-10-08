@@ -1,5 +1,6 @@
 package app.controller.api;
 
+import app.repository.models.dto.api.group.GroupCoursesResponse;
 import app.repository.models.dto.api.group.GroupLevelsResponse;
 import app.repository.models.dto.api.group.GroupResponse;
 import app.repository.models.dto.api.group.GroupsResponse;
@@ -41,9 +42,15 @@ public class GroupController {
     }
 
     @GetMapping("/levels")
-    public ResponseEntity<GroupLevelsResponse> getLevels() {
+    public ResponseEntity<GroupLevelsResponse> getLevels(@RequestParam("course") Integer course) {
         log.info("GET Запрос: /api/v1/groups/levels");
-        return ResponseEntity.ok(new GroupLevelsResponse(persistenceService.getLevels()));
+        return ResponseEntity.ok(new GroupLevelsResponse(persistenceService.getLevels(course)));
+    }
+
+    @GetMapping("/courses")
+    public ResponseEntity<GroupCoursesResponse> getCourses() {
+        log.info("GET Запрос: /api/v1/groups/courses");
+        return ResponseEntity.ok(new GroupCoursesResponse(persistenceService.getCourses()));
     }
 
     @GetMapping("/schedule")

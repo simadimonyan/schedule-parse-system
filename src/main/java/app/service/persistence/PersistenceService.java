@@ -73,8 +73,13 @@ public class PersistenceService {
     }
 
     @Cacheable("levels")
-    public List<String> getLevels() {
-        return groupRepository.findDistinctLevels().orElse(new ArrayList<>());
+    public List<String> getLevels(Integer course) {
+        return groupRepository.findDistinctLevels(course).orElse(new ArrayList<>());
+    }
+
+    @Cacheable("courses")
+    public List<Integer> getCourses() {
+        return groupRepository.findDistinctCourses().orElse(new ArrayList<>());
     }
 
     @Cacheable("schedule")
