@@ -78,7 +78,8 @@ services:
     volumes:
       - ./volumes/minio/data:/data
       - ./volumes/minio/certs:/certs
-      - ./minio-init-webhook.sh:/minio-init-webhook.sh
+      - ./minio-manual-init-webhook.sh:/minio-manual-init-webhook.sh
+      - ./minio-auto-init-webhook.sh:/minio-auto-init-webhook.sh
       - ./minio-generate-keys.sh:/minio-generate-keys.sh
     command: ["server", "/data", "--console-address", ":9001"]
     healthcheck:
