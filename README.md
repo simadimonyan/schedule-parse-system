@@ -102,7 +102,7 @@ sudo chmod -R 777 ./volumes
 5. Перезапустите приложение: `docker restart app`
 6. Дождитесь запуска сервиса `app`
 7. `docker exec -it minio /bin/sh`
-8. `bash minio-manual-init-webhook.sh` (повторять с шага 7 при перезапуске app)
+8. `bash minio-manual-init-webhook.sh` (повторять с шага 7-8 при перезапуске app)
 
 9. Для того, чтобы защитить сервер от переполнения памяти необходимо настроить первичные данные для скрипта перезагрузки и очистки сервисов (очищает volume clickhouse и кеш docker контейнеров):
 
