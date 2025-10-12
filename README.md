@@ -38,7 +38,7 @@ crontab -e
 ```
 5. Это откроет файл crontab в текстовом редакторе. Добавьте строку. В самом низу файла добавьте команду для cron проверки обновления сертификатов дважды в день:
 ```
-0 0,12 * * * /usr/bin/certbot renew --cert-path /schedule-parse-service/volumes/nginx/ssl/fullchain.pem --key-path /schedule-parse-service/volumes/nginx/ssl/privkey.pem --post-hook "docker exec nginx nginx -s reload"
+0 0,12 * * * /usr/bin/certbot renew --cert-path /root/schedule-parse-system/volumes/nginx/ssl/fullchain.pem --key-path /root/schedule-parse-system/volumes/nginx/ssl/privkey.pem --post-hook "docker exec nginx nginx nginx -s reload"
 ```
 
 6. Отредактируйте конфигурационный файл journald (для предотвращения переполнения памяти диска):
@@ -120,7 +120,7 @@ crontab -e
 
 11. Это откроет файл crontab в текстовом редакторе. Добавьте строку. В самом низу файла добавьте команду для cron автоочистки и перезапуска сервисов каждые 12 часов (начиная с 01:00):
 ```
-0 1,12 * * * /usr/bin/bash /schedule-parse-service/restart-services.sh
+0 1,12 * * * /usr/bin/bash /root/schedule-parse-system/restart-services.sh  
 ```
 
 ### Настройка API
