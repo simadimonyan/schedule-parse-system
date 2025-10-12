@@ -69,6 +69,8 @@ done
 
 echo "=== Starting service restart and cleanup ==="
 
+cd /root/schedule-parse-system/
+
 # Stop all containers
 echo "Stopping all Docker containers..."
 docker stop $(docker ps -aq) 2>/dev/null || true

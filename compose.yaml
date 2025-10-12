@@ -14,6 +14,8 @@ services:
     volumes:
       - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./volumes/nginx/ssl:/etc/nginx/ssl
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       - app
       - minio
@@ -39,6 +41,8 @@ services:
       dockerfile: ./Dockerfile
     volumes: 
       - ./:/service/schedule-parse-service
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       - app_db
       - otel-collector
@@ -81,6 +85,8 @@ services:
       - ./minio-manual-init-webhook.sh:/minio-manual-init-webhook.sh
       - ./minio-auto-init-webhook.sh:/minio-auto-init-webhook.sh
       - ./minio-generate-keys.sh:/minio-generate-keys.sh
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     command: ["server", "/data", "--console-address", ":9001"]
     healthcheck:
       test: [ "CMD", "curl", "-k", "http://minio:9000/minio/health/live" ]
@@ -109,6 +115,8 @@ services:
       - app_db
     volumes:
       - ./volumes/pgadmin-data:/var/lib/pgadmin
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     logging:
       driver: "json-file"
       options:
@@ -127,6 +135,8 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - ./volumes/app_db/postgres:/var/lib/postgresql/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     ports:
       - "5432:5432"
     logging:
@@ -146,6 +156,8 @@ services:
       - "6380:6379"
     volumes:
       - ./volumes/redis:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     logging:
       driver: "json-file"
       options:
@@ -170,6 +182,8 @@ services:
     volumes:
       - ./volumes/clickhouse/data:/var/lib/clickhouse
       - ./volumes/clickhouse/logs:/var/log/clickhouse-server
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     logging:
       driver: "json-file"
       options:
@@ -190,6 +204,8 @@ services:
       - "8888:8888"
     volumes:
       - ./configs/opentelemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     logging:
       driver: "json-file"
       options:
@@ -214,7 +230,9 @@ services:
       - "8081:8080"
       - "8000:8000"
     volumes:
-      - './volumes/hyperdx/data:/data/db'
+      - ./volumes/hyperdx/data:/data/db
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     logging:
       driver: "json-file"
       options:
@@ -236,8 +254,10 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - './volumes/grafana:/var/lib/grafana'
-      - './configs/grafana/grafana.ini:/etc/grafana/grafana.ini'
+      - ./volumes/grafana:/var/lib/grafana
+      - ./configs/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     logging:
       driver: "json-file"
       options:
