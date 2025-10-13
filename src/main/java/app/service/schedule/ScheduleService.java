@@ -18,7 +18,7 @@ public class ScheduleService {
     }
 
     // ночь 00:00 с воскресенье на понедельник
-    @Scheduled(cron = "0 0 0 * * 0", zone = "Europe/Moscow")
+    @Scheduled(cron = "0 0 0 * * 1", zone = "Europe/Moscow")
     public void swapWeekParity() {
         persistenceService.swapWeek();
     }
