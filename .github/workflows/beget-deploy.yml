@@ -20,7 +20,7 @@ jobs:
       with:
         host: ${{ secrets.BEGET_SSH_HOST }}
         username: ${{ secrets.BEGET_SSH_USER }}
-        key: ${{ secrets.BEGET_SSH_PASSWORD }}
+        password: ${{ secrets.BEGET_SSH_PASSWORD }}
         source: "src/main/java/"
         target: ${{ secrets.BEGET_DEPLOY_PATH }}
         overwrite: true
@@ -30,7 +30,7 @@ jobs:
       with:
         host: ${{ secrets.BEGET_SSH_HOST }}
         username: ${{ secrets.BEGET_SSH_USER }}
-        key: ${{ secrets.BEGET_SSH_PASSWORD }}
+        password: ${{ secrets.BEGET_SSH_PASSWORD }}
         script: |
           cd /root/schedule-parse-system/
           bash restart-services.sh
