@@ -17,7 +17,7 @@ exporters:
     database: default
     username: admin
     password: admin
-    ttl: 48h
+    ttl: 12h
     timeout: 10s
     sending_queue:
       queue_size: 100
