@@ -10,6 +10,10 @@ jobs:
     environment: Beget
     
     steps:
+    - name: Checkout production branch
+      uses: actions/checkout@v4
+      with:
+        ref: production
     
     - name: Deploy to Beget via SSH
       uses: appleboy/scp-action@v0.1.3
@@ -17,8 +21,9 @@ jobs:
         host: ${{ secrets.BEGET_SSH_HOST }}
         username: ${{ secrets.BEGET_SSH_USER }}
         key: ${{ secrets.BEGET_SSH_PASSWORD }}
-        source: "src/main/"
-        target: "java/"
+        source: "src/main/java/"
+        target: ${{ secrets.BEGET_DEPLOY_PATH }}
+        overwrite: true
 
     - name: Restart application
       uses: appleboy/scp-action@v0.1.3
