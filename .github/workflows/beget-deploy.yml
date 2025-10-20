@@ -1,0 +1,30 @@
+name: Deploy Backend to Beget
+
+on:
+  push:
+    branches: [ production ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    
+    - name: Deploy to Beget via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.BEGET_SSH_HOST }}
+        username: ${{ secrets.BEGET_SSH_USER }}
+        key: ${{ secrets.BEGET_SSH_PASSWORD }}
+        source: "src/main/java/"
+        target: ${{ secrets.BEGET_DEPLOY_PATH }}
+
+    - name: Restart application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.BEGET_SSH_HOST }}
+        username: ${{ secrets.BEGET_SSH_USER }}
+        key: ${{ secrets.BEGET_SSH_PASSWORD }}
+        script: |
+          cd /root/schedule-parse-system/
+          bash restart-services.sh
