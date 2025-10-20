@@ -24,9 +24,10 @@ jobs:
         source: "src/main/java/"
         target: ${{ secrets.BEGET_DEPLOY_PATH }}
         overwrite: true
+        strip_components: 3
 
     - name: Restart application
-      uses: appleboy/scp-action@v0.1.3
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.BEGET_SSH_HOST }}
         username: ${{ secrets.BEGET_SSH_USER }}
