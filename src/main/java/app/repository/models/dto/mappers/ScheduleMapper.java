@@ -33,7 +33,8 @@ public class ScheduleMapper {
                     s.getLessonType(),
                     s.getLessonName(),
                     s.getTeacher() != null ? teacherMapper.toTeacherResponse(s.getTeacher()) : null,
-                    s.getAuditory()
+                    s.getAuditory(),
+                    s.getEiosLink()
             ));
         }
         return new ScheduleResponse(units);
