@@ -44,4 +44,7 @@ public class Schedule implements Serializable {
     @Column(name = "time_period")
     private String timePeriod;
 
+    @Column(name = "eios")
+    private String eiosLink;
+
 }

@@ -109,7 +109,18 @@ public class ExcelService {
                              */
 
                             Schedule schedule = new Schedule();
-                            String[] lines = currentCell.value.split("\n");
+
+                            String[] lines;
+                            String eiosLink = "";
+
+                            if (currentCell.value.contains("https")) {
+                                String[] tempSplit = currentCell.value.split("https");
+                                lines = tempSplit[0].split("\n");
+                                eiosLink = "https" + tempSplit[1];
+                            }
+                            else
+                                lines = currentCell.value.split("\n");
+
                             String firstLine = lines[0].trim();
                             String type = firstLine.substring(0, firstLine.indexOf(".")).trim().equals("л") ? "Лекция" : "Практика";
                             String subject = firstLine.substring(firstLine.indexOf(".") + 1).trim();
@@ -136,12 +147,30 @@ public class ExcelService {
 
                             // идемпотентность для сохранения (анти-дубликат)
                             if (label != null && !label.isBlank()) {
-                                Teacher teacher = teacherCache.computeIfAbsent(label.trim(), l -> {
-                                    Teacher t = new Teacher();
-                                    t.setLabel(l);
-                                    return t;
-                                });
+
+                                Teacher teacher = null;
+
+                                for (String teacherLabel : teacherCache.keySet()) {
+
+                                    String[] tempSplit = label.trim().split(" ");
+
+                                    // Наличие приставки или звания
+                                    if (tempSplit.length == 3 && teacherLabel.contains(tempSplit[1])) {
+                                        teacher = teacherCache.get(teacherLabel);
+                                    } // Отсутствие приставки или звания
+                                    else if (tempSplit.length == 2 && teacherLabel.contains(tempSplit[0])) {
+                                        teacher = teacherCache.get(teacherLabel);
+                                    }
+                                    else {
+                                        Teacher t = new Teacher();
+                                        t.setLabel(label.trim());
+                                        teacher = t;
+                                    }
+
+                                }
+
                                 schedule.setTeacher(teacher);
+                                teacherCache.put(label.trim(), teacher);
                             }
 
                             // день недели
@@ -159,9 +188,10 @@ public class ExcelService {
                             schedule.setTimePeriod(timePeriod);
                             schedule.setLessonCount(lessonNumberMap.get(timePeriod));
                             schedule.setWeekCount(weekOdd ? 1 : 2);
+                            schedule.setEiosLink(eiosLink);
 
                             schedules.add(schedule);
-                            log.info("Индексировано занятие: {}:{}:{} | {} | {} - {} - {} - {}",
+                            log.info("Индексировано занятие: {}:{}:{} | {} | {} - {} - {} - {} | {}",
                                     schedule.getDayWeek(),
                                     schedule.getTimePeriod(),
                                     schedule.getWeekCount(),
@@ -169,7 +199,8 @@ public class ExcelService {
                                     schedule.getLessonType(),
                                     schedule.getLessonName(),
                                     schedule.getTeacher() == null ? "Нет преподавателя" : schedule.getTeacher().getLabel(),
-                                    schedule.getAuditory() == null ? "Нет аудитории" : schedule.getAuditory()
+                                    schedule.getAuditory() == null ? "Нет аудитории" : schedule.getAuditory(),
+                                    schedule.getEiosLink()
                             );
 
                         }
