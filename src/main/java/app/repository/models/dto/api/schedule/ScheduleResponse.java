@@ -19,7 +19,8 @@ public record ScheduleResponse(
             String lessonType,
             String lessonName,
             TeacherResponse teacher,
-            String auditory
+            String auditory,
+            String eiosLink
     ) {}
 
 }
