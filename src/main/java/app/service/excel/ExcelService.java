@@ -62,7 +62,7 @@ public class ExcelService {
 
                             Group group = new Group();
 
-                            String name = cell.getStringCellValue();
+                            String name = cell.getStringCellValue().trim();
 
                             String[] nameParts = fileName.split(" ");
                             int index = IntStream.range(0, nameParts.length)
@@ -110,6 +110,13 @@ public class ExcelService {
 
                             Schedule schedule = new Schedule();
 
+                            boolean masterMode = fileName.contains("Мг");
+
+                            String type = "";
+                            String subject = "";
+                            String label = "";
+                            String auditory = "";
+
                             String[] lines;
                             String eiosLink = "";
 
@@ -121,53 +128,106 @@ public class ExcelService {
                             else
                                 lines = currentCell.value.split("\n");
 
-                            String firstLine = lines[0].trim();
-                            String type = firstLine.substring(0, firstLine.indexOf(".")).trim().equals("л") ? "Лекция" : "Практика";
-                            String subject = firstLine.substring(firstLine.indexOf(".") + 1).trim();
+                            // Парсинг ячеек СПО / Бакалавриат
+                            if (!masterMode) {
+                                String firstLine = lines[0].trim();
+                                type = firstLine.substring(0, firstLine.indexOf(".")).trim().equals("л") ? "Лекция" : "Практика";
+                                subject = firstLine.substring(firstLine.indexOf(".") + 1).trim();
 
-                            String secondLine = lines.length > 1 ? lines[1].replaceAll("\\s+", " ").trim() : "";
+                                String secondLine = lines.length > 1 ? lines[1].replaceAll("\\s+", " ").trim() : "";
 
-                            String label = null;
-                            String auditory = null;
+                                label = null;
+                                auditory = null;
 
-                            if (!secondLine.isEmpty()) {
-                                Matcher mTeacherAuditory = Pattern.compile(
-                                        "^(?<teacher>.+?)\\s+(?<auditory>\\S+)$",
-                                        Pattern.UNICODE_CASE | Pattern.DOTALL
-                                ).matcher(secondLine);
+                                if (!secondLine.isEmpty()) {
+                                    Matcher mTeacherAuditory = Pattern.compile(
+                                            "^(?<teacher>.+?)\\s+(?<auditory>\\S+)$",
+                                            Pattern.UNICODE_CASE | Pattern.DOTALL
+                                    ).matcher(secondLine);
 
-                                if (mTeacherAuditory.matches()) {
-                                    label = mTeacherAuditory.group("teacher") != null ? mTeacherAuditory.group("teacher").trim() : null;
-                                    auditory = mTeacherAuditory.group("auditory") != null ? mTeacherAuditory.group("auditory").trim() : null;
-                                } else {
-                                    // Строка содержит только аудиторию
-                                    auditory = secondLine.trim();
+                                    if (mTeacherAuditory.matches()) {
+                                        label = mTeacherAuditory.group("teacher") != null ? mTeacherAuditory.group("teacher").trim() : null;
+                                        auditory = mTeacherAuditory.group("auditory") != null ? mTeacherAuditory.group("auditory").trim() : null;
+                                    } else {
+                                        // Строка содержит только аудиторию
+                                        auditory = secondLine.trim();
+                                    }
                                 }
+                            }
+                            else { // шаблон относительно инициалов: (пара) (фамилия) И.И (аудитория / ссылка / пустота)
+
+                                log.info(currentCell.value);
+
+                                Matcher m = Pattern.compile("\\s*(.*?)\\s+([А-Яа-яЁёA-Za-z-]+)\\s+([А-ЯA-Z]\\.[А-ЯA-Z]?\\.?)\\s*(.*)?",
+                                        Pattern.UNICODE_CASE | Pattern.DOTALL).matcher(currentCell.value.trim());
+
+                                if (m.matches()) {
+                                    subject = m.group(1).trim();
+                                    String surname = m.group(2);
+                                    String initials = m.group(3);
+                                    String end = m.group(4);
+
+                                    label = surname + " " + initials;
+
+                                    if (end != null && !end.contains("https")) {
+                                        auditory = end.trim();
+                                    }
+
+                                    log.info("Parsed - Subject: " + subject + ", Label: " + label + ", Auditory: " + auditory);
+                                } else {
+                                    log.error("No match found for: " + currentCell.value.trim());
+                                    log.debug("Cell value: '" + currentCell.value.trim() + "'");
+                                }
+
                             }
 
                             // идемпотентность для сохранения (анти-дубликат)
                             if (label != null && !label.isBlank()) {
 
                                 Teacher teacher = null;
+                                String[] tempSplit = label.trim().split(" ");
 
-                                for (String teacherLabel : teacherCache.keySet()) {
+                                //log.info("--обработка преподавателя--");
 
-                                    String[] tempSplit = label.trim().split(" ");
+                                if (!teacherCache.isEmpty()) {
 
-                                    // Наличие приставки или звания
-                                    if (tempSplit.length == 3 && teacherLabel.contains(tempSplit[1])) {
-                                        teacher = teacherCache.get(teacherLabel);
-                                    } // Отсутствие приставки или звания
-                                    else if (tempSplit.length == 2 && teacherLabel.contains(tempSplit[0])) {
-                                        teacher = teacherCache.get(teacherLabel);
-                                    }
-                                    else {
-                                        Teacher t = new Teacher();
-                                        t.setLabel(label.trim());
-                                        teacher = t;
+                                    for (String teacherLabel : teacherCache.keySet()) {
+
+                                        //log.info("label: " + label);
+                                        //log.info("length: " + tempSplit.length);
+
+                                        // Наличие приставки или звания
+                                        if (tempSplit.length == 3 && teacherLabel.contains(tempSplit[1])) {
+                                            //log.info("наличие приставки");
+                                            teacher = teacherCache.get(teacherLabel);
+                                            break;
+                                        } // Отсутствие приставки или звания
+                                        else if (tempSplit.length == 2 && teacherLabel.contains(tempSplit[0])) {
+                                            //log.info("отсутствие приставки");
+                                            teacher = teacherCache.get(teacherLabel);
+                                            break;
+                                        }
+                                        else {
+                                            //log.info("создание нового");
+                                            Teacher t = new Teacher();
+                                            if (tempSplit.length == 3) t.setLabel(tempSplit[1] + " " + tempSplit[2]);
+                                            else t.setLabel(label.trim());
+                                            teacher = t;
+                                            break;
+                                        }
+
                                     }
 
                                 }
+                                else {
+                                    //log.info("создание первого");
+                                    Teacher t = new Teacher();
+                                    if (tempSplit.length == 3) t.setLabel(tempSplit[1] + " " + tempSplit[2]);
+                                    else t.setLabel(label.trim());
+                                    teacher = t;
+                                }
+
+                                //log.info("--put--");
 
                                 schedule.setTeacher(teacher);
                                 teacherCache.put(label.trim(), teacher);
