@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ updated cron in ScheduleService">
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ master degree schedule support">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/schedule/ScheduleResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/schedule/ScheduleResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Schedule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Schedule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,21 +54,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "development",
-    "last_opened_file_path": "/Users/dimitrisimonyan/Yandex.Disk.localized/Projects/Backend/schedule-parse-service",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;development&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/dimitrisimonyan/Yandex.Disk.localized/Projects/Backend/schedule-parse-service&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Docker.App">
     <configuration name="App" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="schedule-parse-service.main" />
@@ -126,7 +124,11 @@
       <workItem from="1759935399769" duration="3405000" />
       <workItem from="1760303889121" duration="13000" />
       <workItem from="1760375857402" duration="1032000" />
-      <workItem from="1761074592608" duration="1690000" />
+      <workItem from="1761074592608" duration="4803000" />
+      <workItem from="1761226762856" duration="619000" />
+      <workItem from="1761503096142" duration="56000" />
+      <workItem from="1761505277386" duration="7201000" />
+      <workItem from="1761555516877" duration="7247000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />
@@ -232,7 +234,31 @@
       <option name="project" value="LOCAL" />
       <updated>1760376049079</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="+ teacher idempotency &amp; eios links">
+      <option name="closed" value="true" />
+      <created>1761076461876</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1761076461876</updated>
+    </task>
+    <task id="LOCAL-00015" summary="+ teacher idempotency &amp; eios links">
+      <option name="closed" value="true" />
+      <created>1761078294995</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1761078294995</updated>
+    </task>
+    <task id="LOCAL-00016" summary="+ master degree schedule support">
+      <option name="closed" value="true" />
+      <created>1761566397168</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1761566397168</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -262,6 +288,8 @@
     <MESSAGE value="+ configuration" />
     <MESSAGE value="+ updated /levels &amp; added /courses requests" />
     <MESSAGE value="+ updated cron in ScheduleService" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ updated cron in ScheduleService" />
+    <MESSAGE value="+ teacher idempotency &amp; eios links" />
+    <MESSAGE value="+ master degree schedule support" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ master degree schedule support" />
   </component>
 </project>
