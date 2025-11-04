@@ -10,10 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
@@ -55,7 +52,7 @@ public class ExcelService {
 
                     for (Cell cell : row) {
 
-                        log.debug("Строка {}, колонка {}, значение: '{}'", row.getRowNum(), cell.getColumnIndex(), cell);
+                        //log.info("Строка {}, колонка {}, значение: '{}'", row.getRowNum(), cell.getColumnIndex(), cell);
 
                         // перебор групп на курсе | индексация с 3 колонки
                         if (cell.getColumnIndex() >= 2 && row.getRowNum() == 5 && !cell.getStringCellValue().isBlank()) {
@@ -63,15 +60,36 @@ public class ExcelService {
                             Group group = new Group();
 
                             String name = cell.getStringCellValue().trim();
+                            String[] nameParts = name.trim().split(" ");
+                            log.info(Arrays.toString(nameParts));
 
-                            String[] nameParts = fileName.split(" ");
-                            int index = IntStream.range(0, nameParts.length)
-                                    .filter(s -> nameParts[s].equals("курс"))
+                            if (nameParts.length > 1) {
+
+                                List<String> nonEmptyParts = new ArrayList<>();
+                                for (String part : nameParts) {
+                                    if (!part.isEmpty()) {
+                                        nonEmptyParts.add(part);
+                                    }
+                                }
+
+                                // если безномерная часть одной группы равна второй "24-ОЗДЗ-01 24-ОЗДЗ-02"
+                                if (nonEmptyParts.get(0).substring(0, nonEmptyParts.get(0).length() - 3).equals(nonEmptyParts.get(1).substring(0, nonEmptyParts.get(1).length() - 3))) {
+                                    // общее расписание - "XX-XXX-01/02"
+                                    name = nonEmptyParts.get(0).substring(0, nonEmptyParts.get(0).length() - 2) // "XX-XXX-"
+                                            + nonEmptyParts.get(0).substring(nonEmptyParts.get(0).length() - 2) // 01
+                                            + "/"
+                                            + nonEmptyParts.get(1).substring(nonEmptyParts.get(1).length() - 2); // 02
+                                }
+                            }
+
+                            String[] fileNameParts = fileName.split(" ");
+                            int index = IntStream.range(0, fileNameParts.length)
+                                    .filter(s -> fileNameParts[s].equals("курс"))
                                     .findFirst()
                                     .orElseThrow(() -> new IllegalArgumentException("Файл не содержит слово 'курс'"));
                             int course;
                             try {
-                                course = Integer.parseInt(nameParts[index - 1]);
+                                course = Integer.parseInt(fileNameParts[index - 1]);
                             } catch (NumberFormatException e) {
                                 throw new IllegalArgumentException("Не удалось определить номер курса в имени файла: " + fileName, e);
                             }
@@ -92,7 +110,7 @@ public class ExcelService {
 
                             if (currentCell.value.isBlank() || currentCell.value.isEmpty()) continue;
 
-                            log.debug("Парсинг ячейки (строка {}, колонка {}): {}", row.getRowNum(), cell.getColumnIndex(), cell.getStringCellValue());
+                            log.info("Парсинг ячейки (строка {}, колонка {}): {}", row.getRowNum(), cell.getColumnIndex(), cell.getStringCellValue());
 
                             /*
                               1 - мерж нет - создаем на 1 неделю
@@ -117,46 +135,93 @@ public class ExcelService {
                             String label = "";
                             String auditory = "";
 
-                            String[] lines;
+                            String[] lines = currentCell.value.trim().split("\n");
                             String eiosLink = "";
 
+                            // парсинг ссылки eios (при наличии)
                             if (currentCell.value.contains("https")) {
-                                String[] tempSplit = currentCell.value.split("https");
-                                lines = tempSplit[0].split("\n");
+                                String[] tempSplit;
+
+                                log.info(Arrays.toString(lines));
+
+                                if (lines.length == 1) {
+                                    tempSplit = currentCell.value.split("https");
+                                    lines = new String[] { tempSplit[0].trim() };
+                                }
+                                else {
+                                    tempSplit = lines[1].split("https");
+                                    lines = new String[] { lines[0], tempSplit[0].trim() };
+                                }
+
+                                log.info(Arrays.toString(tempSplit));
                                 eiosLink = "https" + tempSplit[1];
                             }
-                            else
-                                lines = currentCell.value.split("\n");
 
                             // Парсинг ячеек СПО / Бакалавриат
                             if (!masterMode) {
+
                                 String firstLine = lines[0].trim();
-                                type = firstLine.substring(0, firstLine.indexOf(".")).trim().equals("л") ? "Лекция" : "Практика";
-                                subject = firstLine.substring(firstLine.indexOf(".") + 1).trim();
+
+                                // разделитель по точке л. пр. лаб.
+                                String dotSplit = firstLine.substring(0, firstLine.indexOf(".")).trim();
+
+                                // данные предмета и его типа
+                                type = dotSplit.equals("л") ? "Лекция" : dotSplit.equals("лаб") ? "Лабораторная" : "Практика";
+                                if (lines.length > 1) subject = firstLine.replaceFirst("^[а-яА-ЯёЁ]+\\.", "").trim();
 
                                 String secondLine = lines.length > 1 ? lines[1].replaceAll("\\s+", " ").trim() : "";
 
                                 label = null;
                                 auditory = null;
 
+                                // ячейки пар без ссылок
                                 if (!secondLine.isEmpty()) {
+
                                     Matcher mTeacherAuditory = Pattern.compile(
-                                            "^(?<teacher>.+?)\\s+(?<auditory>\\S+)$",
+                                            "^(?<teacher>.+?)\\s+(?<auditory>[0-9]+(?:-[0-9]+)?[а-яa-z]?|с/зал\\.[0-9]+)$",
+                                            Pattern.UNICODE_CASE | Pattern.DOTALL
+                                    ).matcher(secondLine);
+
+                                    Matcher mTeacherOnly = Pattern.compile(
+                                            "^[А-Яа-яЁёA-Za-z-]+\\s+[А-ЯA-Z]\\.\\s*[А-ЯA-Z]?\\.?$",
                                             Pattern.UNICODE_CASE | Pattern.DOTALL
                                     ).matcher(secondLine);
 
                                     if (mTeacherAuditory.matches()) {
-                                        label = mTeacherAuditory.group("teacher") != null ? mTeacherAuditory.group("teacher").trim() : null;
-                                        auditory = mTeacherAuditory.group("auditory") != null ? mTeacherAuditory.group("auditory").trim() : null;
+                                        // "Иванов И.И. 2-405"
+                                        label = mTeacherAuditory.group("teacher").trim();
+                                        auditory = mTeacherAuditory.group("auditory").trim();
+                                    } else if (mTeacherOnly.matches()) {
+                                        // "Иванов И.И." (только ФИО)
+                                        label = secondLine.trim();
                                     } else {
-                                        // Строка содержит только аудиторию
+                                        // "2-405" (только аудитория)
                                         auditory = secondLine.trim();
                                     }
+
                                 }
+                                else { // ячейки с ссылками
+
+                                    String processedLine = firstLine.trim();
+
+                                    Matcher m = Pattern.compile("^(.*?)\\s+([А-Яа-яЁёA-Za-z-]+)\\s+([А-ЯA-Z]\\.\\s*[А-ЯA-Z]?\\.?)\\s*(https?:.*)?$",
+                                            Pattern.UNICODE_CASE | Pattern.DOTALL).matcher(processedLine);
+
+                                    // данные преподавателя и название пары
+                                    if (m.matches()) {
+                                        String surname = m.group(2);
+                                        String initials = m.group(3);
+                                        label = surname + " " + initials;
+                                        subject = m.group(1).replaceFirst("^[а-яА-ЯёЁ]+\\.", "").trim();
+                                    }
+                                    else { // нет преподавателя (л.Физическая культура и спорт https://eios.imsit.ru/course/view.php?id=12020)
+                                        subject = processedLine.replaceFirst("^[а-яА-ЯёЁ]+\\.", "").trim();;
+                                    }
+
+                                }
+
                             }
                             else { // шаблон относительно инициалов: (пара) (фамилия) И.И (аудитория / ссылка / пустота)
-
-                                log.info(currentCell.value);
 
                                 Matcher m = Pattern.compile("\\s*(.*?)\\s+([А-Яа-яЁёA-Za-z-]+)\\s+([А-ЯA-Z]\\.[А-ЯA-Z]?\\.?)\\s*(.*)?",
                                         Pattern.UNICODE_CASE | Pattern.DOTALL).matcher(currentCell.value.trim());
@@ -172,8 +237,6 @@ public class ExcelService {
                                     if (end != null && !end.contains("https")) {
                                         auditory = end.trim();
                                     }
-
-                                    log.info("Parsed - Subject: " + subject + ", Label: " + label + ", Auditory: " + auditory);
                                 } else {
                                     log.error("No match found for: " + currentCell.value.trim());
                                     log.debug("Cell value: '" + currentCell.value.trim() + "'");
@@ -187,28 +250,20 @@ public class ExcelService {
                                 Teacher teacher = null;
                                 String[] tempSplit = label.trim().split(" ");
 
-                                //log.info("--обработка преподавателя--");
-
                                 if (!teacherCache.isEmpty()) {
 
                                     for (String teacherLabel : teacherCache.keySet()) {
 
-                                        //log.info("label: " + label);
-                                        //log.info("length: " + tempSplit.length);
-
                                         // Наличие приставки или звания
                                         if (tempSplit.length == 3 && teacherLabel.contains(tempSplit[1])) {
-                                            //log.info("наличие приставки");
                                             teacher = teacherCache.get(teacherLabel);
                                             break;
                                         } // Отсутствие приставки или звания
                                         else if (tempSplit.length == 2 && teacherLabel.contains(tempSplit[0])) {
-                                            //log.info("отсутствие приставки");
                                             teacher = teacherCache.get(teacherLabel);
                                             break;
                                         }
                                         else {
-                                            //log.info("создание нового");
                                             Teacher t = new Teacher();
                                             if (tempSplit.length == 3) t.setLabel(tempSplit[1] + " " + tempSplit[2]);
                                             else t.setLabel(label.trim());
@@ -220,14 +275,11 @@ public class ExcelService {
 
                                 }
                                 else {
-                                    //log.info("создание первого");
                                     Teacher t = new Teacher();
                                     if (tempSplit.length == 3) t.setLabel(tempSplit[1] + " " + tempSplit[2]);
                                     else t.setLabel(label.trim());
                                     teacher = t;
                                 }
-
-                                //log.info("--put--");
 
                                 schedule.setTeacher(teacher);
                                 teacherCache.put(label.trim(), teacher);
