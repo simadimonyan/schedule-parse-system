@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ master degree schedule support">
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ internal-distant education">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,7 +130,7 @@
       <workItem from="1761555516877" duration="7247000" />
       <workItem from="1761579829460" duration="202000" />
       <workItem from="1762189276565" duration="20104000" />
-      <workItem from="1762274946851" duration="8193000" />
+      <workItem from="1762274946851" duration="9112000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />
@@ -261,7 +260,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761566397168</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="+ internal-distant education">
+      <option name="closed" value="true" />
+      <created>1762291362779</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1762291362779</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -293,6 +300,7 @@
     <MESSAGE value="+ updated cron in ScheduleService" />
     <MESSAGE value="+ teacher idempotency &amp; eios links" />
     <MESSAGE value="+ master degree schedule support" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ master degree schedule support" />
+    <MESSAGE value="+ internal-distant education" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ internal-distant education" />
   </component>
 </project>
