@@ -26,6 +26,10 @@ public class Group implements Serializable {
     @Column(name = "level")
     private String level;
 
+    // форма обучения
+    @Column(name = "studyForm")
+    private String studyForm;
+
     @Column(name = "name")
     private String name;
 
