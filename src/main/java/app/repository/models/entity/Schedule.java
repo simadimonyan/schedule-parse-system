@@ -38,6 +38,10 @@ public class Schedule implements Serializable {
     @Column(name = "day_week")
     private String dayWeek;
 
+    // закрепленная дата
+    @Column(name = "pinned_date")
+    private String pinnedDate;
+
     @Column(name = "week_count")
     private Integer weekCount;
 
