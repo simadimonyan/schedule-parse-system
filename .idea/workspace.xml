@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ distant lessons filter for today">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/persistence/PersistenceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/persistence/PersistenceService.java" afterDir="false" />
-    </list>
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ distant lessons filter for week" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -137,7 +132,7 @@
       <workItem from="1762681611880" duration="33050000" />
       <workItem from="1762768164202" duration="17435000" />
       <workItem from="1762956010845" duration="3802000" />
-      <workItem from="1762972463771" duration="9745000" />
+      <workItem from="1762972463771" duration="10488000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />
@@ -315,7 +310,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762975266395</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="+ distant lessons filter for week">
+      <option name="closed" value="true" />
+      <created>1762984018724</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1762984018724</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -352,6 +355,7 @@
     <MESSAGE value="+ mapper fix" />
     <MESSAGE value="+ week count fix" />
     <MESSAGE value="+ distant lessons filter for today" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ distant lessons filter for today" />
+    <MESSAGE value="+ distant lessons filter for week" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ distant lessons filter for week" />
   </component>
 </project>
