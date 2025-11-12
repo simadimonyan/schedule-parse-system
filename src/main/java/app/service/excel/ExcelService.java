@@ -154,90 +154,91 @@ public class ExcelService {
 
                                     for (Group group : indexedDistantGroups) {
 
-                                        Schedule schedule = new Schedule();
+                                        // у заочной формы нет четности недели
+                                        for (int w = 1; w <= 2; w++) {
 
-                                        StringBuilder name = new StringBuilder(currentCell.subject.trim());
-                                        String type = "";
-                                        if (name.toString().contains("Экзамен") || name.toString().contains("Зачёт")) {
-                                            String[] tempSplit = name.toString().split(":");
-                                            type = tempSplit[0];
-                                            log.info("type: " + type);
-                                            name = new StringBuilder();
-                                            for (int part = 1; part < tempSplit.length; part++) {
-                                                String add = (part == 1) ? tempSplit[part].substring(1) : tempSplit[part];
-                                                name.append(add);
+                                            Schedule schedule = new Schedule();
+
+                                            StringBuilder name = new StringBuilder(currentCell.subject.trim());
+                                            String type = "";
+                                            if (name.toString().contains("Экзамен") || name.toString().contains("Зачёт")) {
+                                                String[] tempSplit = name.toString().split(":");
+                                                type = tempSplit[0];
+                                                log.info("type: " + type);
+                                                name = new StringBuilder();
+                                                for (int part = 1; part < tempSplit.length; part++) {
+                                                    String add = (part == 1) ? tempSplit[part].substring(1) : tempSplit[part];
+                                                    name.append(add);
+                                                }
                                             }
-                                        }
 
-                                        byte[] rgb = new byte[]{(byte) 255, (byte) 255, (byte) 255};
-                                        Color color = fileName.contains(".xlsx") ? new XSSFColor(rgb, null) : HSSFColor.HSSFColorPredefined.WHITE.getColor();
-                                        Color cellColor = cell.getCellStyle().getFillForegroundColorColor();
+                                            byte[] rgb = new byte[]{(byte) 255, (byte) 255, (byte) 255};
+                                            Color color = fileName.contains(".xlsx") ? new XSSFColor(rgb, null) : HSSFColor.HSSFColorPredefined.WHITE.getColor();
+                                            Color cellColor = cell.getCellStyle().getFillForegroundColorColor();
 
-                                        log.info("color: " + color);
-                                        log.info("cellColor: " + cellColor);
+                                            log.info("color: " + color);
+                                            log.info("cellColor: " + cellColor);
 
-                                        // если цвет ячейки красный
-                                        if (cellColor != null && !isWhiteColor(cellColor, color) && !(type.contains("Экзамен") || type.contains("Зачёт"))) type = "Вводная пара";
+                                            // если цвет ячейки красный
+                                            if (cellColor != null && !isWhiteColor(cellColor, color) && !(type.contains("Экзамен") || type.contains("Зачёт"))) type = "Вводная пара";
 
-                                        schedule.setLessonName(name.toString());
-                                        schedule.setLessonType(type);
+                                            schedule.setLessonName(name.toString());
+                                            schedule.setLessonType(type);
 
-                                        // идемпотентность для сохранения (анти-дубликат)
-                                        if (currentCell.teacher != null && !currentCell.teacher.isBlank()) {
+                                            // идемпотентность для сохранения (анти-дубликат)
+                                            if (currentCell.teacher != null && !currentCell.teacher.isBlank()) {
 
-                                            Teacher teacher = null;
-                                            String[] tempSplit = currentCell.teacher.trim().split(" ");
+                                                Teacher teacher = null;
+                                                String[] tempSplit = currentCell.teacher.trim().split(" ");
 
-                                            if (!teacherCache.isEmpty()) {
+                                                if (!teacherCache.isEmpty()) {
 
-                                                for (String teacherLabel : teacherCache.keySet()) {
+                                                    for (String teacherLabel : teacherCache.keySet()) {
 
-                                                    // Наличие приставки или звания
-                                                    if (tempSplit.length == 3 && teacherLabel.contains(tempSplit[1])) {
-                                                        teacher = teacherCache.get(teacherLabel);
-                                                        break;
-                                                    } // Отсутствие приставки или звания
-                                                    else if (tempSplit.length == 2 && teacherLabel.contains(tempSplit[0])) {
-                                                        teacher = teacherCache.get(teacherLabel);
-                                                        break;
-                                                    }
-                                                    else {
-                                                        Teacher t = new Teacher();
-                                                        if (tempSplit.length == 3) t.setLabel(tempSplit[1] + " " + tempSplit[2]);
-                                                        else t.setLabel(currentCell.teacher.trim());
-                                                        teacher = t;
-                                                        break;
+                                                        // Наличие приставки или звания
+                                                        if (tempSplit.length == 3 && teacherLabel.contains(tempSplit[1])) {
+                                                            teacher = teacherCache.get(teacherLabel);
+                                                            break;
+                                                        } // Отсутствие приставки или звания
+                                                        else if (tempSplit.length == 2 && teacherLabel.contains(tempSplit[0])) {
+                                                            teacher = teacherCache.get(teacherLabel);
+                                                            break;
+                                                        }
+                                                        else {
+                                                            Teacher t = new Teacher();
+                                                            if (tempSplit.length == 3) t.setLabel(tempSplit[1] + " " + tempSplit[2]);
+                                                            else t.setLabel(currentCell.teacher.trim());
+                                                            teacher = t;
+                                                            break;
+                                                        }
+
                                                     }
 
                                                 }
+                                                else {
+                                                    Teacher t = new Teacher();
+                                                    if (tempSplit.length == 3) t.setLabel(tempSplit[1] + " " + tempSplit[2]);
+                                                    else t.setLabel(currentCell.teacher.trim());
+                                                    teacher = t;
+                                                }
 
+                                                schedule.setTeacher(teacher);
+                                                teacherCache.put(currentCell.teacher.trim(), teacher);
                                             }
-                                            else {
-                                                Teacher t = new Teacher();
-                                                if (tempSplit.length == 3) t.setLabel(tempSplit[1] + " " + tempSplit[2]);
-                                                else t.setLabel(currentCell.teacher.trim());
-                                                teacher = t;
-                                            }
 
-                                            schedule.setTeacher(teacher);
-                                            teacherCache.put(currentCell.teacher.trim(), teacher);
-                                        }
+                                            // день недели (0 - день недели | 1 - дата)
+                                            String cellDate = getCellValueWithMerge(sheet, row.getRowNum(), 1).value.trim();
+                                            String dayWeek = (!cellDate.isBlank() && !cellDate.isEmpty()) ? cellDate.split(" ")[0] : getCellValueWithMerge(sheet, row.getRowNum() + 1, 1).value.trim().split(" ")[0];;
+                                            String pinnedDate = (!cellDate.isBlank() && !cellDate.isEmpty()) ? cellDate.split(" ")[1] : getCellValueWithMerge(sheet, row.getRowNum() + 1, 1).value.trim().split(" ")[1];;
+                                            if (!dayWeek.isBlank()) dayWeek = dayWeek.substring(0, 1).toUpperCase() + dayWeek.substring(1).toLowerCase();
 
-                                        // день недели (0 - день недели | 1 - дата)
-                                        String cellDate = getCellValueWithMerge(sheet, row.getRowNum(), 1).value.trim();
-                                        String dayWeek = (!cellDate.isBlank() && !cellDate.isEmpty()) ? cellDate.split(" ")[0] : getCellValueWithMerge(sheet, row.getRowNum() + 1, 1).value.trim().split(" ")[0];;
-                                        String pinnedDate = (!cellDate.isBlank() && !cellDate.isEmpty()) ? cellDate.split(" ")[1] : getCellValueWithMerge(sheet, row.getRowNum() + 1, 1).value.trim().split(" ")[1];;
-                                        if (!dayWeek.isBlank()) dayWeek = dayWeek.substring(0, 1).toUpperCase() + dayWeek.substring(1).toLowerCase();
+                                            // время занятия
+                                            String timePeriod = getCellValueWithMerge(sheet, row.getRowNum(), 2).value.trim();
+                                            timePeriod = timePeriod.equals("8:00") ? "08:00" : timePeriod.equals("9:40") ? "09:40" : timePeriod;
 
-                                        // время занятия
-                                        String timePeriod = getCellValueWithMerge(sheet, row.getRowNum(), 2).value.trim();
-                                        timePeriod = timePeriod.equals("8:00") ? "08:00" : timePeriod.equals("9:40") ? "09:40" : timePeriod;
+                                            log.info("timePeriod: " + timePeriod);
+                                            log.info("count: " + lessonDistantMap.get(timePeriod));
 
-                                        log.info("timePeriod: " + timePeriod);
-                                        log.info("count: " + lessonDistantMap.get(timePeriod));
-
-                                        // у заочной формы нет четности недели
-                                        for (int w = 1; w <= 2; w++) {
                                             schedule.setGroup(group);
                                             schedule.setAuditory(currentCell.location == null ? "Нет аудитории" : currentCell.location.trim());
                                             schedule.setDayWeek(dayWeek);
@@ -255,18 +256,19 @@ public class ExcelService {
                                             schedule.setPinnedDate(pinnedDate);
 
                                             schedules.add(schedule);
-                                        }
 
-                                        log.info("Индексировано занятие: {}:{}:{} | {} | {} - {} - {} - {}",
-                                                schedule.getDayWeek(),
-                                                schedule.getTimePeriod(),
-                                                schedule.getWeekCount(),
-                                                schedule.getGroup().getName(),
-                                                schedule.getLessonType(),
-                                                schedule.getLessonName(),
-                                                schedule.getTeacher() == null ? "Нет преподавателя" : schedule.getTeacher().getLabel(),
-                                                schedule.getAuditory() == null ? "Нет аудитории" : schedule.getAuditory()
-                                        );
+                                            log.info("Индексировано занятие: {}:{}:{} | {} | {} - {} - {} - {}",
+                                                    schedule.getDayWeek(),
+                                                    schedule.getTimePeriod(),
+                                                    schedule.getWeekCount(),
+                                                    schedule.getGroup().getName(),
+                                                    schedule.getLessonType(),
+                                                    schedule.getLessonName(),
+                                                    schedule.getTeacher() == null ? "Нет преподавателя" : schedule.getTeacher().getLabel(),
+                                                    schedule.getAuditory() == null ? "Нет аудитории" : schedule.getAuditory()
+                                            );
+
+                                        }
 
                                     }
 
