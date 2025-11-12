@@ -18,6 +18,7 @@ public record ScheduleResponse(
             Integer lessonCount,
             String lessonType,
             String lessonName,
+            String pinnedDate,
             TeacherResponse teacher,
             String auditory,
             String eiosLink
