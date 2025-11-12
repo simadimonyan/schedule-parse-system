@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -90,7 +92,12 @@ public class PersistenceService {
                     .orElse(new ArrayList<>());
         else
             schedule = scheduleRepository.findAllByGroupNameAndDayWeekAndWeekCount(name, dayWeek, weekCount)
-                    .orElse(new ArrayList<>());
+                    .orElse(new ArrayList<>()).stream().filter(s -> {
+                        if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
+                            return s.getPinnedDate().equals(LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")));
+                        }
+                        return true;
+                    }).toList();
         return schedule;
     }
 
@@ -119,7 +126,12 @@ public class PersistenceService {
                     .orElse(new ArrayList<>());
         else
             schedule = scheduleRepository.findAllByTeacherLabelAndDayWeekAndWeekCount(label, dayWeek, weekCount)
-                    .orElse(new ArrayList<>());
+                    .orElse(new ArrayList<>()).stream().filter(s -> {
+                        if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
+                            return s.getPinnedDate().equals(LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")));
+                        }
+                        return true;
+                    }).toList();
         return schedule;
     }
 
