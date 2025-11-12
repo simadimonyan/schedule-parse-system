@@ -43,7 +43,7 @@ public class GroupController {
 
     @GetMapping("/levels")
     public ResponseEntity<GroupLevelsResponse> getLevels(@RequestParam("course") Integer course) {
-        log.info("GET Запрос: /api/v1/groups/levels");
+        log.info("GET Запрос: /api/v1/groups/levels?course={}", course);
         return ResponseEntity.ok(new GroupLevelsResponse(persistenceService.getLevels(course)));
     }
 
@@ -57,10 +57,11 @@ public class GroupController {
     public ResponseEntity<ScheduleResponse> getSchedule(
             @RequestParam("group") String groupName,
             @RequestParam(value = "dayWeek", required = false) String dayWeek,
+            @RequestParam(value = "date", required = false) String date,
             @RequestParam("weekCount") Integer weekCount
     ) {
-        log.info("GET Запрос: /api/v1/groups/schedule?group={}&dayWeek={}&weekCount={}", groupName, dayWeek, weekCount);
-        return ResponseEntity.ok(scheduleMapper.toScheduleResponse(persistenceService.getGroupSchedule(groupName, dayWeek, weekCount)));
+        log.info("GET Запрос: /api/v1/groups/schedule?group={}&dayWeek={}&date={}&weekCount={}", groupName, dayWeek, date, weekCount);
+        return ResponseEntity.ok(scheduleMapper.toScheduleResponse(persistenceService.getGroupSchedule(groupName, dayWeek, date, weekCount)));
     }
 
 }
