@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ internal-distant education">
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ distant study form">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -131,6 +131,8 @@
       <workItem from="1761579829460" duration="202000" />
       <workItem from="1762189276565" duration="20104000" />
       <workItem from="1762274946851" duration="9112000" />
+      <workItem from="1762681611880" duration="33050000" />
+      <workItem from="1762768164202" duration="17435000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />
@@ -268,7 +270,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762291362779</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="+ distant study form">
+      <option name="closed" value="true" />
+      <created>1762807148057</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1762807148057</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -301,6 +311,7 @@
     <MESSAGE value="+ teacher idempotency &amp; eios links" />
     <MESSAGE value="+ master degree schedule support" />
     <MESSAGE value="+ internal-distant education" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ internal-distant education" />
+    <MESSAGE value="+ distant study form" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ distant study form" />
   </component>
 </project>
