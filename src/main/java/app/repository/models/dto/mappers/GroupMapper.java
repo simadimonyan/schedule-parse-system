@@ -12,7 +12,7 @@ import java.util.List;
 public class GroupMapper {
 
     public GroupResponse toGroupResponse(Group group) {
-        return new GroupResponse(group.getId(), group.getName(), group.getCourse(), group.getLevel());
+        return new GroupResponse(group.getId(), group.getName(), group.getCourse(), group.getLevel(), group.getStudyForm());
     }
 
     public GroupsResponse toGroupsResponse(List<Group> groups) {

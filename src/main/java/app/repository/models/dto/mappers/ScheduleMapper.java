@@ -32,6 +32,7 @@ public class ScheduleMapper {
                     s.getLessonCount(),
                     s.getLessonType(),
                     s.getLessonName(),
+                    s.getPinnedDate(),
                     s.getTeacher() != null ? teacherMapper.toTeacherResponse(s.getTeacher()) : null,
                     s.getAuditory(),
                     s.getEiosLink()
