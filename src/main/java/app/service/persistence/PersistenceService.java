@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -85,16 +86,51 @@ public class PersistenceService {
     }
 
     @Cacheable("schedule")
-    public List<Schedule> getGroupSchedule(String name, String dayWeek, Integer weekCount) {
+    public List<Schedule> getGroupSchedule(String name, String dayWeek, String date, Integer weekCount) {
         List<Schedule> schedule;
         if (dayWeek == null)
             schedule = scheduleRepository.findAllByGroupNameAndWeekCount(name, weekCount)
-                    .orElse(new ArrayList<>());
+                    // фильтры для заочки
+                    .orElse(new ArrayList<>()).stream().filter(s -> {
+                        if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
+
+                            List<String> weekDates = new ArrayList<>();
+                            String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
+
+                            // обратная совместимость с предыдущими версиями приложения
+                            if (date == null) {
+                                LocalDate today = LocalDate.now();
+                                LocalDate monday = today.with(DayOfWeek.MONDAY);
+
+                                // получает даты настоящей недели
+                                for (int i = 0; i < 7; i++) {
+                                    weekDates.add(monday.plusDays(i).format(DateTimeFormatter.ofPattern("dd.MM.yy")));
+                                }
+                            }
+                            else if (date.equals("full")) {
+                                return true;
+                            }
+                            else {
+                                LocalDate specificDate = LocalDate.parse(date + "." + year, DateTimeFormatter.ofPattern("dd.MM.yy"))
+                                        .withYear(LocalDate.now().getYear());
+                                LocalDate monday = specificDate.with(DayOfWeek.MONDAY);
+
+                                // получает даты недели по указанной дате
+                                for (int i = 0; i < 7; i++) {
+                                    weekDates.add(monday.plusDays(i).format(DateTimeFormatter.ofPattern("dd.MM.yy")));
+                                }
+                            }
+
+                            // проверка наличия указанной даты в неделе
+                            return weekDates.contains(s.getPinnedDate() + "." + year);
+                        }
+                        return true;
+                    }).toList();
         else
             schedule = scheduleRepository.findAllByGroupNameAndDayWeekAndWeekCount(name, dayWeek, weekCount)
                     .orElse(new ArrayList<>()).stream().filter(s -> {
                         if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
-                            return s.getPinnedDate().equals(LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")));
+                            return s.getPinnedDate().equals(date == null ? LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")) : date);
                         }
                         return true;
                     }).toList();
@@ -119,16 +155,51 @@ public class PersistenceService {
     }
 
     @Cacheable("schedule")
-    public List<Schedule> getTeacherSchedule(String label, String dayWeek, Integer weekCount) {
+    public List<Schedule> getTeacherSchedule(String label, String dayWeek, String date, Integer weekCount) {
         List<Schedule> schedule;
         if (dayWeek == null)
             schedule = scheduleRepository.findAllByTeacherLabelAndWeekCount(label, weekCount)
-                    .orElse(new ArrayList<>());
+                    // фильтры для заочки
+                    .orElse(new ArrayList<>()).stream().filter(s -> {
+                        if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
+
+                            List<String> weekDates = new ArrayList<>();
+                            String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
+
+                            // обратная совместимость с предыдущими версиями приложения
+                            if (date == null) {
+                                LocalDate today = LocalDate.now();
+                                LocalDate monday = today.with(DayOfWeek.MONDAY);
+
+                                // получает даты настоящей недели
+                                for (int i = 0; i < 7; i++) {
+                                    weekDates.add(monday.plusDays(i).format(DateTimeFormatter.ofPattern("dd.MM.yy")));
+                                }
+                            }
+                            else if (date.equals("full")) {
+                                return true;
+                            }
+                            else {
+                                LocalDate specificDate = LocalDate.parse(date + "." + year, DateTimeFormatter.ofPattern("dd.MM.yy"))
+                                        .withYear(LocalDate.now().getYear());
+                                LocalDate monday = specificDate.with(DayOfWeek.MONDAY);
+
+                                // получает даты недели по указанной дате
+                                for (int i = 0; i < 7; i++) {
+                                    weekDates.add(monday.plusDays(i).format(DateTimeFormatter.ofPattern("dd.MM.yy")));
+                                }
+                            }
+
+                            // проверка наличия указанной даты в неделе
+                            return weekDates.contains(s.getPinnedDate() + "." + year);
+                        }
+                        return true;
+                    }).toList();
         else
             schedule = scheduleRepository.findAllByTeacherLabelAndDayWeekAndWeekCount(label, dayWeek, weekCount)
                     .orElse(new ArrayList<>()).stream().filter(s -> {
                         if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
-                            return s.getPinnedDate().equals(LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")));
+                            return s.getPinnedDate().equals(date == null ? LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")) : date);
                         }
                         return true;
                     }).toList();

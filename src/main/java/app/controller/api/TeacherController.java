@@ -46,10 +46,11 @@ public class TeacherController {
     public ResponseEntity<ScheduleResponse> getSchedule(
             @RequestParam("teacher") String teacherName,
             @RequestParam(value = "dayWeek", required = false) String dayWeek,
+            @RequestParam(value = "date", required = false) String date,
             @RequestParam("weekCount") Integer weekCount
     ) {
-        log.info("GET Запрос: /api/v1/teachers/schedule?teacher={}&dayWeek={}&weekCount={}", teacherName, dayWeek, weekCount);
-        return ResponseEntity.ok(scheduleMapper.toScheduleResponse(persistenceService.getTeacherSchedule(teacherName, dayWeek, weekCount)));
+        log.info("GET Запрос: /api/v1/teachers/schedule?teacher={}&dayWeek={}&date={}&weekCount={}", teacherName, dayWeek, date, weekCount);
+        return ResponseEntity.ok(scheduleMapper.toScheduleResponse(persistenceService.getTeacherSchedule(teacherName, dayWeek, date, weekCount)));
     }
 
 }
