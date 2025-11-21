@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ distant lessons filter for week">
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ distant lessons day week cell fix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" afterDir="false" />
     </list>
@@ -136,7 +136,7 @@
       <workItem from="1762768164202" duration="17435000" />
       <workItem from="1762956010845" duration="3802000" />
       <workItem from="1762972463771" duration="11081000" />
-      <workItem from="1763744636423" duration="2015000" />
+      <workItem from="1763744636423" duration="2396000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />
@@ -322,7 +322,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762984018724</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="+ distant lessons day week cell fix">
+      <option name="closed" value="true" />
+      <created>1763747401050</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1763747401050</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -360,6 +368,7 @@
     <MESSAGE value="+ week count fix" />
     <MESSAGE value="+ distant lessons filter for today" />
     <MESSAGE value="+ distant lessons filter for week" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ distant lessons filter for week" />
+    <MESSAGE value="+ distant lessons day week cell fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ distant lessons day week cell fix" />
   </component>
 </project>
