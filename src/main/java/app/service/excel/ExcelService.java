@@ -226,18 +226,18 @@ public class ExcelService {
                                                 teacherCache.put(currentCell.teacher.trim(), teacher);
                                             }
 
-                                            // день недели (0 - день недели | 1 - дата)
-                                            String cellDate = getCellValueWithMerge(sheet, row.getRowNum(), 1).value.trim();
-                                            String dayWeek = (!cellDate.isBlank() && !cellDate.isEmpty()) ? cellDate.split(" ")[0] : getCellValueWithMerge(sheet, row.getRowNum() + 1, 1).value.trim().split(" ")[0];;
-                                            String pinnedDate = (!cellDate.isBlank() && !cellDate.isEmpty()) ? cellDate.split(" ")[1] : getCellValueWithMerge(sheet, row.getRowNum() + 1, 1).value.trim().split(" ")[1];;
-                                            if (!dayWeek.isBlank()) dayWeek = dayWeek.substring(0, 1).toUpperCase() + dayWeek.substring(1).toLowerCase();
-
                                             // время занятия
                                             String timePeriod = getCellValueWithMerge(sheet, row.getRowNum(), 2).value.trim();
                                             timePeriod = timePeriod.equals("8:00") ? "08:00" : timePeriod.equals("9:40") ? "09:40" : timePeriod;
 
                                             log.info("timePeriod: " + timePeriod);
                                             log.info("count: " + lessonDistantMap.get(timePeriod));
+
+                                            // день недели (0 - день недели | 1 - дата)
+                                            String cellDate = getCellValueWithMerge(sheet, row.getRowNum(), 1).value.trim();
+                                            String dayWeek = (!cellDate.isBlank() && !cellDate.isEmpty()) ? cellDate.split(" ")[0] : getCellValueWithMerge(sheet, timePeriod.contains("08:00") ? row.getRowNum() + 2 : row.getRowNum(), 1).value.trim().split(" ")[0];;
+                                            String pinnedDate = (!cellDate.isBlank() && !cellDate.isEmpty()) ? cellDate.split(" ")[1] : getCellValueWithMerge(sheet, timePeriod.contains("08:00") ? row.getRowNum() + 2 : row.getRowNum(), 1).value.trim().split(" ")[1];;
+                                            if (!dayWeek.isBlank()) dayWeek = dayWeek.substring(0, 1).toUpperCase() + dayWeek.substring(1).toLowerCase();
 
                                             schedule.setGroup(group);
                                             schedule.setAuditory(currentCell.location == null ? "Нет аудитории" : currentCell.location.trim());
