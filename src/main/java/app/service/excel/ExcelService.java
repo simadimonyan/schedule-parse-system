@@ -551,10 +551,17 @@ public class ExcelService {
                 Cell firstCell = firstRow.getCell(range.getFirstColumn());
 
                 if (firstCell != null && (firstCell.getCellType() != CellType.BLANK || !firstCell.getStringCellValue().isEmpty())) {
+
                     CellType type = firstRow.getCell(colIndex + 1).getCellType();
                     String location = type == CellType.NUMERIC ? String.valueOf((int) firstRow.getCell(colIndex + 1).getNumericCellValue()) : firstRow.getCell(colIndex + 1).getStringCellValue();
-                    String teacher = sheet.getRow(range.getLastRow() + 1).getCell(colIndex).getStringCellValue();
-                    return new DistantCellWrapper(firstCell.getStringCellValue(), location, teacher);
+
+                    if (firstCell.getStringCellValue().contains("CОБРАНИЕ")) {
+                        return new DistantCellWrapper(firstCell.getStringCellValue(), location, "");
+                    }
+                    else {
+                        String teacher = sheet.getRow(range.getLastRow() + 1).getCell(colIndex).getStringCellValue();
+                        return new DistantCellWrapper(firstCell.getStringCellValue(), location, teacher);
+                    }
                 }
                 else
                     return null;
