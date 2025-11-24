@@ -548,7 +548,7 @@ public class ExcelService {
             CellRangeAddress range = sheet.getMergedRegion(i);
             if (range.isInRange(rowIndex, colIndex)) {
                 Row firstRow = sheet.getRow(range.getFirstRow());
-                Cell firstCell = firstRow.getCell(range.getFirstColumn());
+                Cell firstCell = firstRow.getCell(colIndex);
 
                 if (firstCell != null && (firstCell.getCellType() != CellType.BLANK || !firstCell.getStringCellValue().isEmpty())) {
 
