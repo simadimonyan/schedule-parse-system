@@ -548,14 +548,15 @@ public class ExcelService {
             CellRangeAddress range = sheet.getMergedRegion(i);
             if (range.isInRange(rowIndex, colIndex)) {
                 Row firstRow = sheet.getRow(range.getFirstRow());
-                Cell firstCell = firstRow.getCell(colIndex);
+                Cell firstCell = firstRow.getCell(range.getFirstColumn());
 
                 if (firstCell != null && (firstCell.getCellType() != CellType.BLANK || !firstCell.getStringCellValue().isEmpty())) {
 
                     CellType type = firstRow.getCell(colIndex + 1).getCellType();
                     String location = type == CellType.NUMERIC ? String.valueOf((int) firstRow.getCell(colIndex + 1).getNumericCellValue()) : firstRow.getCell(colIndex + 1).getStringCellValue();
 
-                    if (firstCell.getStringCellValue().contains("CОБРАНИЕ")) {
+                    if (firstCell.getStringCellValue().trim().toLowerCase().contains("CОБРАНИЕ".trim().toLowerCase())
+                        || firstCell.getStringCellValue().trim().equalsIgnoreCase("СОБРАНИЕ")) {
                         return new DistantCellWrapper(firstCell.getStringCellValue(), location, "");
                     }
                     else {
@@ -577,7 +578,8 @@ public class ExcelService {
                 CellType type = row.getCell(colIndex + 1).getCellType();
                 String location = type == CellType.NUMERIC ? String.valueOf((int) row.getCell(colIndex + 1).getNumericCellValue()) : row.getCell(colIndex + 1).getStringCellValue();
 
-                if (cell.getStringCellValue().contains("CОБРАНИЕ")) {
+                if (cell.getStringCellValue().trim().toLowerCase().contains("CОБРАНИЕ".trim().toLowerCase())
+                    || cell.getStringCellValue().trim().equalsIgnoreCase("СОБРАНИЕ")) {
                     return new DistantCellWrapper(cell.getStringCellValue(), location, "");
                 }
                 else {
