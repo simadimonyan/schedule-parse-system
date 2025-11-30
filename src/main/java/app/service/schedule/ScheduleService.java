@@ -1,6 +1,7 @@
 package app.service.schedule;
 
-import app.service.persistence.PersistenceService;
+import app.service.cache.CacheService;
+import app.service.persistence.SchedulePersistenceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,17 +11,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class ScheduleService {
 
-    private final PersistenceService persistenceService;
+    private final SchedulePersistenceService schedulePersistenceService;
+    private final CacheService cacheService;
 
     @Autowired
-    public ScheduleService(PersistenceService persistenceService) {
-        this.persistenceService = persistenceService;
+    public ScheduleService(SchedulePersistenceService schedulePersistenceService, CacheService cacheService) {
+        this.schedulePersistenceService = schedulePersistenceService;
+        this.cacheService = cacheService;
     }
 
     // ночь 00:00 с воскресенье на понедельник
     @Scheduled(cron = "0 0 0 * * 1", zone = "Europe/Moscow")
     public void swapWeekParity() {
-        persistenceService.swapWeek();
+        schedulePersistenceService.swapWeek();
+        cacheService.clearAllCaches();
     }
 
 }
