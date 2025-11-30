@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class PersistenceService {
+public class SchedulePersistenceService {
 
     private final ExcelService excelService;
     private final StorageService storageService;
@@ -42,7 +42,7 @@ public class PersistenceService {
     private final ConfigRepository configRepository;
 
     @Autowired
-    public PersistenceService(
+    public SchedulePersistenceService(
             ExcelService excelService,
             StorageService storageService,
             ScheduleRepository scheduleRepository,
