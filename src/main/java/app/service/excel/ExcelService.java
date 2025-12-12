@@ -196,11 +196,11 @@ public class ExcelService {
                                                     for (String teacherLabel : teacherCache.keySet()) {
 
                                                         // Наличие приставки или звания
-                                                        if (tempSplit.length == 3 && teacherLabel.contains(tempSplit[1])) {
+                                                        if (tempSplit.length == 3 && teacherCompare(teacherLabel, tempSplit[1])) { //teacherLabel.contains(tempSplit[1])) {
                                                             teacher = teacherCache.get(teacherLabel);
                                                             break;
                                                         } // Отсутствие приставки или звания
-                                                        else if (tempSplit.length == 2 && teacherLabel.contains(tempSplit[0])) {
+                                                        else if (tempSplit.length == 2 && teacherCompare(teacherLabel, tempSplit[0])) {//teacherLabel.contains(tempSplit[0])) {
                                                             teacher = teacherCache.get(teacherLabel);
                                                             break;
                                                         }
@@ -426,11 +426,11 @@ public class ExcelService {
                                                 for (String teacherLabel : teacherCache.keySet()) {
 
                                                     // Наличие приставки или звания
-                                                    if (tempSplit.length == 3 && teacherLabel.contains(tempSplit[1])) {
+                                                    if (tempSplit.length == 3 && teacherCompare(teacherLabel, tempSplit[1])) { //teacherLabel.contains(tempSplit[1])) {
                                                         teacher = teacherCache.get(teacherLabel);
                                                         break;
                                                     } // Отсутствие приставки или звания
-                                                    else if (tempSplit.length == 2 && teacherLabel.contains(tempSplit[0])) {
+                                                    else if (tempSplit.length == 2 && teacherCompare(teacherLabel, tempSplit[0])) { //teacherLabel.contains(tempSplit[0])) {
                                                         teacher = teacherCache.get(teacherLabel);
                                                         break;
                                                     }
@@ -607,6 +607,56 @@ public class ExcelService {
             return ((HSSFColor) color1).getIndex() == ((HSSFColor) color2).getIndex();
         }
         return false;
+    }
+
+    /**
+     * Сравнение преподавателей с учетом однофамильцев
+     * @param label1 преподаватель 1 (что имеем)
+     * @param label2 преподаватель 2 (что хотим)
+     * @return boolean
+     */
+    private boolean teacherCompare(String label1, String label2) {
+
+        // сравнение инициалов
+        String initials1 = label1.trim().replace(".", "").replace(",", "").replace(" ", "");
+        String initials2 = label2.trim().replace(".", "").replace(",", "").replace(" ", "");
+
+        // AA == AB
+        if (!initials1.equalsIgnoreCase(initials2)) return false;
+
+        // расстояние Ливенштейна (без сохранения матрицы расстояний)
+        int[] prev = new int[label2.length() + 1];
+        int[] curr = new int[label2.length() + 1];
+
+        // инициализация индексов слова в матрице
+        for (int i = 0; i <= label2.length(); i++) {
+            prev[i] = i;
+        }
+
+        // проход по второй строке начиная с 1 индекса первого слова
+        for (int j = 1; j <= label1.length(); j++) {
+            curr[0] = j;
+            char c1 = label1.charAt(j - 1);
+
+            // проход по второй строке начиная с 1 индекса второго слова
+            for (int i = 1; i <= label2.length(); i++) {
+                char c2 = label2.charAt(i - 1);
+                int cost = c1 == c2 ? 0 : 1;
+
+                // поиск кратчайшего пути операций
+                curr[j] = Math.min(
+                    Math.min(prev[j] + 1, curr[j - 1] + 1),
+                    prev[j - 1] + cost
+                );
+            }
+
+            //int[] temp = prev;
+            prev = curr;
+            //curr = temp;
+        }
+
+        // строки не равны если количество операций > 1 (1 - погрешность ошибки)
+        return prev[label2.length()] < 2;
     }
 
 }
