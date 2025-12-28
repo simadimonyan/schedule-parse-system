@@ -145,8 +145,8 @@ wait_for_service() {
 }
 
 # Изменить url под ваше доменное имя или IP (с учетом subpath)
-wait_for_service "minio" "https://schedule-imsit.ru/console"
-wait_for_service "app" "https://schedule-imsit.ru/schedule"
+wait_for_service "minio" "https://admin.myimsit.ru/console"
+wait_for_service "app" "https://api.myimsit.ru/schedule"
 
 # Additional wait to ensure services are fully initialized
 echo "Waiting for services to fully initialize..."
