@@ -4,9 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ distant lessons day week cell fix">
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ teacher parser anti-duplicate system">
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/QuizController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/AnswerRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/ApplicationRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/QuestionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/QuizRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/auth/AdminToken.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/request/QuizRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/request/SubmitRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/response/QuizResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/response/QuizzesResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/unit/AnswerUnit.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/unit/QuestionUnit.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/unit/SubmitUnit.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/ApplicationMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Answer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Application.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Question.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Quiz.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/service/persistence/QuizPersistenceService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/configuration/SecurityConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/configuration/SecurityConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/webhook/WebhookController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/webhook/WebhookController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,8 +56,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Interface" />
         <option value="Record" />
+        <option value="Interface" />
         <option value="Class" />
       </list>
     </option>
@@ -60,7 +83,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;development&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;production&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/dimitrisimonyan/Yandex.Disk.localized/Projects/Backend/schedule-parse-service&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -136,7 +159,24 @@
       <workItem from="1762768164202" duration="17435000" />
       <workItem from="1762956010845" duration="3802000" />
       <workItem from="1762972463771" duration="11081000" />
-      <workItem from="1763744636423" duration="2396000" />
+      <workItem from="1763744636423" duration="3082000" />
+      <workItem from="1763885608197" duration="26834000" />
+      <workItem from="1764096060798" duration="616000" />
+      <workItem from="1764352963269" duration="888000" />
+      <workItem from="1764537226837" duration="2095000" />
+      <workItem from="1765005826177" duration="1767000" />
+      <workItem from="1765011577779" duration="15000" />
+      <workItem from="1765011605818" duration="1529000" />
+      <workItem from="1765139223567" duration="55000" />
+      <workItem from="1765225931444" duration="4436000" />
+      <workItem from="1765285285901" duration="48000" />
+      <workItem from="1765285336168" duration="3163000" />
+      <workItem from="1765377681859" duration="348000" />
+      <workItem from="1765378960283" duration="9000" />
+      <workItem from="1765536125941" duration="1092000" />
+      <workItem from="1766148843966" duration="737000" />
+      <workItem from="1766490796077" duration="706000" />
+      <workItem from="1766515270923" duration="7000" />
     </task>
     <task id="LOCAL-00001" summary="+ MinIO Webhook">
       <option name="closed" value="true" />
@@ -330,7 +370,55 @@
       <option name="project" value="LOCAL" />
       <updated>1763747401050</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="+ excel parser fix">
+      <option name="closed" value="true" />
+      <created>1763993091434</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1763993091434</updated>
+    </task>
+    <task id="LOCAL-00026" summary="+ excel parser fix">
+      <option name="closed" value="true" />
+      <created>1763996154770</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1763996154770</updated>
+    </task>
+    <task id="LOCAL-00027" summary="+ excel parser fix">
+      <option name="closed" value="true" />
+      <created>1764000279418</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1764000279418</updated>
+    </task>
+    <task id="LOCAL-00028" summary="+ weekly cache clear for distant lessons update">
+      <option name="closed" value="true" />
+      <created>1764537967911</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1764537967911</updated>
+    </task>
+    <task id="LOCAL-00029" summary="+ weekly cache clear for distant lessons update">
+      <option name="closed" value="true" />
+      <created>1764538761734</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1764538761734</updated>
+    </task>
+    <task id="LOCAL-00030" summary="+ teacher parser anti-duplicate system">
+      <option name="closed" value="true" />
+      <created>1765536666747</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1765536666747</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -369,6 +457,9 @@
     <MESSAGE value="+ distant lessons filter for today" />
     <MESSAGE value="+ distant lessons filter for week" />
     <MESSAGE value="+ distant lessons day week cell fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ distant lessons day week cell fix" />
+    <MESSAGE value="+ excel parser fix" />
+    <MESSAGE value="+ weekly cache clear for distant lessons update" />
+    <MESSAGE value="+ teacher parser anti-duplicate system" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ teacher parser anti-duplicate system" />
   </component>
 </project>

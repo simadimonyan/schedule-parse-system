@@ -167,14 +167,14 @@ Bearer <admin-token> (application.properties)
 
 ## URL
 
-### Адреса для production (пример: schedule-imsit.ru)
+### Адреса для production (пример: myimsit.ru)
 
-- HyperDX: https://schedule-imsit.ru
-- MinIO: https://schedule-imsit.ru/console/
-- pgAdmin: https://schedule-imsit.ru/pgadmin/
-- Grafana: https://schedule-imsit.ru/grafana/
-- API Swagger: https://schedule-imsit.ru/schedule/
-- Redis: tcp://schedule-imsit.ru:6379
+- HyperDX: https://admin.myimsit.ru
+- MinIO: https://admin.myimsit.ru/console/
+- pgAdmin: https://admin.myimsit.ru/pgadmin/
+- Grafana: https://admin.myimsit.ru/grafana/
+- API Swagger: https://api.myimsit.ru/schedule/
+- Redis: tcp://myimsit.ru:6379
 
 ### Адреса для теста
 

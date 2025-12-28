@@ -242,6 +242,8 @@ services:
       - HYPERDX_APP_URL=${HYPERDX_APP_URL}
       - HYPERDX_APP_PORT=${HYPERDX_APP_PORT}
       #- FRONTEND_URL=${FRONTEND_URL} - для production
+      #- HYPERDX_BASE_PATH=${HYPERDX_BASE_PATH} - для production
+      #- NEXT_PUBLIC_HYPERDX_BASE_PATH=${NEXT_PUBLIC_HYPERDX_BASE_PATH} - для production
 
       - TZ=Europe/Moscow
     ports:
