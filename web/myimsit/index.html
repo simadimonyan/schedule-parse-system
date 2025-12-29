@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя Академия - Твое расписание всегда под рукой</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        :root {
+            --primary: #2d5bef;
+            --primary-dark: #1a49d4;
+            --secondary: #6c63ff;
+            --light: #f8f9ff;
+            --dark: #1a1a2e;
+            --gray: #6c757d;
+            --success: #28a745;
+            --border-radius: 16px;
+            --shadow: 0 10px 30px rgba(45, 91, 239, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header & Navigation */
+        header {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 100px 0 80px;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6eeff 100%);
+            overflow: hidden;
+        }
+
+        .hero-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 50px;
+        }
+
+        .hero-text {
+            flex: 1;
+        }
+
+        .hero-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+
+        .hero h1 span {
+            color: var(--primary);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+
+        .app-badges {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 24px;
+            background: var(--dark);
+            color: white;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .badge:hover {
+            transform: translateY(-5px);
+            background: var(--primary);
+        }
+
+        .badge i {
+            font-size: 1.5rem;
+        }
+
+        .phone-mockup {
+            width: 300px;
+            height: 600px;
+            background: white;
+            border-radius: 40px;
+            padding: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+            border: 12px solid var(--dark);
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(160deg, var(--primary), var(--secondary));
+            border-radius: 30px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            color: white;
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-icon i {
+            font-size: 40px;
+            color: var(--primary);
+        }
+
+        .phone-screen h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .phone-screen p {
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        /* Features Section */
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+
+        .section-title p {
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+        }
+
+        .features {
+            padding: 100px 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 35px 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border-top: 5px solid var(--primary);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(45, 91, 239, 0.15);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(45, 91, 239, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .feature-icon i {
+            font-size: 30px;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        .feature-card p {
+            color: var(--gray);
+        }
+
+        /* Screenshots */
+        .screenshots {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+        }
+
+        .screenshots-slider {
+            display: flex;
+            gap: 30px;
+            overflow-x: auto;
+            padding: 20px 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) transparent;
+        }
+
+        .screenshots-slider::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .screenshots-slider::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .screenshot {
+            flex: 0 0 auto;
+            width: 250px;
+            height: 500px;
+            background: white;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            border: 10px solid white;
+        }
+
+        .screenshot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 100px 0;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .cta h2 {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 70px 0 30px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 50px;
+            margin-bottom: 50px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            color: white;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 15px;
+        }
+
+        .footer-links a {
+            color: #aaa;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: white;
+            padding-left: 5px;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .hero-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .app-badges {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .badge {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+            
+            .section-title h2 {
+                font-size: 2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Моя Академия</span>
+                </a>
+                <div class="nav-links">
+                    <a href="#features">Возможности</a>
+                    <a href="#screenshots">Скриншоты</a>
+                    <a href="#download">Скачать</a>
+                    <a href="#figma" target="_blank">Figma</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Будь на шаг впереди: <span>«Моя Академия»</span> — твое расписание всегда под рукой!</h1>
+                    <p>Приложение, которое делает поиск расписания проще и организованнее. Управляй своим временем эффективно!</p>
+                    
+                    <div class="app-badges">
+                        <a href="https://trk.mail.ru/c/mx6mvx5" class="badge" target="_blank">
+                            <i class="fab fa-android"></i>
+                            <div>
+                                <div>Доступно на</div>
+                                <div style="font-size: 1.2rem;">Android</div>
+                            </div>
+                        </a>
+                        <a href="https://trk.mail.ru/c/if5yk8" class="badge" target="_blank">
+                            <i class="fab fa-apple"></i>
+                            <div>
+                                <div>Загрузите в</div>
+                                <div style="font-size: 1.2rem;">App Store</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="hero-image">
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <div class="app-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h3>Моя Академия</h3>
+                            <p>Твое расписание всегда под рукой</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Что делает нас особенными</h2>
+                <p>«Моя Академия» предлагает уникальные возможности для студентов, которые упрощают учебный процесс</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3>Гибкость</h3>
+                    <p>Корректно отображает расписание при смене недель. Никакой путаницы между четными и нечетными неделями.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Уведомления</h3>
+                    <p>Предупреждает о начале занятий заранее. Вы никогда не опоздаете на пару, даже если забыли посмотреть расписание.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Актуальность</h3>
+                    <p>Изменения в расписании обновляются своевременно. Всегда в курсе последних изменений в учебном процессе.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-wifi-slash"></i>
+                    </div>
+                    <h3>Офлайн-режим</h3>
+                    <p>Работает без интернета. Доступ к расписанию в метро, общежитии или где угодно, даже без подключения к сети.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h3>Расписание преподавателей</h3>
+                    <p>Помогает планировать встречи и консультации. Легко найти, когда преподаватель свободен.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    <h3>Информация о неделе</h3>
+                    <p>Позволяет узнать, какая неделя идёт сейчас. Больше не нужно считать недели вручную.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshots -->
+    <section class="screenshots" id="screenshots">
+        <div class="container">
+            <div class="section-title">
+                <h2>Интерфейс приложения</h2>
+                <p>Простой, интуитивный и современный дизайн для максимального удобства использования</p>
+            </div>
+            
+            <div class="screenshots-slider">
+                <div class="screenshot" style="background: linear-gradient(160deg, #2d5bef, #6c63ff);">
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: white; padding: 30px; text-align: center;">
+                        <i class="fas fa-calendar-day" style="font-size: 60px; margin-bottom: 20px;"></i>
+                        <h3 style="margin-bottom: 15px;">Главное расписание</h3>
+                        <p>Четкое отображение пар на сегодня и неделю</p>
+                    </div>
+                </div>
+                
+                <div class="screenshot" style="background: linear-gradient(160deg, #ff6b6b, #ff8e53);">
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: white; padding: 30px; text-align: center;">
+                        <i class="fas fa-bell" style="font-size: 60px; margin-bottom: 20px;"></i>
+                        <h3 style="margin-bottom: 15px;">Уведомления</h3>
+                        <p>Настройка напоминаний о начале занятий</p>
+                    </div>
+                </div>
+                
+                <div class="screenshot" style="background: linear-gradient(160deg, #1dd1a1, #10ac84);">
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: white; padding: 30px; text-align: center;">
+                        <i class="fas fa-user-tie" style="font-size: 60px; margin-bottom: 20px;"></i>
+                        <h3 style="margin-bottom: 15px;">Преподаватели</h3>
+                        <p>Поиск расписания преподавателей</p>
+                    </div>
+                </div>
+                
+                <div class="screenshot" style="background: linear-gradient(160deg, #5f27cd, #341f97);">
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: white; padding: 30px; text-align: center;">
+                        <i class="fas fa-cog" style="font-size: 60px; margin-bottom: 20px;"></i>
+                        <h3 style="margin-bottom: 15px;">Настройки</h3>
+                        <p>Персонализация под ваши нужды</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta" id="download">
+        <div class="container">
+            <h2>Установи приложение «Моя Академия»</h2>
+            <p>И начни управлять своим учебным временем эффективно! Все возможности уже ждут тебя.</p>
+            
+            <div class="app-badges" style="justify-content: center;">
+                <a href="https://trk.mail.ru/c/mx6mvx5" class="badge" target="_blank">
+                    <i class="fab fa-android"></i>
+                    <div>
+                        <div>Доступно на</div>
+                        <div style="font-size: 1.2rem;">Android</div>
+                    </div>
+                </a>
+                <a href="https://trk.mail.ru/c/if5yk8" class="badge" target="_blank">
+                    <i class="fab fa-apple"></i>
+                    <div>
+                        <div>Загрузите в</div>
+                        <div style="font-size: 1.2rem;">App Store</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Моя Академия</h3>
+                    <p>Приложение для студентов, которое делает поиск расписания проще и организованнее. Твое расписание всегда под рукой!</p>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Ссылки</h3>
+                    <ul class="footer-links">
+                        <li><a href="#features">Возможности</a></li>
+                        <li><a href="#screenshots">Скриншоты</a></li>
+                        <li><a href="#download">Скачать</a></li>
+                        <li><a href="https://www.figma.com/design/68kyfLtVu2N5eXgpCO2OM7/Мой-ИМСИТ?node-id=0-1&p=f&t=qy6mdGnnEhgISioP-0" target="_blank" id="figma">Дизайн в Figma</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Контакты</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:support@myacademy.ru">support@myacademy.ru</a></li>
+                        <li><a href="#">Политика конфиденциальности</a></li>
+                        <li><a href="#">Пользовательское соглашение</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>© 2023 «Моя Академия». Все права защищены. Приложение для студентов.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Плавная прокрутка для навигации
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                if(this.getAttribute('href') === '#') return;
+                
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if(targetId === '#figma') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Анимация появления элементов при прокрутке
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        // Наблюдаем за карточками возможностей
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(card);
+        });
+        
+        // Наблюдаем за заголовками секций
+        document.querySelectorAll('.section-title').forEach(title => {
+            title.style.opacity = '0';
+            title.style.transform = 'translateY(20px)';
+            title.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(title);
+        });
+        
+        // Активируем анимацию для уже видимых элементов при загрузке
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.feature-card, .section-title').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if(rect.top < window.innerHeight - 50) {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
