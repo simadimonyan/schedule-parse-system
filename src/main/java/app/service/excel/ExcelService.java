@@ -333,8 +333,12 @@ public class ExcelService {
 
                                             String firstLine = lines[0].trim();
 
-                                            // разделитель по точке л. пр. лаб.
-                                            String dotSplit = firstLine.substring(0, firstLine.indexOf(".")).trim();
+                                            // разделитель по точке л. пр. лаб. (по умолчанию практика)
+                                            String dotSplit = "п";
+                                            try {
+                                                dotSplit = firstLine.substring(0, firstLine.indexOf(".")).trim();
+                                            }
+                                            catch (Exception ignored) {}
 
                                             // данные предмета и его типа
                                             type = dotSplit.equals("л") ? "Лекция" : dotSplit.equals("лаб") ? "Лабораторная" : "Практика";
