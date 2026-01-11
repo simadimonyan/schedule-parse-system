@@ -333,15 +333,15 @@ public class ExcelService {
 
                                             String firstLine = lines[0].trim();
 
-                                            // разделитель по точке л. пр. лаб. (по умолчанию практика)
-                                            String dotSplit = "п";
+                                            // разделитель по точке л. пр. лаб.
+                                            String dotSplit = "";
                                             try {
                                                 dotSplit = firstLine.substring(0, firstLine.indexOf(".")).trim();
                                             }
                                             catch (Exception ignored) {}
 
                                             // данные предмета и его типа
-                                            type = dotSplit.equals("л") ? "Лекция" : dotSplit.equals("лаб") ? "Лабораторная" : "Практика";
+                                            type = dotSplit.equals("л") ? "Лекция" : dotSplit.equals("лаб") ? "Лабораторная" :  dotSplit.equals("п") ? "Практика" : "";
                                             if (lines.length > 1) subject = firstLine.replaceFirst("^[а-яА-ЯёЁ]+\\.", "").trim();
 
                                             String secondLine = lines.length > 1 ? lines[1].replaceAll("\\s+", " ").trim() : "";
