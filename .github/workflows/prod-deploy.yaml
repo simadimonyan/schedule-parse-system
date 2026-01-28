@@ -33,5 +33,5 @@ jobs:
         username: ${{ secrets.PROD_SSH_USER }}
         password: ${{ secrets.PROD_SSH_PASSWORD }}
         script: |
-          cd /root/schedule-parse-system/
+          cd /home/schedule-parse-system/
           bash restart-services.sh
