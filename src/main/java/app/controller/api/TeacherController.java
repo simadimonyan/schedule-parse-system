@@ -5,9 +5,8 @@ import app.repository.models.dto.api.teacher.TeacherResponse;
 import app.repository.models.dto.api.teacher.TeachersResponse;
 import app.repository.models.dto.mappers.ScheduleMapper;
 import app.repository.models.dto.mappers.TeacherMapper;
-import app.service.persistence.PersistenceService;
+import app.service.persistence.SchedulePersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +18,13 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "Authorization")
 public class TeacherController {
 
-    private final PersistenceService persistenceService;
+    private final SchedulePersistenceService schedulePersistenceService;
     private final TeacherMapper teacherMapper;
     private final ScheduleMapper scheduleMapper;
 
     @Autowired
-    public TeacherController(PersistenceService persistenceService, TeacherMapper teacherMapper, ScheduleMapper scheduleMapper) {
-        this.persistenceService = persistenceService;
+    public TeacherController(SchedulePersistenceService schedulePersistenceService, TeacherMapper teacherMapper, ScheduleMapper scheduleMapper) {
+        this.schedulePersistenceService = schedulePersistenceService;
         this.teacherMapper = teacherMapper;
         this.scheduleMapper = scheduleMapper;
     }
@@ -33,13 +32,13 @@ public class TeacherController {
     @GetMapping("/{teacher}")
     public ResponseEntity<TeacherResponse> getTeacher(@PathVariable("teacher") String teacherLabel) {
         log.info("GET Запрос: /api/v1/teachers/{}", teacherLabel);
-        return ResponseEntity.ok(teacherMapper.toTeacherResponse(persistenceService.getTeacher(teacherLabel)));
+        return ResponseEntity.ok(teacherMapper.toTeacherResponse(schedulePersistenceService.getTeacher(teacherLabel)));
     }
 
     @GetMapping("/search")
     public ResponseEntity<TeachersResponse> search(@RequestParam(value = "department", required = false) String department) {
         log.info("GET Запрос: /api/v1/teachers?department={}", department);
-        return ResponseEntity.ok(teacherMapper.toTeachersResponse(persistenceService.getTeachers(department)));
+        return ResponseEntity.ok(teacherMapper.toTeachersResponse(schedulePersistenceService.getTeachers(department)));
     }
 
     @GetMapping("/schedule")
@@ -50,7 +49,7 @@ public class TeacherController {
             @RequestParam("weekCount") Integer weekCount
     ) {
         log.info("GET Запрос: /api/v1/teachers/schedule?teacher={}&dayWeek={}&date={}&weekCount={}", teacherName, dayWeek, date, weekCount);
-        return ResponseEntity.ok(scheduleMapper.toScheduleResponse(persistenceService.getTeacherSchedule(teacherName, dayWeek, date, weekCount)));
+        return ResponseEntity.ok(scheduleMapper.toScheduleResponse(schedulePersistenceService.getTeacherSchedule(teacherName, dayWeek, date, weekCount)));
     }
 
 }
