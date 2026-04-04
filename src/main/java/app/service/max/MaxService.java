@@ -137,7 +137,6 @@ public class MaxService {
 
             scheduleRepository.deleteAllByGroupId(group.getId());
             persistenceService.persistSchedule(schedule);
-            persistenceService.setConfig("last_external_parsed_group", group.getId().toString());
             log.info("Синхронизация расписания %s завершена!".formatted(group.getName()));
         }
         else
