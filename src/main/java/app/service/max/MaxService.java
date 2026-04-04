@@ -1,6 +1,7 @@
 package app.service.max;
 
 import app.repository.dao.GroupRepository;
+import app.repository.dao.ScheduleRepository;
 import app.repository.models.entity.Config;
 import app.repository.models.entity.Group;
 import app.repository.models.entity.Schedule;
@@ -25,6 +26,7 @@ public class MaxService {
 
     private final SchedulePersistenceService persistenceService;
     private final GroupRepository groupRepository;
+    private final ScheduleRepository scheduleRepository;
     private final WebClient webClient;
 
     // очно / очно-заочно
@@ -38,6 +40,16 @@ public class MaxService {
             7, "18.10-19.40"
     );
 
+    private static final Map<String, Integer> lessonTimeMap = Map.of(
+            "08.00-09.30", 1,
+            "09.40-11.10", 2,
+            "11.30-13.00", 3,
+            "13.10-14.40", 4,
+            "14.50-16.20", 5,
+            "16.30-18.00", 6,
+            "18.10-19.40", 7
+    );
+
     // заочно
     private static final Map<String, Integer> lessonDistantMap = Map.of(
             "08:00", 1,
@@ -49,7 +61,6 @@ public class MaxService {
             "18:10", 7
     );
 
-    // заочно
     private static final Map<String, String> dayWeekDistantMap = Map.of(
             "пн", "Понедельник",
             "вт", "Вторник",
@@ -60,8 +71,14 @@ public class MaxService {
     );
 
     @Autowired
-    public MaxService(SchedulePersistenceService persistenceService, GroupRepository groupRepository, String url) {
+    public MaxService(
+            SchedulePersistenceService persistenceService,
+            GroupRepository groupRepository,
+            ScheduleRepository scheduleRepository,
+            String url
+    ) {
         this.persistenceService = persistenceService;
+        this.scheduleRepository = scheduleRepository;
         this.groupRepository = groupRepository;
         this.webClient = WebClient.create(url);
     }
@@ -99,6 +116,7 @@ public class MaxService {
 
         List<Schedule> schedule = getSchedule(group);
 
+        scheduleRepository.deleteAllByGroupId(group.getId());
         persistenceService.persistSchedule(schedule);
         persistenceService.setConfig("last_external_parsed_group", group.getId().toString());
         log.info("Синхронизация расписания %s завершена!".formatted(group.getName()));
@@ -176,6 +194,7 @@ public class MaxService {
                 }).map(data -> {
                     try {
                         String time = data.getElementsByClass("lesson-time").first().text();
+                        Integer lessonCount = lessonTimeMap.get(time);
                         String subject = data.getElementsByClass("lesson-subject").first().text().trim();
                         Integer weekCount = Integer.parseInt(data.getElementsByClass("lesson-chip-week").first().text().split(":")[1].trim());
 
@@ -202,6 +221,8 @@ public class MaxService {
                         savable.setGroup(group);
                         savable.setDayWeek(dayWeek.get());
                         savable.setTimePeriod(time);
+                        savable.setLessonCount(lessonCount);
+                        savable.setPinnedDate("");
                         savable.setLessonName(subject);
                         savable.setWeekCount(weekCount);
                         savable.setLessonType(type.get());
@@ -261,6 +282,7 @@ public class MaxService {
                     try {
                         String rawTime = data.getElementsByClass("lesson-time").first().text();
                         String time = lessonNumberMap.get(lessonDistantMap.get(rawTime));
+                        Integer lessonCount = lessonDistantMap.get(rawTime);
                         String subject = data.getElementsByClass("lesson-subject").first().text().trim();
                         Integer weekCount = Integer.parseInt(data.getElementsByClass("lesson-chip-week").first().text().split(":")[1].trim());
 
@@ -293,6 +315,7 @@ public class MaxService {
                         savable.setTimePeriod(time);
                         savable.setLessonName(subject);
                         savable.setWeekCount(weekCount);
+                        savable.setLessonCount(lessonCount);
                         savable.setLessonType(type.get());
                         savable.setAuditory(location.get());
                         savable.setPinnedDate(pinnedDate.get());
@@ -306,7 +329,7 @@ public class MaxService {
                         log.error("[Заочная] [{}] Ошибка парсинга пары: {}", group.getName(), e.getMessage(), e);
                         return null;
                     }
-                }).filter(s -> s != null).collect(Collectors.toList()));
+                }).filter(Objects::nonNull).toList());
                 log.info("[Заочная] [{}] Неделя {}: спаршено {} пар", group.getName(), finalI + 1, schedule.size());
             }
         }
