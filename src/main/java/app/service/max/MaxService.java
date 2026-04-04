@@ -327,7 +327,7 @@ public class MaxService {
                             if (parts.length < 2) return;
                             String val = parts[1].trim();
                             switch (parts[0]) {
-                                case "Тип" -> type.set(val);
+                                case "Тип" -> type.set(val.substring(0, 1).toUpperCase() + val.substring(1));
                                 case "Ауд." -> location.set(val);
                                 case "Преп." -> teacher.set(val);
                             }
