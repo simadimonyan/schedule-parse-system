@@ -130,7 +130,7 @@ public class SchedulePersistenceService {
             schedule = scheduleRepository.findAllByGroupNameAndDayWeekAndWeekCount(name, dayWeek, weekCount)
                     .orElse(new ArrayList<>()).stream().filter(s -> {
                         if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
-                            return s.getPinnedDate().equals(date == null ? LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")) : date);
+                            return date == null || s.getPinnedDate().equals(date);
                         }
                         return true;
                     }).toList();
@@ -199,7 +199,7 @@ public class SchedulePersistenceService {
             schedule = scheduleRepository.findAllByTeacherLabelAndDayWeekAndWeekCount(label, dayWeek, weekCount)
                     .orElse(new ArrayList<>()).stream().filter(s -> {
                         if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
-                            return s.getPinnedDate().equals(date == null ? LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")) : date);
+                            return date == null || s.getPinnedDate().equals(date);
                         }
                         return true;
                     }).toList();
