@@ -122,6 +122,24 @@ public class MaxService {
         log.info("Синхронизация расписания %s завершена!".formatted(group.getName()));
     }
 
+    @Async
+    public void loadAndPersistSchedule(String label) {
+        Group group = groupRepository.findByName(label).get();
+
+        log.info("Начало синхронизации расписания %s со сторонним сервером!".formatted(group.getName()));
+
+        if (group != null) {
+            List<Schedule> schedule = getSchedule(group);
+
+            scheduleRepository.deleteAllByGroupId(group.getId());
+            persistenceService.persistSchedule(schedule);
+            persistenceService.setConfig("last_external_parsed_group", group.getId().toString());
+            log.info("Синхронизация расписания %s завершена!".formatted(group.getName()));
+        }
+        else
+            log.info("Группа %s не найдена!".formatted(label));
+    }
+
     private Map<String, ArrayList<String>> getGroups() {
         Map<String, ArrayList<String>> map = new HashMap<>();
 
@@ -281,7 +299,8 @@ public class MaxService {
                 }).map(data -> {
                     try {
                         String rawTime = data.getElementsByClass("lesson-time").first().text();
-                        String time = lessonNumberMap.get(lessonDistantMap.get(rawTime));
+                        String time = lessonNumberMap.get(lessonDistantMap.get(rawTime.equals("8:00") ? "08:00"
+                                : rawTime.equals("9:40") ? "09:40" : rawTime));
                         Integer lessonCount = lessonDistantMap.get(rawTime);
                         String subject = data.getElementsByClass("lesson-subject").first().text().trim();
                         Integer weekCount = Integer.parseInt(data.getElementsByClass("lesson-chip-week").first().text().split(":")[1].trim());
