@@ -154,11 +154,11 @@ public class MaxService {
                     .retrieve()
                     .bodyToMono(String.class)
                     .doOnError(e -> log.error("Ошибка сети: {}", e.getMessage()))
-                    .onErrorReturn(null)
+                    .onErrorReturn("")
                     .block();
 
             ArrayList<String> groups = new ArrayList<>();
-            if (response != null) {
+            if (response != null && !response.isEmpty()) {
                 Document doc = Jsoup.parse(response);
                 Element element = doc.getElementById("group-list");
                 if (element != null) {
