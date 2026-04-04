@@ -62,7 +62,7 @@ public class ConfigController {
     public ResponseEntity<?> loadExternalSchedule(@RequestBody String token) {
         log.info("POST Запрос: /api/v1/configuration/schedule/load");
         if (token.startsWith("Bearer") && token.substring(7).equals(adminToken)) {
-            maxService.loadAndPersistGroups();
+            maxService.loadAndPersistSchedule();
             return ResponseEntity.ok("Процесс запущен!");
         }
         log.warn("Попытка доступа к административным функциям - доступ отказан");
