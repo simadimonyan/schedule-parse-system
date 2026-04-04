@@ -25,4 +25,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     @Query("DELETE FROM Schedule s WHERE s.group.id = :groupId")
     void deleteAllByGroupId(@Param("groupId") Long groupId);
 
+    Optional<Schedule> findByGroupIdAndDayWeekAndTimePeriodAndLessonNameAndWeekCountAndPinnedDate(
+            Long groupId, String dayWeek, String timePeriod, String lessonName, Integer weekCount, String pinnedDate);
+
 }

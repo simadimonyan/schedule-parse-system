@@ -299,6 +299,8 @@ public class SchedulePersistenceService {
             }
         }
 
+        }
+
         Set<Long> groupIds = list.stream()
                 .map(s -> s.getGroup().getId())
                 .collect(Collectors.toSet());
