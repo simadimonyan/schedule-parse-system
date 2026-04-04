@@ -258,13 +258,11 @@ public class SchedulePersistenceService {
         extractAndLoadSchedule(newSchedules);
     }
 
-    @Async
     @Transactional
     public void persistSchedule(List<Schedule> list) {
         extractAndLoadSchedule(list);
     }
 
-    @Async
     @Transactional
     public void persistGroups(List<Group> list) {
         for (Group group : list) {
@@ -310,6 +308,7 @@ public class SchedulePersistenceService {
         }
 
         scheduleRepository.saveAllAndFlush(list);
+        log.info("Сохранено {} записей расписания для групп: {}", list.size(), groupIds);
     }
 
 }

@@ -14,6 +14,7 @@ import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
@@ -84,6 +85,7 @@ public class MaxService {
     }
 
     @Async
+    @Transactional
     public void loadAndPersistGroups() {
        log.info("Начало синхронизации групп со сторонним сервером!");
 
@@ -102,6 +104,7 @@ public class MaxService {
     }
 
     @Async
+    @Transactional
     public void loadAndPersistSchedule() {
         Group group;
         try {
@@ -123,6 +126,7 @@ public class MaxService {
     }
 
     @Async
+    @Transactional
     public void loadAndPersistSchedule(String label) {
         Group group = groupRepository.findByName(label).get();
 
@@ -208,6 +212,8 @@ public class MaxService {
                 schedule.addAll(lessons.getElementsByClass("lesson-day").stream().flatMap(day -> {
                     dayWeek.set(day.getElementsByClass("lesson-day-title").first().text().trim());
                     log.debug("[Очная] [{}] Неделя {}: парсинг дня «{}»", group.getName(), finalI + 1, dayWeek.get());
+                    int lessonCardCount = day.getElementsByClass("lesson-card").size();
+                    log.info("[Очная] [{}] Неделя {}: найдено {} lesson-card в дне {}", group.getName(), finalI + 1, lessonCardCount, dayWeek.get());
                     return day.getElementsByClass("lesson-card").stream();
                 }).map(data -> {
                     try {
@@ -256,7 +262,7 @@ public class MaxService {
                         return null;
                     }
                 }).filter(s -> s != null).collect(Collectors.toList()));
-                log.info("[Очная] [{}] Неделя {}: спаршено {} пар", group.getName(), finalI + 1, schedule.size());
+                log.info("[Очная] [{}] Неделя {}: после фильтра {} пар", group.getName(), finalI + 1, schedule.stream().filter(s -> s != null).count());
             }
         } else if (group.getStudyForm().equals("Заочная")) {
             for (int i = 0; i <= 3; i++) {
@@ -295,6 +301,8 @@ public class MaxService {
                     log.debug("[Заочная] [{}] Неделя {}: парсинг дня «{}»", group.getName(), finalI + 1, head);
                     dayWeek.set(dayWeekDistantMap.get(head.split(" ")[2]));
                     pinnedDate.set(head.split("Дата: ")[1]);
+                    int lessonCardCount = day.getElementsByClass("lesson-card").size();
+                    log.info("[Заочная] [{}] Неделя {}: найдено {} lesson-card в дне {}", group.getName(), finalI + 1, lessonCardCount, head);
                     return day.getElementsByClass("lesson-card").stream();
                 }).map(data -> {
                     try {
@@ -349,6 +357,7 @@ public class MaxService {
                         return null;
                     }
                 }).filter(Objects::nonNull).toList());
+                log.info("[Заочная] [{}] Неделя {}: после фильтра {} пар", group.getName(), finalI + 1, schedule.stream().filter(Objects::nonNull).count());
                 log.info("[Заочная] [{}] Неделя {}: спаршено {} пар", group.getName(), finalI + 1, schedule.size());
             }
         }
