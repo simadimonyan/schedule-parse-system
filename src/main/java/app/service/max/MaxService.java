@@ -227,7 +227,7 @@ public class MaxService {
                         AtomicReference<String> teacher = new AtomicReference<>("");
 
                         data.getElementsByClass("lesson-meta").first().getElementsByClass("lesson-chip").stream().forEach(meta -> {
-                            String[] parts = meta.text().split(":", 2);
+                            String[] parts = meta.text().split(": ", 2);
                             if (parts.length < 2) return;
                             String val = parts[1].trim();
                             switch (parts[0]) {
@@ -322,7 +322,7 @@ public class MaxService {
                         AtomicReference<String> teacher = new AtomicReference<>("");
 
                         data.getElementsByClass("lesson-meta").first().getElementsByClass("lesson-chip").stream().forEach(meta -> {
-                            String[] parts = meta.text().split(":", 2);
+                            String[] parts = meta.text().split(": ", 2);
                             if (parts.length < 2) return;
                             String val = parts[1].trim();
                             switch (parts[0]) {
