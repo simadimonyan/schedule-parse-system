@@ -69,7 +69,12 @@ done
 
 echo "=== Starting service restart and cleanup ==="
 
+# Изменить при необходимости основной путь к папке проекта
 cd /root/schedule-parse-system/
+
+# Initialize SSL certificates if needed (first-time setup)
+echo "Checking SSL certificates..."
+bash init-certs.sh
 
 # Stop all containers
 echo "Stopping all Docker containers..."
@@ -101,10 +106,10 @@ wait_for_service() {
     
     while [ $attempt -le $max_attempts ]; do
         # Проверяем, запущен ли контейнер
-        if docker compose ps "$service" | grep -q "Up"; then
+        if docker compose ps "$service" | grep -qE "Up|running"; then
             # Получаем HTTP статус-код
             local http_code
-            http_code=$(curl -s -o /dev/null -w "%{http_code}" -L --connect-timeout 10 "$url")
+            http_code=$(curl -o /dev/null -w "%{http_code}" -L --connect-timeout 10 "$url" || true)
             
             # Проверяем статус-код: 2xx и 3xx считаем успехом
             if [[ "$http_code" =~ ^[23][0-9]{2}$ ]]; then
