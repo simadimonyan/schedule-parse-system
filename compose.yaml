@@ -61,6 +61,8 @@ services:
       - 8080:8080
     environment:
       - TZ=Europe/Moscow
+    dns:
+      - host.docker.internal
     logging:
       driver: "json-file"
       options:
