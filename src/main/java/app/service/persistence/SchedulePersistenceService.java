@@ -286,7 +286,6 @@ public class SchedulePersistenceService {
                 });
     }
 
-    @CacheEvict(value = "schedule", allEntries = true)
     private void extractAndLoadSchedule(List<Schedule> list) {
         for (Schedule schedule : list) {
             Teacher teacher = schedule.getTeacher();
