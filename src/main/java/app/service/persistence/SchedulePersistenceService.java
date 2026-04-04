@@ -251,6 +251,7 @@ public class SchedulePersistenceService {
 
     @Async
     @Transactional
+    @CacheEvict(value = "schedule", allEntries = true)
     public void persistSchedule(String fileName) throws IOException {
         InputStream excel = storageService.getObjectByName(fileName.split("/")[1]);
         List<Schedule> newSchedules = excelService.parseWorkbook(fileName, excel);
@@ -259,11 +260,13 @@ public class SchedulePersistenceService {
     }
 
     @Transactional
+    @CacheEvict(value = "schedule", allEntries = true)
     public void persistSchedule(List<Schedule> list) {
         extractAndLoadSchedule(list);
     }
 
     @Transactional
+    @CacheEvict(value = "groups", allEntries = true)
     public void persistGroups(List<Group> list) {
         for (Group group : list) {
             if (group != null) {
