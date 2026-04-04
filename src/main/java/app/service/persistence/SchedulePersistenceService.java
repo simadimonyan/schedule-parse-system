@@ -92,7 +92,7 @@ public class SchedulePersistenceService {
             schedule = scheduleRepository.findAllByGroupNameAndWeekCount(name, weekCount)
                     // фильтры для заочки
                     .orElse(new ArrayList<>()).stream().filter(s -> {
-                        if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
+                        if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
 
                             List<String> weekDates = new ArrayList<>();
                             String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
@@ -129,7 +129,7 @@ public class SchedulePersistenceService {
         else
             schedule = scheduleRepository.findAllByGroupNameAndDayWeekAndWeekCount(name, dayWeek, weekCount)
                     .orElse(new ArrayList<>()).stream().filter(s -> {
-                        if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
+                        if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
                             return s.getPinnedDate().equals(date == null ? LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")) : date);
                         }
                         return true;
@@ -161,7 +161,7 @@ public class SchedulePersistenceService {
             schedule = scheduleRepository.findAllByTeacherLabelAndWeekCount(label, weekCount)
                     // фильтры для заочки
                     .orElse(new ArrayList<>()).stream().filter(s -> {
-                        if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
+                        if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
 
                             List<String> weekDates = new ArrayList<>();
                             String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
@@ -198,7 +198,7 @@ public class SchedulePersistenceService {
         else
             schedule = scheduleRepository.findAllByTeacherLabelAndDayWeekAndWeekCount(label, dayWeek, weekCount)
                     .orElse(new ArrayList<>()).stream().filter(s -> {
-                        if (!s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
+                        if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
                             return s.getPinnedDate().equals(date == null ? LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM")) : date);
                         }
                         return true;
