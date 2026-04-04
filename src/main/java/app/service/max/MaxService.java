@@ -106,28 +106,29 @@ public class MaxService {
 
     private Map<String, ArrayList<String>> getGroups() {
         Map<String, ArrayList<String>> map = new HashMap<>();
-        ArrayList<String> groups = new ArrayList<>();
 
         for (int i = 0; i <= 1; i++) {
             int finalI = i;
+            String studyForm = (finalI == 0) ? "очная" : "заочная";
             String response = webClient.get().uri(uriBuilder -> uriBuilder
-                         .queryParam("study_form", (finalI == 0) ? "очная" : "заочная")
+                         .queryParam("study_form", studyForm)
                          .build())
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
 
+            ArrayList<String> groups = new ArrayList<>();
             if (response != null) {
                 Document doc = Jsoup.parse(response);
                 Element element = doc.getElementById("group-list");
-
-                groups = (ArrayList<String>) element.stream().map(option ->
-                        option.selectFirst("option").attr("value"))
-                        .collect(Collectors.toList());
+                if (element != null) {
+                    groups = (ArrayList<String>) element.select("option").stream()
+                            .map(option -> option.attr("value"))
+                            .collect(Collectors.toList());
+                }
             }
 
-            map.put((finalI == 0) ? "очная" : "заочная", groups);
-            groups.clear();
+            map.put(studyForm, groups);
         }
 
         return map;
@@ -151,57 +152,53 @@ public class MaxService {
                         .bodyToMono(String.class)
                         .block();
 
-                if (response != null) {
-                    Document doc = Jsoup.parse(response);
-                    Element element = doc.getElementById("lessons");
+                if (response == null) continue;
 
-                    AtomicReference<String> dayWeek = new AtomicReference<>("");
+                Document doc = Jsoup.parse(response);
+                Element lessons = doc.getElementsByClass("lessons").first();
+                if (lessons == null) continue;
 
-                    schedule = (ArrayList<Schedule>) element.stream().flatMap(day -> {
-                        dayWeek.set(day.getElementById("lesson-day-head")
-                                .getElementById("lesson-day-title").text().trim());
-                        return day.getElementById("lesson-grid").stream();
-                    }).map(lesson -> {
-                        Element data = lesson.getElementById("lesson-card");
+                AtomicReference<String> dayWeek = new AtomicReference<>("");
 
-                        String time = data.getElementById("lesson-time").text();
-                        String subject = data.getElementById("lesson-subject").text().trim();
-                        Integer weekCount = Integer.parseInt(data.getElementById("lesson-chip-week").text().split(":")[1].trim());
+                schedule.addAll(lessons.getElementsByClass("lesson-day").stream().flatMap(day -> {
+                    dayWeek.set(day.getElementsByClass("lesson-day-title").first().text().trim());
+                    return day.getElementsByClass("lesson-card").stream();
+                }).map(data -> {
+                    String time = data.getElementsByClass("lesson-time").first().text();
+                    String subject = data.getElementsByClass("lesson-subject").first().text().trim();
+                    Integer weekCount = Integer.parseInt(data.getElementsByClass("lesson-chip-week").first().text().split(":")[1].trim());
 
-                        AtomicReference<String> type = new AtomicReference<>("");
-                        AtomicReference<String> location = new AtomicReference<>("");
-                        AtomicReference<String> teacher = new AtomicReference<>("");
+                    AtomicReference<String> type = new AtomicReference<>("");
+                    AtomicReference<String> location = new AtomicReference<>("");
+                    AtomicReference<String> teacher = new AtomicReference<>("");
 
-                        data.getElementById("lesson-meta").stream().forEach(meta -> {
+                    data.getElementsByClass("lesson-meta").first().getElementsByClass("lesson-chip").stream().forEach(meta -> {
+                        String[] parts = meta.text().split(":", 2);
+                        if (parts.length < 2) return;
+                        String val = parts[1].trim();
+                        switch (parts[0]) {
+                            case "Тип" -> type.set(val.equals("л") ? "Лекция" : val.equals("лаб") ? "Лабораторная"
+                                    : val.equals("пр") ? "Практика" : val);
+                            case "Ауд." -> location.set(val);
+                            case "Преп." -> teacher.set(val);
+                        }
+                    });
 
-                            String dotSplit = meta.text().split(":")[1];
+                    Schedule savable = new Schedule();
+                    savable.setGroup(group);
+                    savable.setDayWeek(dayWeek.get());
+                    savable.setTimePeriod(time);
+                    savable.setLessonName(subject);
+                    savable.setWeekCount(weekCount);
+                    savable.setLessonType(type.get());
+                    savable.setAuditory(location.get());
+                    savable.setEiosLink("");
 
-                            switch (meta.text().split(":")[0]) {
-                                case "Тип" -> type.set(dotSplit.trim().equals("л") ? "Лекция" : dotSplit.equals("лаб") ? "Лабораторная"
-                                        :  dotSplit.equals("п") ? "Практика" : type.get().substring(0, 1).toUpperCase()
-                                        + toString().substring(1));
-                                case "Ауд." -> location.set(dotSplit);
-                                case "Преп." -> teacher.set(dotSplit);
-                            }
-                        });
+                    Teacher teach = persistenceService.getOrPersistTeacher(teacher.get());
+                    savable.setTeacher(teach);
 
-                        Schedule savable = new Schedule();
-                        savable.setGroup(group);
-                        savable.setDayWeek(dayWeek.get());
-                        savable.setTimePeriod(time);
-                        savable.setLessonName(subject);
-                        savable.setWeekCount(weekCount);
-                        savable.setLessonType(type.get());
-                        savable.setAuditory(location.get());
-                        savable.setEiosLink("");
-
-                        Teacher teach = persistenceService.getOrPersistTeacher(teacher.get());
-
-                        savable.setTeacher(teach);
-
-                        return savable;
-                    }).collect(Collectors.toList());
-                }
+                    return savable;
+                }).collect(Collectors.toList()));
             }
         } else if (group.getStudyForm().equals("Заочная")) {
             for (int i = 0; i <= 3; i++) {
@@ -218,60 +215,57 @@ public class MaxService {
                         .bodyToMono(String.class)
                         .block();
 
-                if (response != null) {
-                    Document doc = Jsoup.parse(response);
-                    Element element = doc.getElementById("lessons");
+                if (response == null) continue;
 
-                    AtomicReference<String> dayWeek = new AtomicReference<>("");
-                    AtomicReference<String> pinnedDate = new AtomicReference<>("");
+                Document doc = Jsoup.parse(response);
+                Element lessons = doc.getElementsByClass("lessons").first();
+                if (lessons == null) continue;
 
-                    schedule = (ArrayList<Schedule>) element.stream().flatMap(day -> {
-                        String head = day.getElementById("lesson-day-head").getElementById("lesson-day-title").text().trim();
-                        dayWeek.set(dayWeekDistantMap.get(head.split(" ")[2]));
-                        pinnedDate.set(head.split("Дата: ")[1]);
-                        return day.getElementById("lesson-grid").stream();
-                    }).map(lesson -> {
-                        Element data = lesson.getElementById("lesson-card");
+                AtomicReference<String> dayWeek = new AtomicReference<>("");
+                AtomicReference<String> pinnedDate = new AtomicReference<>("");
 
-                        String time = lessonNumberMap.get(lessonDistantMap.get(data.getElementById("lesson-time").text()));
-                        String subject = data.getElementById("lesson-subject").text().trim();
-                        Integer weekCount = Integer.parseInt(data.getElementById("lesson-chip-week").text().split(":")[1].trim());
+                // head format: "День недели: ср · Дата: 01.04"
+                schedule.addAll(lessons.getElementsByClass("lesson-day").stream().flatMap(day -> {
+                    String head = day.getElementsByClass("lesson-day-title").first().text().trim();
+                    dayWeek.set(dayWeekDistantMap.get(head.split(" ")[2]));
+                    pinnedDate.set(head.split("Дата: ")[1]);
+                    return day.getElementsByClass("lesson-card").stream();
+                }).map(data -> {
+                    String time = lessonNumberMap.get(lessonDistantMap.get(data.getElementsByClass("lesson-time").first().text()));
+                    String subject = data.getElementsByClass("lesson-subject").first().text().trim();
+                    Integer weekCount = Integer.parseInt(data.getElementsByClass("lesson-chip-week").first().text().split(":")[1].trim());
 
-                        AtomicReference<String> type = new AtomicReference<>("");
-                        AtomicReference<String> location = new AtomicReference<>("");
-                        AtomicReference<String> teacher = new AtomicReference<>("");
+                    AtomicReference<String> type = new AtomicReference<>("");
+                    AtomicReference<String> location = new AtomicReference<>("");
+                    AtomicReference<String> teacher = new AtomicReference<>("");
 
-                        data.getElementById("lesson-meta").stream().forEach(meta -> {
+                    data.getElementsByClass("lesson-meta").first().getElementsByClass("lesson-chip").stream().forEach(meta -> {
+                        String[] parts = meta.text().split(":", 2);
+                        if (parts.length < 2) return;
+                        String val = parts[1].trim();
+                        switch (parts[0]) {
+                            case "Тип" -> type.set(val);
+                            case "Ауд." -> location.set(val);
+                            case "Преп." -> teacher.set(val);
+                        }
+                    });
 
-                            String dotSplit = meta.text().split(":")[1];
+                    Schedule savable = new Schedule();
+                    savable.setGroup(group);
+                    savable.setDayWeek(dayWeek.get());
+                    savable.setTimePeriod(time);
+                    savable.setLessonName(subject);
+                    savable.setWeekCount(weekCount);
+                    savable.setLessonType(type.get());
+                    savable.setAuditory(location.get());
+                    savable.setPinnedDate(pinnedDate.get());
+                    savable.setEiosLink("");
 
-                            switch (meta.text().split(":")[0]) {
-                                case "Тип" -> type.set(dotSplit.trim().equals("л") ? "Лекция" : dotSplit.equals("лаб") ? "Лабораторная"
-                                        :  dotSplit.equals("п") ? "Практика" : type.get().substring(0, 1).toUpperCase()
-                                        + toString().substring(1));
-                                case "Ауд." -> location.set(dotSplit);
-                                case "Преп." -> teacher.set(dotSplit);
-                            }
-                        });
+                    Teacher teach = persistenceService.getOrPersistTeacher(teacher.get());
+                    savable.setTeacher(teach);
 
-                        Schedule savable = new Schedule();
-                        savable.setGroup(group);
-                        savable.setDayWeek(dayWeek.get());
-                        savable.setTimePeriod(time);
-                        savable.setLessonName(subject);
-                        savable.setWeekCount(weekCount);
-                        savable.setLessonType(type.get());
-                        savable.setAuditory(location.get());
-                        savable.setPinnedDate(pinnedDate.get());
-                        savable.setEiosLink("");
-
-                        Teacher teach = persistenceService.getOrPersistTeacher(teacher.get());
-
-                        savable.setTeacher(teach);
-
-                        return savable;
-                    }).collect(Collectors.toList());
-                }
+                    return savable;
+                }).collect(Collectors.toList()));
             }
         }
 
