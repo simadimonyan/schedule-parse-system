@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/minio-webhook")
 public class WebhookController {
 
-    private final SchedulePersistenceService schedulePersistenceService;
+    private final SchedulePersistenceService persistenceService;
     private final CacheService cacheService;
 
 
     @Autowired
-    public WebhookController(SchedulePersistenceService schedulePersistenceService, CacheService cacheService) {
-        this.schedulePersistenceService = schedulePersistenceService;
+    public WebhookController(SchedulePersistenceService persistenceService, CacheService cacheService) {
+        this.persistenceService = persistenceService;
         this.cacheService = cacheService;
     }
 
@@ -36,7 +36,7 @@ public class WebhookController {
 
             if (event.getKey().contains(".xls") || event.getKey().contains(".xlsx")) {
                 cacheService.clearAllCaches();
-                schedulePersistenceService.persistSchedule(event.getKey());
+                persistenceService.persistSchedule(event.getKey());
             }
         }
         catch (Exception e) {

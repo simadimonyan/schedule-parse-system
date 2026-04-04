@@ -19,12 +19,12 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "Authorization")
 public class GroupController {
 
-    private final SchedulePersistenceService schedulePersistenceService;
+    private final SchedulePersistenceService persistenceService;
     private final GroupMapper groupMapper;
     private final ScheduleMapper scheduleMapper;
 
-    public GroupController(SchedulePersistenceService schedulePersistenceService, GroupMapper groupMapper, ScheduleMapper scheduleMapper) {
-        this.schedulePersistenceService = schedulePersistenceService;
+    public GroupController(SchedulePersistenceService persistenceService, GroupMapper groupMapper, ScheduleMapper scheduleMapper) {
+        this.persistenceService = persistenceService;
         this.groupMapper = groupMapper;
         this.scheduleMapper = scheduleMapper;
     }
@@ -32,25 +32,25 @@ public class GroupController {
     @GetMapping("/{group}")
     public ResponseEntity<GroupResponse> getGroup(@PathVariable("group") String groupName) {
         log.info("GET Запрос: /api/v1/groups/{}", groupName);
-        return ResponseEntity.ok(groupMapper.toGroupResponse(schedulePersistenceService.getGroup(groupName)));
+        return ResponseEntity.ok(groupMapper.toGroupResponse(persistenceService.getGroup(groupName)));
     }
 
     @GetMapping("/search")
     public ResponseEntity<GroupsResponse> search(@RequestParam("course") Integer course, @RequestParam(value = "level", required = false) String level) {
         log.info("GET Запрос: /api/v1/groups/search?course={}&level={}", course, level);
-        return ResponseEntity.ok(groupMapper.toGroupsResponse(schedulePersistenceService.getGroups(course, level)));
+        return ResponseEntity.ok(groupMapper.toGroupsResponse(persistenceService.getGroups(course, level)));
     }
 
     @GetMapping("/levels")
     public ResponseEntity<GroupLevelsResponse> getLevels(@RequestParam("course") Integer course) {
         log.info("GET Запрос: /api/v1/groups/levels?course={}", course);
-        return ResponseEntity.ok(new GroupLevelsResponse(schedulePersistenceService.getLevels(course)));
+        return ResponseEntity.ok(new GroupLevelsResponse(persistenceService.getLevels(course)));
     }
 
     @GetMapping("/courses")
     public ResponseEntity<GroupCoursesResponse> getCourses() {
         log.info("GET Запрос: /api/v1/groups/courses");
-        return ResponseEntity.ok(new GroupCoursesResponse(schedulePersistenceService.getCourses()));
+        return ResponseEntity.ok(new GroupCoursesResponse(persistenceService.getCourses()));
     }
 
     @GetMapping("/schedule")
@@ -61,7 +61,7 @@ public class GroupController {
             @RequestParam("weekCount") Integer weekCount
     ) {
         log.info("GET Запрос: /api/v1/groups/schedule?group={}&dayWeek={}&date={}&weekCount={}", groupName, dayWeek, date, weekCount);
-        return ResponseEntity.ok(scheduleMapper.toScheduleResponse(schedulePersistenceService.getGroupSchedule(groupName, dayWeek, date, weekCount)));
+        return ResponseEntity.ok(scheduleMapper.toScheduleResponse(persistenceService.getGroupSchedule(groupName, dayWeek, date, weekCount)));
     }
 
 }

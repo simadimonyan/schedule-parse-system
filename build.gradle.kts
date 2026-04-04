@@ -13,11 +13,15 @@ repositories {
 
 dependencies {
 
+    // HTML parser
+    implementation("org.jsoup:jsoup:1.22.1")
+
     // JUnit
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    // Spring (Boot, Web, Data, Security)
+    // Spring (Boot, Web, Data, Security, Web Flux)
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")

@@ -255,7 +255,37 @@ public class SchedulePersistenceService {
         InputStream excel = storageService.getObjectByName(fileName.split("/")[1]);
         List<Schedule> newSchedules = excelService.parseWorkbook(fileName, excel);
 
-        for (Schedule schedule : newSchedules) {
+        extractAndLoadSchedule(newSchedules);
+    }
+
+    @Async
+    @Transactional
+    public void persistSchedule(List<Schedule> list) {
+        extractAndLoadSchedule(list);
+    }
+
+    @Async
+    @Transactional
+    public void persistGroups(List<Group> list) {
+        for (Group group : list) {
+            if (group != null) {
+                groupRepository.findByName(group.getName())
+                        .orElseGet(() -> groupRepository.saveAndFlush(group));
+            }
+        }
+    }
+
+    public Teacher getOrPersistTeacher(String teacher) {
+        return teacherRepository.findByLabel(teacher)
+                .orElseGet(() -> {
+                    Teacher savable = new Teacher();
+                    savable.setLabel(teacher);
+                    return teacherRepository.saveAndFlush(savable);
+                });
+    }
+
+    private void extractAndLoadSchedule(List<Schedule> list) {
+        for (Schedule schedule : list) {
             Teacher teacher = schedule.getTeacher();
             if (teacher != null) {
                 Teacher managedTeacher = teacherRepository.findByLabel(teacher.getLabel())
@@ -271,7 +301,7 @@ public class SchedulePersistenceService {
             }
         }
 
-        Set<Long> groupIds = newSchedules.stream()
+        Set<Long> groupIds = list.stream()
                 .map(s -> s.getGroup().getId())
                 .collect(Collectors.toSet());
 
@@ -279,7 +309,7 @@ public class SchedulePersistenceService {
             scheduleRepository.deleteAllByGroupId(groupId);
         }
 
-        scheduleRepository.saveAllAndFlush(newSchedules);
+        scheduleRepository.saveAllAndFlush(list);
     }
 
 }
