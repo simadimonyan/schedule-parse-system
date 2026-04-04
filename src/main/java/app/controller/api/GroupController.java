@@ -7,7 +7,7 @@ import app.repository.models.dto.api.group.GroupsResponse;
 import app.repository.models.dto.api.schedule.ScheduleResponse;
 import app.repository.models.dto.mappers.GroupMapper;
 import app.repository.models.dto.mappers.ScheduleMapper;
-import app.service.persistence.PersistenceService;
+import app.service.persistence.SchedulePersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "Authorization")
 public class GroupController {
 
-    private final PersistenceService persistenceService;
+    private final SchedulePersistenceService persistenceService;
     private final GroupMapper groupMapper;
     private final ScheduleMapper scheduleMapper;
 
-    public GroupController(PersistenceService persistenceService, GroupMapper groupMapper, ScheduleMapper scheduleMapper) {
+    public GroupController(SchedulePersistenceService persistenceService, GroupMapper groupMapper, ScheduleMapper scheduleMapper) {
         this.persistenceService = persistenceService;
         this.groupMapper = groupMapper;
         this.scheduleMapper = scheduleMapper;

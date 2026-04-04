@@ -15,6 +15,8 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     Optional<List<Group>> findAllByCourseAndLevel(Integer course, String level);
 
+    Optional<Group> findFirstByIdGreaterThanOrderByIdAsc(Long lastId);
+
     @Query("SELECT DISTINCT g.level FROM Group g WHERE g.course = :course")
     Optional<List<String>> findDistinctLevels(Integer course);
 

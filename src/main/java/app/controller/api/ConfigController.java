@@ -1,9 +1,12 @@
 package app.controller.api;
 
 import app.repository.models.dto.api.configuration.WeekResponse;
-import app.service.persistence.PersistenceService;
+import app.service.max.MaxService;
+import app.service.persistence.SchedulePersistenceService;
+import app.service.schedule.ScheduleService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.Max;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -19,10 +22,12 @@ public class ConfigController {
     @Value("${schedule.admin.token}")
     private String adminToken;
 
-    private final PersistenceService persistenceService;
+    private final SchedulePersistenceService persistenceService;
+    private final MaxService maxService;
 
-    public ConfigController(PersistenceService persistenceService) {
+    public ConfigController(SchedulePersistenceService persistenceService, MaxService maxService) {
         this.persistenceService = persistenceService;
+        this.maxService = maxService;
     }
 
     @GetMapping("/week")
@@ -37,6 +42,28 @@ public class ConfigController {
         if (token.startsWith("Bearer") && token.substring(7).equals(adminToken)) {
             persistenceService.swapWeek();
             return ResponseEntity.ok(new WeekResponse(Integer.parseInt(persistenceService.getConfig("weekCount").getValue())));
+        }
+        log.warn("Попытка доступа к административным функциям - доступ отказан");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ отказан");
+    }
+
+    @PostMapping("/groups/load")
+    public ResponseEntity<?> loadExternalGroups(@RequestBody String token) {
+        log.info("POST Запрос: /api/v1/configuration/groups/load");
+        if (token.startsWith("Bearer") && token.substring(7).equals(adminToken)) {
+            maxService.loadAndPersistGroups();
+            return ResponseEntity.ok("Процесс запущен!");
+        }
+        log.warn("Попытка доступа к административным функциям - доступ отказан");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ отказан");
+    }
+
+    @PostMapping("/schedule/load")
+    public ResponseEntity<?> loadExternalSchedule(@RequestBody String token) {
+        log.info("POST Запрос: /api/v1/configuration/schedule/load");
+        if (token.startsWith("Bearer") && token.substring(7).equals(adminToken)) {
+            maxService.loadAndPersistGroups();
+            return ResponseEntity.ok("Процесс запущен!");
         }
         log.warn("Попытка доступа к административным функциям - доступ отказан");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ отказан");

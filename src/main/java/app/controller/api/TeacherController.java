@@ -5,9 +5,8 @@ import app.repository.models.dto.api.teacher.TeacherResponse;
 import app.repository.models.dto.api.teacher.TeachersResponse;
 import app.repository.models.dto.mappers.ScheduleMapper;
 import app.repository.models.dto.mappers.TeacherMapper;
-import app.service.persistence.PersistenceService;
+import app.service.persistence.SchedulePersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +18,12 @@ import org.springframework.web.bind.annotation.*;
 @SecurityRequirement(name = "Authorization")
 public class TeacherController {
 
-    private final PersistenceService persistenceService;
+    private final SchedulePersistenceService persistenceService;
     private final TeacherMapper teacherMapper;
     private final ScheduleMapper scheduleMapper;
 
     @Autowired
-    public TeacherController(PersistenceService persistenceService, TeacherMapper teacherMapper, ScheduleMapper scheduleMapper) {
+    public TeacherController(SchedulePersistenceService persistenceService, TeacherMapper teacherMapper, ScheduleMapper scheduleMapper) {
         this.persistenceService = persistenceService;
         this.teacherMapper = teacherMapper;
         this.scheduleMapper = scheduleMapper;
