@@ -56,11 +56,11 @@ public class ConfigController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ отказан");
     }
 
-    @PostMapping("/schedule/load")
-    public ResponseEntity<?> loadExternalSchedule(@RequestBody String token) {
+    @PostMapping("/schedule/load/{group}")
+    public ResponseEntity<?> loadExternalSchedule(@PathVariable("group") String groupName, @RequestBody String token) {
         log.info("POST Запрос: /api/v1/configuration/schedule/load");
         if (token.startsWith("Bearer") && token.substring(7).equals(adminToken)) {
-            maxService.loadAndPersistSchedule();
+            maxService.loadAndPersistSchedule(groupName);
             return ResponseEntity.ok("Процесс запущен!");
         }
         log.warn("Попытка доступа к административным функциям - доступ отказан");
