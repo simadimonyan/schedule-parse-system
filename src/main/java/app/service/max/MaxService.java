@@ -103,7 +103,6 @@ public class MaxService {
        log.info("Синхронизация групп завершена!");
     }
 
-    @Async
     @Transactional
     public void loadAndPersistSchedule() {
         Group group;
@@ -125,7 +124,6 @@ public class MaxService {
         log.info("Синхронизация расписания %s завершена!".formatted(group.getName()));
     }
 
-    @Async
     @Transactional
     public void loadAndPersistSchedule(String label) {
         Group group = groupRepository.findByName(label).get();
@@ -178,6 +176,7 @@ public class MaxService {
 
     private List<Schedule> getSchedule(Group group) {
         ArrayList<Schedule> schedule = new ArrayList<>();
+        log.info("Парсинг расписания для группы {} (форма: {}, курс: {})", group.getName(), group.getStudyForm(), group.getCourse());
 
         if (group.getStudyForm().equals("Очная")) {
             for (int i = 0; i <= 1; i++) {
@@ -360,6 +359,8 @@ public class MaxService {
                 log.info("[Заочная] [{}] Неделя {}: после фильтра {} пар", group.getName(), finalI + 1, schedule.stream().filter(Objects::nonNull).count());
                 log.info("[Заочная] [{}] Неделя {}: спаршено {} пар", group.getName(), finalI + 1, schedule.size());
             }
+        } else {
+            log.warn("Неизвестная форма обучения для группы {}: {}", group.getName(), group.getStudyForm());
         }
 
         return schedule;
