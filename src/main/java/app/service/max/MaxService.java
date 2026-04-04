@@ -103,6 +103,7 @@ public class MaxService {
        log.info("Синхронизация групп завершена!");
     }
 
+    @Async
     @Transactional
     public void loadAndPersistSchedule() {
         Group group;
@@ -124,6 +125,7 @@ public class MaxService {
         log.info("Синхронизация расписания %s завершена!".formatted(group.getName()));
     }
 
+    @Async
     @Transactional
     public void loadAndPersistSchedule(String label) {
         Group group = groupRepository.findByName(label).get();
@@ -310,7 +312,6 @@ public class MaxService {
                                 : rawTime.equals("9:40") ? "09:40" : rawTime));
                         Integer lessonCount = lessonDistantMap.get(rawTime);
                         String subject = data.getElementsByClass("lesson-subject").first().text().trim();
-                        Integer weekCount = Integer.parseInt(data.getElementsByClass("lesson-chip-week").first().text().split(":")[1].trim());
 
                         if (time == null) {
                             log.warn("[Заочная] [{}] Неизвестное время пары: «{}» — пара пропущена", group.getName(), rawTime);
@@ -340,7 +341,7 @@ public class MaxService {
                         savable.setDayWeek(dayWeek.get());
                         savable.setTimePeriod(time);
                         savable.setLessonName(subject);
-                        savable.setWeekCount(weekCount);
+                        savable.setWeekCount(1);
                         savable.setLessonCount(lessonCount);
                         savable.setLessonType(type.get());
                         savable.setAuditory(location.get());
@@ -361,6 +362,25 @@ public class MaxService {
             }
         } else {
             log.warn("Неизвестная форма обучения для группы {}: {}", group.getName(), group.getStudyForm());
+        }
+
+        if (group.getStudyForm().equals("Заочная")) {
+            List<Schedule> copies = schedule.stream().map(it -> {
+                Schedule copy = new Schedule();
+                copy.setGroup(it.getGroup());
+                copy.setTeacher(it.getTeacher());
+                copy.setDayWeek(it.getDayWeek());
+                copy.setTimePeriod(it.getTimePeriod());
+                copy.setLessonCount(it.getLessonCount());
+                copy.setLessonName(it.getLessonName());
+                copy.setLessonType(it.getLessonType());
+                copy.setAuditory(it.getAuditory());
+                copy.setPinnedDate(it.getPinnedDate());
+                copy.setEiosLink(it.getEiosLink());
+                copy.setWeekCount(2);
+                return copy;
+            }).toList();
+            schedule.addAll(copies);
         }
 
         return schedule;
