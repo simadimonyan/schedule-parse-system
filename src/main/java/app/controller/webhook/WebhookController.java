@@ -2,11 +2,10 @@ package app.controller.webhook;
 
 import app.repository.models.dto.minio.MinioEvent;
 import app.service.cache.CacheService;
-import app.service.persistence.PersistenceService;
+import app.service.persistence.SchedulePersistenceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,12 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/minio-webhook")
 public class WebhookController {
 
-    private final PersistenceService persistenceService;
+    private final SchedulePersistenceService persistenceService;
     private final CacheService cacheService;
 
 
     @Autowired
-    public WebhookController(PersistenceService persistenceService, CacheService cacheService) {
+    public WebhookController(SchedulePersistenceService persistenceService, CacheService cacheService) {
         this.persistenceService = persistenceService;
         this.cacheService = cacheService;
     }
