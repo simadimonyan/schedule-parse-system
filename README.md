@@ -21,7 +21,7 @@
 
 1. Клонируйте репозиторий:
     ```
-    git clone https://github.com/simadimonyan/schedule-parse-system.git
+    git clone https://github.com/simadimonyan/schedule-parse-system.git -b production
     cd schedule-parse-service
     ```
 
