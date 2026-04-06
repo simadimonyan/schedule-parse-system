@@ -307,9 +307,10 @@ public class MaxService {
                 }).map(data -> {
                     try {
                         String rawTime = data.getElementsByClass("lesson-time").first().text();
-                        String time = lessonNumberMap.get(lessonDistantMap.get(rawTime.equals("8:00") ? "08:00"
-                                : rawTime.equals("9:40") ? "09:40" : rawTime));
-                        Integer lessonCount = lessonDistantMap.get(rawTime);
+                        String normalizedTime = rawTime.equals("8:00") ? "08:00"
+                                : rawTime.equals("9:40") ? "09:40" : rawTime;
+                        String time = lessonNumberMap.get(lessonDistantMap.get(normalizedTime));
+                        Integer lessonCount = lessonDistantMap.get(normalizedTime);
                         String subject = data.getElementsByClass("lesson-subject").first().text().trim();
 
                         if (time == null) {
