@@ -321,16 +321,19 @@ public class MaxService {
                         AtomicReference<String> location = new AtomicReference<>("");
                         AtomicReference<String> teacher = new AtomicReference<>("");
 
-                        data.getElementsByClass("lesson-meta").first().getElementsByClass("lesson-chip").stream().forEach(meta -> {
-                            String[] parts = meta.text().split(": ", 2);
-                            if (parts.length < 2) return;
-                            String val = parts[1].trim();
-                            switch (parts[0]) {
-                                case "Тип" -> type.set(val.substring(0, 1).toUpperCase() + val.substring(1));
-                                case "Ауд." -> location.set(val);
-                                case "Преп." -> teacher.set(val);
-                            }
-                        });
+                        Element metaElement = data.getElementsByClass("lesson-meta").first();
+                        if (metaElement != null) {
+                            metaElement.getElementsByClass("lesson-chip").stream().forEach(meta -> {
+                                String[] parts = meta.text().split(": ", 2);
+                                if (parts.length < 2) return;
+                                String val = parts[1].trim();
+                                switch (parts[0]) {
+                                    case "Тип" -> type.set(val.substring(0, 1).toUpperCase() + val.substring(1));
+                                    case "Ауд." -> location.set(val);
+                                    case "Преп." -> teacher.set(val);
+                                }
+                            });
+                        }
 
                         log.debug("[Заочная] [{}] Пара: день={}, дата={}, время={}, предмет={}, тип={}, ауд={}, преп={}",
                                 group.getName(), dayWeek.get(), pinnedDate.get(), time, subject, type.get(), location.get(), teacher.get());
