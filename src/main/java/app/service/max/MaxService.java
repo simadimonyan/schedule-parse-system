@@ -117,10 +117,15 @@ public class MaxService {
 
         log.info("Начало синхронизации расписания %s со сторонним сервером!".formatted(group.getName()));
 
-        List<Schedule> schedule = getSchedule(group);
+        try {
+            List<Schedule> schedule = getSchedule(group);
 
-        scheduleRepository.deleteAllByGroupId(group.getId());
-        persistenceService.persistSchedule(schedule);
+            scheduleRepository.deleteAllByGroupId(group.getId());
+            persistenceService.persistSchedule(schedule);
+        }
+        catch (Exception e) {
+            log.info("Синхронизация расписания %s произошла с ошибкой!".formatted(group.getName()));
+        }
         persistenceService.setConfig("last_external_parsed_group", group.getId().toString());
         log.info("Синхронизация расписания %s завершена!".formatted(group.getName()));
     }
