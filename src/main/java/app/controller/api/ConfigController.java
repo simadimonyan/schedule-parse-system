@@ -3,6 +3,7 @@ package app.controller.api;
 import app.repository.models.dto.api.configuration.WeekResponse;
 import app.service.max.MaxService;
 import app.service.metrics.OnlineService;
+import app.service.metrics.StatService;
 import app.service.persistence.SchedulePersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,11 +29,13 @@ public class ConfigController {
 
     private final SchedulePersistenceService persistenceService;
     private final OnlineService onlineService;
+    private final StatService statService;
     private final MaxService maxService;
 
-    public ConfigController(SchedulePersistenceService persistenceService, OnlineService onlineService, MaxService maxService) {
+    public ConfigController(SchedulePersistenceService persistenceService, OnlineService onlineService, StatService statService, MaxService maxService) {
         this.persistenceService = persistenceService;
         this.onlineService = onlineService;
+        this.statService = statService;
         this.maxService = maxService;
     }
 
@@ -90,6 +93,12 @@ public class ConfigController {
                         .event("online-event")
                         .data(onlineService.getOnline().size() + "")
                         .build());
+    }
+
+    @GetMapping("/online/top/{mode}")
+    public ResponseEntity<?> top(@PathVariable("mode") String mode) {
+        log.info("GET Запрос: /api/v1/configuration/online/top?mode=%s".formatted(mode));
+        return ResponseEntity.ok(mode.equals("groups") ? statService.getTopGroupsByViews() : statService.getTopTeachersByViews());
     }
 
 }

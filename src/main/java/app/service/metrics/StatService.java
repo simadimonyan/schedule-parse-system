@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -21,6 +21,48 @@ public class StatService {
     @Autowired
     public StatService(ConfigRepository configRepository) {
         this.configRepository = configRepository;
+    }
+
+    public Map<String, Integer> getTopGroupsByViews() {
+
+        List<Config> data = configRepository.findAllByTag("group_views")
+                .orElseGet(ArrayList::new);
+
+        return data.stream()
+                .collect(Collectors.groupingBy(
+                        Config::getKey,
+                        Collectors.summingInt(c -> Integer.parseInt(c.getValue()))
+                ))
+                .entrySet().stream()
+                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                .limit(5)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> a,
+                        HashMap::new
+                ));
+    }
+
+    public Map<String, Integer> getTopTeachersByViews() {
+
+        List<Config> data = configRepository.findAllByTag("teacher_views")
+                .orElseGet(ArrayList::new);
+
+        return data.stream()
+                .collect(Collectors.groupingBy(
+                        Config::getKey,
+                        Collectors.summingInt(c -> Integer.parseInt(c.getValue()))
+                ))
+                .entrySet().stream()
+                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                .limit(5)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> a,
+                        HashMap::new
+                ));
     }
 
     @Async
