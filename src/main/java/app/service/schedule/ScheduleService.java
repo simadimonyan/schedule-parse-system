@@ -36,8 +36,8 @@ public class ScheduleService {
         maxService.loadAndPersistGroups();
     }
 
-    // с 8 до 8 каждые 15 минут кроме воскресенья
-    @Scheduled(cron = "0 15/15 8-19 * * 1-6", zone = "Europe/Moscow")
+    // с 8 до 8 каждые 3 минуты кроме воскресенья
+    @Scheduled(cron = "0 3/3 8-19 * * 1-6", zone = "Europe/Moscow")
     public void loadAndPersistSchedule() {
         maxService.loadAndPersistSchedule();
     }

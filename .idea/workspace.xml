@@ -4,32 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ teacher parser anti-duplicate system">
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/QuizController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/AnswerRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/ApplicationRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/QuestionRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/QuizRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/auth/AdminToken.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/request/QuizRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/request/SubmitRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/response/QuizResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/response/QuizzesResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/unit/AnswerUnit.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/unit/QuestionUnit.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/quiz/unit/SubmitUnit.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/ApplicationMapper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Answer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Application.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Question.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Quiz.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/service/persistence/QuizPersistenceService.java" afterDir="false" />
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ exception handler for external server">
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/service/metrics/OnlineService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/service/metrics/StatService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/configuration/SecurityConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/configuration/SecurityConfiguration.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/webhook/WebhookController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/webhook/WebhookController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/dao/ConfigRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/ConfigRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Config.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Config.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Group.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Group.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/max/MaxService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/max/MaxService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/persistence/SchedulePersistenceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/persistence/SchedulePersistenceService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/schedule/ScheduleService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/schedule/ScheduleService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,7 +50,26 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="production" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;simadimonyan&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="302465c6-fa11-4e4e-8f05-6c4020a203bc" />
+        <option name="url" value="https://github.com/simadimonyan/schedule-parse-system.git" />
+      </UrlAndAccount>
+    </option>
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -83,16 +89,32 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;production&quot;,
+    &quot;extract.method.default.visibility&quot;: &quot;private&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;development&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/dimitrisimonyan/Yandex.Disk.localized/Projects/Backend/schedule-parse-service&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.statistic.project.settings&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RunManager" selected="Docker.App">
+    <configuration default="true" type="lua.app" factoryName="Lua Application">
+      <option name="program" value="lua" />
+      <option name="file" value="" />
+      <option name="workingDir" value="$PROJECT_DIR$/src/main/java" />
+      <option name="debuggerType" value="2" />
+      <option name="params" value="" />
+      <option name="charset" value="UTF-8" />
+      <option name="showConsole" value="true" />
+      <method v="2" />
+    </configuration>
     <configuration name="App" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="schedule-parse-service.main" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="app.App" />
@@ -177,30 +199,28 @@
       <workItem from="1766148843966" duration="737000" />
       <workItem from="1766490796077" duration="706000" />
       <workItem from="1766515270923" duration="7000" />
-    </task>
-    <task id="LOCAL-00001" summary="+ MinIO Webhook">
-      <option name="closed" value="true" />
-      <created>1758654481741</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1758654481741</updated>
-    </task>
-    <task id="LOCAL-00002" summary="+ MinIO Webhook">
-      <option name="closed" value="true" />
-      <created>1758654502705</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1758654502705</updated>
-    </task>
-    <task id="LOCAL-00003" summary="+ schema db">
-      <option name="closed" value="true" />
-      <created>1758657494321</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1758657494321</updated>
+      <workItem from="1767989422708" duration="21000" />
+      <workItem from="1768115933319" duration="1977000" />
+      <workItem from="1768543316213" duration="51000" />
+      <workItem from="1769640045743" duration="636000" />
+      <workItem from="1775051797845" duration="4916000" />
+      <workItem from="1775069724536" duration="1731000" />
+      <workItem from="1775115420209" duration="737000" />
+      <workItem from="1775140047656" duration="14101000" />
+      <workItem from="1775209927784" duration="6000" />
+      <workItem from="1775284396338" duration="3790000" />
+      <workItem from="1775302788292" duration="11708000" />
+      <workItem from="1775329432108" duration="104000" />
+      <workItem from="1775329568186" duration="924000" />
+      <workItem from="1775331114109" duration="6159000" />
+      <workItem from="1775343043825" duration="5000" />
+      <workItem from="1775343290733" duration="716000" />
+      <workItem from="1775344246690" duration="1005000" />
+      <workItem from="1775462664813" duration="1293000" />
+      <workItem from="1775469443522" duration="1090000" />
+      <workItem from="1775981182143" duration="2570000" />
+      <workItem from="1775983847354" duration="262000" />
+      <workItem from="1777274386812" duration="16114000" />
     </task>
     <task id="LOCAL-00004" summary="+ excel parser &amp; s3 integration">
       <option name="closed" value="true" />
@@ -418,7 +438,183 @@
       <option name="project" value="LOCAL" />
       <updated>1765536666747</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="+ excel parse update (dot split fix)">
+      <option name="closed" value="true" />
+      <created>1768116365498</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1768116365498</updated>
+    </task>
+    <task id="LOCAL-00032" summary="+ excel parse update (dot split fix)">
+      <option name="closed" value="true" />
+      <created>1768117312251</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1768117312251</updated>
+    </task>
+    <task id="LOCAL-00033" summary="+ external server integration">
+      <option name="closed" value="true" />
+      <created>1775307769597</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1775307769597</updated>
+    </task>
+    <task id="LOCAL-00034" summary="+ fix config controller">
+      <option name="closed" value="true" />
+      <created>1775310041194</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1775310041194</updated>
+    </task>
+    <task id="LOCAL-00035" summary="+ fix parse service">
+      <option name="closed" value="true" />
+      <created>1775311128396</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1775311128396</updated>
+    </task>
+    <task id="LOCAL-00036" summary="+ compose parse">
+      <option name="closed" value="true" />
+      <created>1775313170296</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1775313170296</updated>
+    </task>
+    <task id="LOCAL-00037" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775315178009</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1775315178009</updated>
+    </task>
+    <task id="LOCAL-00038" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775326908610</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1775326908610</updated>
+    </task>
+    <task id="LOCAL-00039" summary="+ dot update">
+      <option name="closed" value="true" />
+      <created>1775329585558</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1775329585558</updated>
+    </task>
+    <task id="LOCAL-00040" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775331886142</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1775331886143</updated>
+    </task>
+    <task id="LOCAL-00041" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775332798046</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1775332798046</updated>
+    </task>
+    <task id="LOCAL-00042" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775333470411</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1775333470411</updated>
+    </task>
+    <task id="LOCAL-00043" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775334336160</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1775334336160</updated>
+    </task>
+    <task id="LOCAL-00044" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775336458678</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1775336458678</updated>
+    </task>
+    <task id="LOCAL-00045" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775338620876</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1775338620876</updated>
+    </task>
+    <task id="LOCAL-00046" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775342234636</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1775342234636</updated>
+    </task>
+    <task id="LOCAL-00047" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775343444574</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1775343444574</updated>
+    </task>
+    <task id="LOCAL-00048" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775343708715</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1775343708715</updated>
+    </task>
+    <task id="LOCAL-00049" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775344628275</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1775344628275</updated>
+    </task>
+    <task id="LOCAL-00050" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775467532392</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1775467532392</updated>
+    </task>
+    <task id="LOCAL-00051" summary="+ bug fix">
+      <option name="closed" value="true" />
+      <created>1775469452012</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1775469452012</updated>
+    </task>
+    <task id="LOCAL-00052" summary="+ exception handler for external server">
+      <option name="closed" value="true" />
+      <created>1775984022228</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1775984022228</updated>
+    </task>
+    <option name="localTasksCounter" value="53" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -436,13 +632,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="+ MinIO Webhook" />
-    <MESSAGE value="+ schema db" />
-    <MESSAGE value="+ excel parser &amp; s3 integration" />
-    <MESSAGE value="+ async webhook" />
-    <MESSAGE value="+ group &amp; teacher api" />
-    <MESSAGE value="+ security auth" />
-    <MESSAGE value="+ open telemetry" />
     <MESSAGE value="+ redis &amp; excel service fix" />
     <MESSAGE value="+ schedule week change &amp; cache fix" />
     <MESSAGE value="+ configuration" />
@@ -460,6 +649,18 @@
     <MESSAGE value="+ excel parser fix" />
     <MESSAGE value="+ weekly cache clear for distant lessons update" />
     <MESSAGE value="+ teacher parser anti-duplicate system" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ teacher parser anti-duplicate system" />
+    <MESSAGE value="+ excel parse update (dot split fix)" />
+    <MESSAGE value="+ external server integration" />
+    <MESSAGE value="+ fix config controller" />
+    <MESSAGE value="+ fix parse service" />
+    <MESSAGE value="+ compose parse" />
+    <MESSAGE value="+ dot update" />
+    <MESSAGE value="+ bug fix" />
+    <MESSAGE value="+ exception handler for external server" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ exception handler for external server" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

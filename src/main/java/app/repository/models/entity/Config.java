@@ -15,10 +15,19 @@ public class Config implements Serializable {
     @Column(name = "config_id")
     private Long id;
 
+    @Column(name = "tag")
+    private String tag;
+
     @Column(name = "key")
     private String key;
 
     @Column(name = "value")
     private String value;
+
+    @Column(name = "created_at")
+    private String createdAt;
+
+    @Column(name = "updated_at")
+    private String updatedAt;
 
 }

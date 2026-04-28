@@ -56,7 +56,13 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AccessFilter accessFilter) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/teachers/**", "/api/v1/groups/**", "/api/v1/configuration/**", "/minio-webhook")
+                        .requestMatchers(
+                                "/api/v1/teachers/**",
+                                "/api/v1/groups/**",
+                                "/api/v1/configuration/**",
+                                "/api/v1/quizzes/**",
+                                "/minio-webhook"
+                        )
                         .authenticated()
                         .anyRequest().permitAll()
                 )

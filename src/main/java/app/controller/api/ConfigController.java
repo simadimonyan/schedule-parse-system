@@ -2,6 +2,7 @@ package app.controller.api;
 
 import app.repository.models.dto.api.configuration.WeekResponse;
 import app.service.max.MaxService;
+import app.service.metrics.OnlineService;
 import app.service.persistence.SchedulePersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.EntityNotFoundException;
@@ -9,7 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+
+import java.time.Duration;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -21,10 +27,12 @@ public class ConfigController {
     private String adminToken;
 
     private final SchedulePersistenceService persistenceService;
+    private final OnlineService onlineService;
     private final MaxService maxService;
 
-    public ConfigController(SchedulePersistenceService persistenceService, MaxService maxService) {
+    public ConfigController(SchedulePersistenceService persistenceService, OnlineService onlineService, MaxService maxService) {
         this.persistenceService = persistenceService;
+        this.onlineService = onlineService;
         this.maxService = maxService;
     }
 
@@ -65,6 +73,23 @@ public class ConfigController {
         }
         log.warn("Попытка доступа к административным функциям - доступ отказан");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ отказан");
+    }
+
+    @PostMapping("/online/heartbeat/{uuid}")
+    public ResponseEntity<?> heartbeat(@PathVariable("uuid") UUID uuid) {
+        log.info("POST Запрос: /api/v1/configuration/online/heartbeat/%s".formatted(uuid));
+        onlineService.heartbeat(uuid);
+        return ResponseEntity.ok("Вы теперь онлайн!");
+    }
+
+    @GetMapping("/online/sse")
+    public Flux<ServerSentEvent<String>> onlineStream() {
+        return Flux.interval(Duration.ofMinutes(1))
+                .map(sequence -> ServerSentEvent.<String> builder()
+                        .id(String.valueOf(sequence))
+                        .event("online-event")
+                        .data(onlineService.getOnline().size() + "")
+                        .build());
     }
 
 }

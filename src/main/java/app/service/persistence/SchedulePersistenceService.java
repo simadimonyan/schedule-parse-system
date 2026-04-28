@@ -9,6 +9,7 @@ import app.repository.models.entity.Group;
 import app.repository.models.entity.Schedule;
 import app.repository.models.entity.Teacher;
 import app.service.excel.ExcelService;
+import app.service.metrics.StatService;
 import app.service.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +42,7 @@ public class SchedulePersistenceService {
     private final TeacherRepository teacherRepository;
     private final GroupRepository groupRepository;
     private final ConfigRepository configRepository;
+    private final StatService statService;
 
     @Autowired
     public SchedulePersistenceService(
@@ -48,7 +51,8 @@ public class SchedulePersistenceService {
             ScheduleRepository scheduleRepository,
             TeacherRepository teacherRepository,
             GroupRepository groupRepository,
-            ConfigRepository configRepository
+            ConfigRepository configRepository,
+            StatService statService
     ) {
         this.excelService = excelService;
         this.storageService = storageService;
@@ -56,6 +60,7 @@ public class SchedulePersistenceService {
         this.teacherRepository = teacherRepository;
         this.groupRepository = groupRepository;
         this.configRepository = configRepository;
+        this.statService = statService;
     }
 
     @Cacheable("groups")
@@ -134,6 +139,8 @@ public class SchedulePersistenceService {
                         }
                         return true;
                     }).toList();
+
+        statService.addGroupView(name);
         return schedule;
     }
 
@@ -203,6 +210,8 @@ public class SchedulePersistenceService {
                         }
                         return true;
                     }).toList();
+
+        statService.addTeacherView(label);
         return schedule;
     }
 
@@ -299,7 +308,11 @@ public class SchedulePersistenceService {
             if (group != null) {
                 Group managedGroup = groupRepository.findByName(group.getName())
                         .orElseGet(() -> groupRepository.saveAndFlush(group));
+
+                managedGroup.setUpdatedAt(System.currentTimeMillis());
                 schedule.setGroup(managedGroup);
+
+                groupRepository.saveAndFlush(group);
             }
         }
 
