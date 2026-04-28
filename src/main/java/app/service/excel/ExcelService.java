@@ -123,6 +123,7 @@ public class ExcelService {
                                         group.setCourse(course);
                                         group.setLevel(level);
                                         group.setStudyForm(fileName.contains("ОФО") ? "Очная" : fileName.contains("ЗФО") ? "Заочная" : "Очно-заочная");
+                                        group.setUpdatedAt(System.currentTimeMillis());
 
                                         log.info("Индексирована группа: {}", group.getName());
                                         createdGroups.add(group);

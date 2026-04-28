@@ -120,8 +120,11 @@ public class MaxService {
         try {
             List<Schedule> schedule = getSchedule(group);
 
-            scheduleRepository.deleteAllByGroupId(group.getId());
-            persistenceService.persistSchedule(schedule);
+            if (!schedule.isEmpty()) {
+                scheduleRepository.deleteAllByGroupId(group.getId());
+                persistenceService.persistSchedule(schedule);
+            }
+
         }
         catch (Exception e) {
             log.info("Синхронизация расписания %s произошла с ошибкой!".formatted(group.getName()));
