@@ -13,10 +13,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -86,16 +91,29 @@ public class ConfigController {
     }
 
     @GetMapping("/online/sse")
-    public Flux<ServerSentEvent<String>> onlineStream() {
-        return Flux.concat(
-                    Flux.just(0L),
-                    Flux.interval(Duration.ofSeconds(30))
-                )
-                .map(sequence -> ServerSentEvent.<String> builder()
-                        .id(String.valueOf(sequence))
-                        .event("online-event")
-                        .data(onlineService.getOnline().size() + "")
-                        .build());
+    public SseEmitter onlineStream() {
+        SseEmitter emitter = new SseEmitter(0L);
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+
+        executor.scheduleAtFixedRate(() -> {
+            try {
+                emitter.send(
+                        SseEmitter.event()
+                                .id(String.valueOf(System.currentTimeMillis()))
+                                .name("online-event")
+                                .data(onlineService.getOnline().size())
+                );
+            } catch (IOException e) {
+                emitter.complete();
+                executor.shutdown();
+            }
+        }, 0, 15, TimeUnit.SECONDS);
+
+        emitter.onCompletion(executor::shutdown);
+        emitter.onTimeout(executor::shutdown);
+        emitter.onError(error -> executor.shutdown());
+
+        return emitter;
     }
 
     @GetMapping("/online/top/{mode}")
