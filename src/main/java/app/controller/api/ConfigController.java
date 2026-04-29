@@ -93,7 +93,7 @@ public class ConfigController {
         return ResponseEntity.ok("Вы теперь онлайн!");
     }
 
-    @GetMapping(value = "/api/v1/configuration/online/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/online/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<OnlineEvent>> stream() {
         return Flux.interval(Duration.ofSeconds(30))
                 .map(i -> ServerSentEvent.builder(

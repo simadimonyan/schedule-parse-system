@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ top views">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" afterDir="false" />
-    </list>
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ top views" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -33,9 +30,9 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Record" />
         <option value="Interface" />
         <option value="Class" />
+        <option value="Record" />
       </list>
     </option>
   </component>
@@ -212,14 +209,6 @@
       <workItem from="1775983847354" duration="262000" />
       <workItem from="1777274386812" duration="16114000" />
       <workItem from="1777420516576" duration="2090000" />
-    </task>
-    <task id="LOCAL-00007" summary="+ security auth">
-      <option name="closed" value="true" />
-      <created>1758839067048</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1758839067048</updated>
     </task>
     <task id="LOCAL-00008" summary="+ open telemetry">
       <option name="closed" value="true" />
@@ -605,7 +594,15 @@
       <option name="project" value="LOCAL" />
       <updated>1777468021139</updated>
     </task>
-    <option name="localTasksCounter" value="56" />
+    <task id="LOCAL-00056" summary="+ sse refactor">
+      <option name="closed" value="true" />
+      <created>1777469962868</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1777469962868</updated>
+    </task>
+    <option name="localTasksCounter" value="57" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -623,7 +620,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="+ updated /levels &amp; added /courses requests" />
     <MESSAGE value="+ updated cron in ScheduleService" />
     <MESSAGE value="+ teacher idempotency &amp; eios links" />
     <MESSAGE value="+ master degree schedule support" />
@@ -648,7 +644,8 @@
     <MESSAGE value="+ top views" />
     <MESSAGE value="+ sse fix" />
     <MESSAGE value="+ security fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ security fix" />
+    <MESSAGE value="+ sse refactor" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ sse refactor" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
