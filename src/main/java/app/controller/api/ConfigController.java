@@ -8,6 +8,7 @@ import app.service.metrics.StatService;
 import app.service.persistence.SchedulePersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -102,7 +103,19 @@ public class ConfigController {
     }
 
     @GetMapping(value = "/online/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream() {
+    public SseEmitter stream(HttpServletResponse response) {
+        // X-Accel-Buffering=no выключает буферизацию в nginx — без этого
+        // заголовка прокси копит весь body и отдаёт его клиенту только
+        // при закрытии стрима. На клиенте это выглядит как "счётчик
+        // обновляется только когда соединение порвалось".
+        // Cache-Control: no-transform запрещает прокси-сжатие (gzip),
+        // которое тоже ломает realtime SSE.
+        response.setHeader("X-Accel-Buffering", "no");
+        response.setHeader("Cache-Control", "no-cache, no-transform");
+        response.setHeader("Connection", "keep-alive");
+
+        // SseEmitter с timeout=0 — сервер не закрывает соединение по
+        // таймауту; реконнектом управляет клиент (см. presence.ts).
         SseEmitter emitter = new SseEmitter(0L);
 
         Runnable tick = () -> {
