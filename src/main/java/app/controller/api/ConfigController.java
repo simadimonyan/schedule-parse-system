@@ -87,7 +87,10 @@ public class ConfigController {
 
     @GetMapping("/online/sse")
     public Flux<ServerSentEvent<String>> onlineStream() {
-        return Flux.interval(Duration.ofMinutes(1))
+        return Flux.concat(
+                    Flux.just(0L),
+                    Flux.interval(Duration.ofSeconds(30))
+                )
                 .map(sequence -> ServerSentEvent.<String> builder()
                         .id(String.valueOf(sequence))
                         .event("online-event")
