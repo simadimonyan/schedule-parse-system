@@ -1,5 +1,6 @@
 package app.controller.api;
 
+import app.repository.models.dto.api.configuration.OnlineEvent;
 import app.repository.models.dto.api.configuration.WeekResponse;
 import app.service.max.MaxService;
 import app.service.metrics.OnlineService;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -91,33 +93,14 @@ public class ConfigController {
         return ResponseEntity.ok("Вы теперь онлайн!");
     }
 
-    @GetMapping(
-        value = "/online/sse",
-        produces = MediaType.TEXT_EVENT_STREAM_VALUE
-    )
-    public SseEmitter onlineStream() {
-        SseEmitter emitter = new SseEmitter(0L);
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-
-        executor.scheduleAtFixedRate(() -> {
-            try {
-                emitter.send(
-                        SseEmitter.event()
-                                .id(String.valueOf(System.currentTimeMillis()))
-                                .name("online-event")
-                                .data(onlineService.getOnline().size())
-                );
-            } catch (IOException e) {
-                emitter.complete();
-                executor.shutdown();
-            }
-        }, 0, 15, TimeUnit.SECONDS);
-
-        emitter.onCompletion(executor::shutdown);
-        emitter.onTimeout(executor::shutdown);
-        emitter.onError(error -> executor.shutdown());
-
-        return emitter;
+    @GetMapping(value = "/api/v1/configuration/online/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<OnlineEvent>> stream() {
+        return Flux.interval(Duration.ofSeconds(30))
+                .map(i -> ServerSentEvent.builder(
+                             new OnlineEvent(onlineService.getOnline().size())
+                        )
+                        .event("online-event")
+                        .build());
     }
 
     @GetMapping("/online/top/{mode}")
