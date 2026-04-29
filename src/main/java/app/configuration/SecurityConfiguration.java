@@ -56,8 +56,12 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AccessFilter accessFilter) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
+                .securityContext(context ->
+                    context.requireExplicitSave(false)
+                )
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+                        .requestMatchers("/api/v1/configuration/online/sse").permitAll()
                         .requestMatchers(
                                 "/api/v1/teachers/**",
                                 "/api/v1/groups/**",
