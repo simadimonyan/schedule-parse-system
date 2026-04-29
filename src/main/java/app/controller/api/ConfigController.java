@@ -13,17 +13,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import reactor.core.publisher.Flux;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -31,6 +28,17 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/api/v1/configuration")
 @SecurityRequirement(name = "Authorization")
 public class ConfigController {
+
+    /** Шарим один пул на все SSE-соединения, чтобы каждый клиент не плодил
+     *  новый поток. Daemon-флаг — чтобы JVM могла нормально завершиться. */
+    private static final ScheduledExecutorService SSE_SCHEDULER =
+            Executors.newScheduledThreadPool(2, r -> {
+                Thread t = new Thread(r, "sse-online-tick");
+                t.setDaemon(true);
+                return t;
+            });
+
+    private static final long SSE_TICK_SECONDS = 30L;
 
     @Value("${schedule.admin.token}")
     private String adminToken;
@@ -94,13 +102,29 @@ public class ConfigController {
     }
 
     @GetMapping(value = "/online/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<OnlineEvent>> stream() {
-        return Flux.interval(Duration.ofSeconds(30))
-                .map(i -> ServerSentEvent.builder(
-                             new OnlineEvent(onlineService.getOnline().size())
-                        )
-                        .event("online-event")
-                        .build());
+    public SseEmitter stream() {
+        SseEmitter emitter = new SseEmitter(0L);
+
+        Runnable tick = () -> {
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("online-event")
+                        .data(new OnlineEvent(onlineService.getOnline().size()),
+                              MediaType.APPLICATION_JSON));
+            } catch (IOException | IllegalStateException ex) {
+                emitter.completeWithError(ex);
+            }
+        };
+
+        ScheduledFuture<?> future = SSE_SCHEDULER.scheduleAtFixedRate(
+                tick, 0L, SSE_TICK_SECONDS, TimeUnit.SECONDS);
+
+        Runnable cancel = () -> future.cancel(false);
+        emitter.onCompletion(cancel);
+        emitter.onTimeout(() -> { cancel.run(); emitter.complete(); });
+        emitter.onError(e -> cancel.run());
+
+        return emitter;
     }
 
     @GetMapping("/online/top/{mode}")
