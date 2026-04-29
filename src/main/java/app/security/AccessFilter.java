@@ -29,7 +29,7 @@ public class AccessFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
-        if (path.startsWith("/login") || path.startsWith("/swagger-ui/") || path.startsWith("/v3/api-docs") || path.startsWith("/error")) {
+        if (path.startsWith("/login") || path.startsWith("/swagger-ui/") || path.startsWith("/v3/api-docs") || path.startsWith("/error") || path.contains("/online/sse")) {
             filterChain.doFilter(request, response);
             return;
         }
