@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ top views" />
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ top views">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -209,14 +212,6 @@
       <workItem from="1775983847354" duration="262000" />
       <workItem from="1777274386812" duration="16114000" />
       <workItem from="1777420516576" duration="2090000" />
-    </task>
-    <task id="LOCAL-00005" summary="+ async webhook">
-      <option name="closed" value="true" />
-      <created>1758735717627</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1758735717627</updated>
     </task>
     <task id="LOCAL-00006" summary="+ group &amp; teacher api">
       <option name="closed" value="true" />
@@ -602,7 +597,15 @@
       <option name="project" value="LOCAL" />
       <updated>1777409699466</updated>
     </task>
-    <option name="localTasksCounter" value="54" />
+    <task id="LOCAL-00054" summary="+ sse fix">
+      <option name="closed" value="true" />
+      <created>1777466404175</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1777466404175</updated>
+    </task>
+    <option name="localTasksCounter" value="55" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -620,7 +623,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="+ schedule week change &amp; cache fix" />
     <MESSAGE value="+ configuration" />
     <MESSAGE value="+ updated /levels &amp; added /courses requests" />
     <MESSAGE value="+ updated cron in ScheduleService" />
@@ -645,7 +647,8 @@
     <MESSAGE value="+ bug fix" />
     <MESSAGE value="+ exception handler for external server" />
     <MESSAGE value="+ top views" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ top views" />
+    <MESSAGE value="+ sse fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ sse fix" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

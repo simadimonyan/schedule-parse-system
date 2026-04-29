@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
@@ -90,7 +91,10 @@ public class ConfigController {
         return ResponseEntity.ok("Вы теперь онлайн!");
     }
 
-    @GetMapping("/online/sse")
+    @GetMapping(
+        value = "/online/sse",
+        produces = MediaType.TEXT_EVENT_STREAM_VALUE
+    )
     public SseEmitter onlineStream() {
         SseEmitter emitter = new SseEmitter(0L);
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
