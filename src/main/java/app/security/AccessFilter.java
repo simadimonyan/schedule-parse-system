@@ -28,6 +28,12 @@ public class AccessFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        // CORS preflight — пропускаем без проверки токена, его отработает CorsFilter
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String path = request.getRequestURI();
         if (path.startsWith("/login") || path.startsWith("/swagger-ui/") || path.startsWith("/v3/api-docs") || path.startsWith("/error") || path.contains("/online/sse")) {
             filterChain.doFilter(request, response);
