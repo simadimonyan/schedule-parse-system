@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ security fix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/init-certs.sh" beforeDir="false" afterPath="$PROJECT_DIR$/init-certs.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/service/persistence/SchedulePersistenceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/persistence/SchedulePersistenceService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

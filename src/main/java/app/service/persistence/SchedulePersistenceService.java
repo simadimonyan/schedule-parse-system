@@ -327,12 +327,16 @@ public class SchedulePersistenceService {
                 .map(s -> s.getGroup().getId())
                 .collect(Collectors.toSet());
 
+        Set<String> names = list.stream()
+                .map(s -> s.getGroup().getName())
+                .collect(Collectors.toSet());
+
         for (Long groupId : groupIds) {
             scheduleRepository.deleteAllByGroupId(groupId);
         }
 
         scheduleRepository.saveAllAndFlush(list);
-        log.info("Сохранено {} записей расписания для групп: {}", list.size(), groupIds);
+        log.info("Сохранено {} записей расписания для групп: {}", list.size(), names);
     }
 
 }
