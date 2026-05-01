@@ -3,7 +3,7 @@
 set -e
 
 CERT_DIR="./volumes/certbot/conf/live"
-DOMAINS=("myimsit.ru" "api.myimsit.ru" "admin.myimsit.ru")
+DOMAINS=("myimsit.ru" "api.myimsit.ru" "admin.myimsit.ru" "app.myimsit.ru")
 EMAIL="${CERTBOT_EMAIL:-admin@myimsit.ru}"
 WEBROOT="/var/www/certbot"
 
@@ -52,9 +52,11 @@ docker run --rm \
     certbot/certbot certonly \
     --webroot \
     --webroot-path "$WEBROOT" \
+    --expand \
     -d myimsit.ru \
     -d api.myimsit.ru \
     -d admin.myimsit.ru \
+    -d app.myimsit.ru \
     --email "$EMAIL" \
     --agree-tos \
     --non-interactive \

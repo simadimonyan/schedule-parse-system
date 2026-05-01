@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -306,13 +307,19 @@ public class SchedulePersistenceService {
 
             Group group = schedule.getGroup();
             if (group != null) {
-                Group managedGroup = groupRepository.findByName(group.getName())
-                        .orElseGet(() -> groupRepository.saveAndFlush(group));
+                Optional<Group> managedGroup = groupRepository.findByName(group.getName());
 
-                managedGroup.setUpdatedAt(System.currentTimeMillis());
-                schedule.setGroup(managedGroup);
+                if (managedGroup.isPresent()) {
+                    Group savable = managedGroup.get();
+                    savable.setUpdatedAt(System.currentTimeMillis());
+                    schedule.setGroup(savable);
 
-                groupRepository.saveAndFlush(group);
+                    groupRepository.saveAndFlush(savable);
+                }
+                else {
+                    groupRepository.saveAndFlush(group);
+                    schedule.setGroup(group);
+                }
             }
         }
 
