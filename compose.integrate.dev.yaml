@@ -1,0 +1,57 @@
+
+# App-only include for the development/test aggregator
+# (configs/development/compose.dev.yaml). Shared infra is provided by the
+# aggregator. Relative paths resolve against THIS directory (docker compose
+# `include` semantics), so build context "." == services/schedule-service.
+
+services:
+
+  schedule_app:
+    container_name: schedule-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./:/service/schedule-parse-service
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - app_db
+      - otel-collector
+    ports:
+      - "8082:8080"
+    environment:
+      - TZ=Europe/Moscow
+    dns:
+      - 8.8.8.8
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 1
+    networks:
+      - schedule_net
+
+  app_db:
+    image: postgres:17.6
+    container_name: schedule-service-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+
+      - TZ=Europe/Moscow
+    volumes:
+      - ./volumes/app_db/postgres:/var/lib/postgresql/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "5432:5432"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: 1
+    networks:
+      - schedule_net
