@@ -33,4 +33,7 @@ public class Group implements Serializable {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "updated_at")
+    private Long updatedAt;
+
 }
