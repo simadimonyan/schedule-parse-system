@@ -9,6 +9,7 @@ import app.repository.models.entity.Group;
 import app.repository.models.entity.Schedule;
 import app.repository.models.entity.Teacher;
 import app.service.excel.ExcelService;
+import app.service.metrics.StatService;
 import app.service.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -23,9 +24,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,6 +43,7 @@ public class SchedulePersistenceService {
     private final TeacherRepository teacherRepository;
     private final GroupRepository groupRepository;
     private final ConfigRepository configRepository;
+    private final StatService statService;
 
     @Autowired
     public SchedulePersistenceService(
@@ -48,7 +52,8 @@ public class SchedulePersistenceService {
             ScheduleRepository scheduleRepository,
             TeacherRepository teacherRepository,
             GroupRepository groupRepository,
-            ConfigRepository configRepository
+            ConfigRepository configRepository,
+            StatService statService
     ) {
         this.excelService = excelService;
         this.storageService = storageService;
@@ -56,6 +61,7 @@ public class SchedulePersistenceService {
         this.teacherRepository = teacherRepository;
         this.groupRepository = groupRepository;
         this.configRepository = configRepository;
+        this.statService = statService;
     }
 
     @Cacheable("groups")
@@ -134,6 +140,8 @@ public class SchedulePersistenceService {
                         }
                         return true;
                     }).toList();
+
+        statService.addGroupView(name);
         return schedule;
     }
 
@@ -203,6 +211,8 @@ public class SchedulePersistenceService {
                         }
                         return true;
                     }).toList();
+
+        statService.addTeacherView(label);
         return schedule;
     }
 
@@ -297,9 +307,19 @@ public class SchedulePersistenceService {
 
             Group group = schedule.getGroup();
             if (group != null) {
-                Group managedGroup = groupRepository.findByName(group.getName())
-                        .orElseGet(() -> groupRepository.saveAndFlush(group));
-                schedule.setGroup(managedGroup);
+                Optional<Group> managedGroup = groupRepository.findByName(group.getName());
+
+                if (managedGroup.isPresent()) {
+                    Group savable = managedGroup.get();
+                    savable.setUpdatedAt(System.currentTimeMillis());
+                    schedule.setGroup(savable);
+
+                    groupRepository.saveAndFlush(savable);
+                }
+                else {
+                    groupRepository.saveAndFlush(group);
+                    schedule.setGroup(group);
+                }
             }
         }
 
@@ -307,12 +327,16 @@ public class SchedulePersistenceService {
                 .map(s -> s.getGroup().getId())
                 .collect(Collectors.toSet());
 
+        Set<String> names = list.stream()
+                .map(s -> s.getGroup().getName())
+                .collect(Collectors.toSet());
+
         for (Long groupId : groupIds) {
             scheduleRepository.deleteAllByGroupId(groupId);
         }
 
         scheduleRepository.saveAllAndFlush(list);
-        log.info("Сохранено {} записей расписания для групп: {}", list.size(), groupIds);
+        log.info("Сохранено {} записей расписания для групп: {}", list.size(), names);
     }
 
 }
