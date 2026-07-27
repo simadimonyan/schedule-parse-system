@@ -7,7 +7,7 @@ import app.repository.models.dto.api.group.GroupsResponse;
 import app.repository.models.dto.api.schedule.ScheduleResponse;
 import app.repository.models.dto.mappers.GroupMapper;
 import app.repository.models.dto.mappers.ScheduleMapper;
-import app.service.persistence.SchedulePersistenceService;
+import app.service.domain.persistence.SchedulePersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

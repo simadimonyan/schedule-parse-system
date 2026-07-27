@@ -2,7 +2,7 @@ package app.controller.webhook;
 
 import app.repository.models.dto.minio.MinioEvent;
 import app.service.cache.CacheService;
-import app.service.persistence.SchedulePersistenceService;
+import app.service.domain.persistence.SchedulePersistenceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

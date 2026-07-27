@@ -11,7 +11,7 @@ services:
     container_name: schedule-service
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: Dockerfile
     volumes:
       - ./:/service/schedule-service
       - /etc/timezone:/etc/timezone:ro

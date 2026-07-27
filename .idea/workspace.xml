@@ -4,14 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ security fix">
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ soa compose integration">
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/service/infra/MasterServiceManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/persistence/SchedulePersistenceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/persistence/SchedulePersistenceService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose.integrate.dev.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.integrate.dev.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose.integrate.prod.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.integrate.prod.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/webhook/WebhookController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/webhook/WebhookController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/excel/ExcelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/excel/ExcelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/max/MaxService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/persistence/SchedulePersistenceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/persistence/SchedulePersistenceService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/schedule/ScheduleService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/schedule/ScheduleService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="98501" />
   </component>
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
@@ -34,8 +48,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Interface" />
-        <option value="Class" />
         <option value="Record" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -53,35 +67,100 @@
     &quot;assignee&quot;: &quot;simadimonyan&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">
-    <option name="selectedUrlAndAccountId">
-      <UrlAndAccount>
-        <option name="accountId" value="302465c6-fa11-4e4e-8f05-6c4020a203bc" />
-        <option name="url" value="https://github.com/simadimonyan/schedule-parse-system.git" />
-      </UrlAndAccount>
-    </option>
-  </component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/simadimonyan/schedule-parse-system.git&quot;,
+    &quot;accountId&quot;: &quot;302465c6-fa11-4e4e-8f05-6c4020a203bc&quot;
+  }
+}</component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="0.008257953441885783" />
+      <entry key="MS500" value="0.383154990060225" />
+      <entry key="S2" value="0.7895536838020148" />
+      <entry key="S5" value="1.0866880240816814" />
+      <entry key="S10" value="1.736401079345843" />
+      <entry key="S30" value="3.983728577581826" />
+      <entry key="S60" value="6.733992318849832" />
+      <entry key="M2" value="9.903172067466414" />
+      <entry key="M5" value="13.060538220621563" />
+      <entry key="M10" value="14.429754572657938" />
+      <entry key="M15" value="14.929354807586316" />
+      <entry key="M30" value="15.452376662484895" />
+      <entry key="H1" value="15.723037055300615" />
+      <entry key="H2" value="15.860720985939476" />
+      <entry key="H4" value="15.93015987873371" />
+      <entry key="D1" value="15.98833201177133" />
+      <entry key="W1" value="15.998332458235167" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="1.0000000000479392" />
+      <entry key="MS500" value="1.008656880608402" />
+      <entry key="S2" value="1.3833270610688766" />
+      <entry key="S5" value="2.296774334936196" />
+      <entry key="S10" value="3.6057579190299354" />
+      <entry key="S30" value="5.857168267686966" />
+      <entry key="S60" value="6.804255990240488" />
+      <entry key="M2" value="7.366839121636951" />
+      <entry key="M5" value="7.73765669336581" />
+      <entry key="M10" value="7.867261073068985" />
+      <entry key="M15" value="7.911154965694921" />
+      <entry key="M30" value="7.955400228995993" />
+      <entry key="H1" value="7.977655603800776" />
+      <entry key="H2" value="7.988816649468835" />
+      <entry key="H4" value="7.994405533525414" />
+      <entry key="D1" value="7.999067200989471" />
+      <entry key="W1" value="7.999866733494695" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.04492408068449183" />
+      <entry key="MS500" value="0.7754107698513734" />
+      <entry key="S2" value="1.8693556525099688" />
+      <entry key="S5" value="3.1611184903985405" />
+      <entry key="S10" value="5.111798083560898" />
+      <entry key="S30" value="9.628193933402235" />
+      <entry key="S60" value="13.383162402554838" />
+      <entry key="M2" value="17.174152225459896" />
+      <entry key="M5" value="20.754306592232364" />
+      <entry key="M10" value="22.27403054066902" />
+      <entry key="M15" value="22.8249455051002" />
+      <entry key="M30" value="23.3998718456293" />
+      <entry key="H1" value="23.69670893429143" />
+      <entry key="H2" value="23.84753791248217" />
+      <entry key="H4" value="23.923563578108446" />
+      <entry key="D1" value="23.987231965774146" />
+      <entry key="W1" value="23.998175292569204" />
+    </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0
 }</component>
   <component name="ProjectId" id="3345BtHXm145deQu8Pt2XZSWFoB" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;extract.method.default.visibility&quot;: &quot;private&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;development&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/dimitrisimonyan/Yandex.Disk.localized/Projects/Backend/schedule-parse-service&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;soa&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/dimitrisimonyan/Desktop/isms-soa-backend/services/schedule-service&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -141,6 +220,14 @@
       <item itemvalue="Docker.App" />
       <item itemvalue="Spring Boot.App" />
     </list>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.25134.95" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.25134.95" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
