@@ -5,7 +5,7 @@ import app.repository.models.dto.api.teacher.TeacherResponse;
 import app.repository.models.dto.api.teacher.TeachersResponse;
 import app.repository.models.dto.mappers.ScheduleMapper;
 import app.repository.models.dto.mappers.TeacherMapper;
-import app.service.persistence.SchedulePersistenceService;
+import app.service.domain.persistence.SchedulePersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

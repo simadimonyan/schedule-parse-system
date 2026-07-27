@@ -1,4 +1,4 @@
-package app.service.persistence;
+package app.service.domain.persistence;
 
 import app.repository.dao.ConfigRepository;
 import app.repository.dao.GroupRepository;
@@ -8,7 +8,7 @@ import app.repository.models.entity.Config;
 import app.repository.models.entity.Group;
 import app.repository.models.entity.Schedule;
 import app.repository.models.entity.Teacher;
-import app.service.excel.ExcelService;
+import app.service.domain.excel.ExcelService;
 import app.service.metrics.StatService;
 import app.service.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -231,6 +230,7 @@ public class SchedulePersistenceService {
                 log.info("Инициализация параметра: weekCount - присвоено значение 1");
                 setConfig("weekCount", "1");
             }
+
             else if (pair.getValue().equals("1")) {
                 log.info("Переключение четности недели: старое значение = {}, новое значение = 2", pair.getValue());
                 setConfig("weekCount", "2");

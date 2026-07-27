@@ -1,4 +1,4 @@
-package app.service.excel;
+package app.service.domain.excel;
 
 import app.repository.models.entity.Group;
 import app.repository.models.entity.Schedule;

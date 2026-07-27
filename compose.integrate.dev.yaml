@@ -10,7 +10,7 @@ services:
     container_name: schedule-service
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: Dockerfile
     volumes:
       - ./:/service/schedule-parse-service
       - /etc/timezone:/etc/timezone:ro
