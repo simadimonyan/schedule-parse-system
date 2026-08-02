@@ -10,9 +10,10 @@ fi
 
 # Настройки по умолчанию для каждого режима
 if [ "$MODE" = "prod" ]; then
-    if [ -z "$ENDPOINT_PREFIX" ]; then
-        read -p "Введите префикс для эндпоинта [/schedule]: " ENDPOINT_PREFIX
-        ENDPOINT_PREFIX=${ENDPOINT_PREFIX:-/schedule}
+    # +x, а не -z: пустой префикс — валидное значение (приложение слушает /minio-webhook
+    # напрямую), спрашивать нужно только если переменная вообще не передана
+    if [ -z "${ENDPOINT_PREFIX+x}" ]; then
+        read -p "Введите префикс для эндпоинта (пусто, если без префикса): " ENDPOINT_PREFIX
     fi
     if [ -z "$BUCKET_NAME" ]; then
         read -p "Введите имя бакета [schedule]: " BUCKET_NAME

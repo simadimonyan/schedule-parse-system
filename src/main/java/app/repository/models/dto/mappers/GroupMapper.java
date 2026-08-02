@@ -2,7 +2,7 @@ package app.repository.models.dto.mappers;
 
 import app.repository.models.dto.api.group.GroupResponse;
 import app.repository.models.dto.api.group.GroupsResponse;
-import app.repository.models.entity.Group;
+import app.repository.models.dto.directory.Group;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

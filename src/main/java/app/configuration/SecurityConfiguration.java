@@ -69,7 +69,11 @@ public class SecurityConfiguration {
                 "https://myimsit.ru"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Cache-Control"));
+        // X-Admin-Token — заголовок административных операций (правка слотов, изменений,
+        // графика занятости, переключение версий). Без него в списке браузер отсечёт запрос
+        // ещё на preflight, до сервера
+        config.setAllowedHeaders(List.of(
+                "Authorization", "X-Admin-Token", "Content-Type", "X-Requested-With", "Accept", "Cache-Control"));
         config.setExposedHeaders(List.of("Content-Type", "Cache-Control"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
@@ -95,6 +99,11 @@ public class SecurityConfiguration {
                                 "/api/v1/teachers/**",
                                 "/api/v1/groups/**",
                                 "/api/v1/configuration/**",
+                                "/api/v1/versions/**",
+                                "/api/v1/slots/**",
+                                "/api/v1/changes/**",
+                                "/api/v1/work-schedules/**",
+                                "/api/v1/schedule/**",
                                 "/api/v1/quizzes/**",
                                 "/minio-webhook"
                         )

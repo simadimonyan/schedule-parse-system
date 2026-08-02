@@ -20,6 +20,12 @@ services:
       - app_db
       - otel-collector
     environment:
+      # справочник групп и преподавателей: master-service в общей сети schedule_net
+      - MASTER_SERVICE_URL=${MASTER_SERVICE_URL:-http://master-service:8080}
+      - MASTER_DEFAULT_FACULTY_ID=${MASTER_DEFAULT_FACULTY_ID:-1}
+      - MASTER_DEFAULT_BLOCK_ID=${MASTER_DEFAULT_BLOCK_ID:-1}
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+
       - TZ=Europe/Moscow
     dns:
       - 8.8.8.8
@@ -32,13 +38,16 @@ services:
       - schedule_net
 
   app_db:
-    image: postgres:17.6
+    image: postgres:18.4
     container_name: schedule-service-db
     restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      # в PG18 дефолтный PGDATA — /var/lib/postgresql/<major>/docker;
+      # задаём явно, чтобы смена мажора не переносила каталог данных
+      - PGDATA=/var/lib/postgresql/data
 
       - TZ=Europe/Moscow
     volumes:

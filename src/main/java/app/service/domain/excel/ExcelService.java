@@ -1,8 +1,8 @@
 package app.service.domain.excel;
 
-import app.repository.models.entity.Group;
+import app.repository.models.dto.directory.Group;
 import app.repository.models.entity.Schedule;
-import app.repository.models.entity.Teacher;
+import app.repository.models.dto.directory.Teacher;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
