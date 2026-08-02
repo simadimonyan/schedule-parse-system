@@ -1,18 +1,20 @@
 package app.service.domain.persistence;
 
+import app.repository.dao.ChangeRepository;
 import app.repository.dao.ConfigRepository;
-import app.repository.dao.GroupRepository;
 import app.repository.dao.ScheduleRepository;
-import app.repository.dao.TeacherRepository;
+import app.repository.models.dto.directory.Group;
+import app.repository.models.dto.directory.Teacher;
+import app.repository.models.entity.Change;
 import app.repository.models.entity.Config;
-import app.repository.models.entity.Group;
 import app.repository.models.entity.Schedule;
-import app.repository.models.entity.Teacher;
 import app.service.domain.excel.ExcelService;
+import app.service.domain.version.VersionService;
+import app.service.infra.MasterDirectoryService;
+import app.service.infra.MasterSyncService;
 import app.service.metrics.StatService;
 import app.service.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -26,11 +28,27 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Расписание в терминах запросов клиента.
+ *
+ * <p>Клиент спрашивает по имени — группа «ПИ-301», преподаватель «Иванов И.И.», — а в базе
+ * лежат идентификаторы справочника мастер-сервиса. Поэтому у каждого чтения два шага:
+ * перевести имя в идентификатор ({@link MasterDirectoryService}), а потом достроить ответ
+ * названиями обратно. Своих таблиц у групп и преподавателей больше нет: справочник
+ * принадлежит мастеру, и вторая его копия означала бы две расходящиеся версии одних данных.
+ *
+ * <p>Списки групп, курсов и уровней собираются из самих пар: группы сервиса — это ровно те,
+ * чьё расписание он хранит.
+ */
 @Slf4j
 @Service
 public class SchedulePersistenceService {
@@ -39,180 +57,162 @@ public class SchedulePersistenceService {
     private final StorageService storageService;
 
     private final ScheduleRepository scheduleRepository;
-    private final TeacherRepository teacherRepository;
-    private final GroupRepository groupRepository;
+    private final ChangeRepository changeRepository;
     private final ConfigRepository configRepository;
     private final StatService statService;
+    private final MasterSyncService masterSyncService;
+    private final MasterDirectoryService masterDirectoryService;
+    private final ScheduleWriter scheduleWriter;
+    private final VersionService versionService;
 
     @Autowired
     public SchedulePersistenceService(
             ExcelService excelService,
             StorageService storageService,
             ScheduleRepository scheduleRepository,
-            TeacherRepository teacherRepository,
-            GroupRepository groupRepository,
+            ChangeRepository changeRepository,
             ConfigRepository configRepository,
-            StatService statService
+            StatService statService,
+            MasterSyncService masterSyncService,
+            MasterDirectoryService masterDirectoryService,
+            ScheduleWriter scheduleWriter,
+            VersionService versionService
     ) {
         this.excelService = excelService;
         this.storageService = storageService;
         this.scheduleRepository = scheduleRepository;
-        this.teacherRepository = teacherRepository;
-        this.groupRepository = groupRepository;
+        this.changeRepository = changeRepository;
         this.configRepository = configRepository;
         this.statService = statService;
+        this.masterSyncService = masterSyncService;
+        this.masterDirectoryService = masterDirectoryService;
+        this.scheduleWriter = scheduleWriter;
+        this.versionService = versionService;
     }
 
-    @Cacheable("groups")
+    @Cacheable(value = "groups", key = "'name:' + #name")
     public Group getGroup(String name) {
-        Group group = groupRepository.findByName(name).orElse(null);
+        Long masterId = masterDirectoryService.groupId(name);
+        if (masterId == null) throw new EntityNotFoundException(String.format("Группа %s не найдена", name));
+
+        Group group = masterDirectoryService.groups(List.of(masterId)).get(masterId);
         if (group == null) throw new EntityNotFoundException(String.format("Группа %s не найдена", name));
         return group;
     }
 
-    @Cacheable("groups")
+    @Cacheable(value = "groups", key = "'search:' + #course + ':' + #level")
     public List<Group> getGroups(Integer course, String level) {
-        List<Group> groups;
-        if (level == null)
-            groups = groupRepository.findAllByCourse(course).orElse(new ArrayList<>());
-        else
-            groups = groupRepository.findAllByCourseAndLevel(course, level).orElse(new ArrayList<>());
-        return groups;
+        return masterDirectoryService.knownGroups().stream()
+                .filter(group -> Objects.equals(group.getCourse(), course))
+                .filter(group -> level == null || level.equals(group.getLevel()))
+                .sorted(Comparator.comparing(Group::getName, Comparator.nullsLast(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
     }
 
     @Cacheable("levels")
     public List<String> getLevels(Integer course) {
-        return groupRepository.findDistinctLevels(course).orElse(new ArrayList<>());
+        return masterDirectoryService.knownGroups().stream()
+                .filter(group -> Objects.equals(group.getCourse(), course))
+                .map(Group::getLevel)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     @Cacheable("courses")
     public List<Integer> getCourses() {
-        return groupRepository.findDistinctCourses().orElse(new ArrayList<>());
+        return masterDirectoryService.knownGroups().stream()
+                .map(Group::getCourse)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
-    @Cacheable("schedule")
-    public List<Schedule> getGroupSchedule(String name, String dayWeek, String date, Integer weekCount) {
+    // ключ по умолчанию складывается только из аргументов, без имени метода: расписание
+    // группы и расписание преподавателя с одинаковыми параметрами попали бы в одну ячейку,
+    // а строка приходит из запроса клиента — совпадение подбирается намеренно
+    @Cacheable(value = "schedule", key = "'group:' + #name + ':' + #dayWeek + ':' + #date + ':' + #weekCount")
+    public ScheduleView getGroupSchedule(String name, String dayWeek, String date, Integer weekCount) {
+        statService.addGroupView(name);
+
+        Long groupMasterId = masterDirectoryService.groupId(name);
+        if (groupMasterId == null) {
+            log.info("Группа {} не найдена в справочнике — расписание пусто", name);
+            return ScheduleView.empty();
+        }
+
+        Long versionId = versionService.activeId();
+
         List<Schedule> schedule;
         if (dayWeek == null)
-            schedule = scheduleRepository.findAllByGroupNameAndWeekCount(name, weekCount)
+            schedule = scheduleRepository.findAllByGroup(versionId, groupMasterId, weekCount)
                     // фильтры для заочки
-                    .orElse(new ArrayList<>()).stream().filter(s -> {
-                        if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
-
-                            List<String> weekDates = new ArrayList<>();
-                            String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
-
-                            // обратная совместимость с предыдущими версиями приложения
-                            if (date == null) {
-                                LocalDate today = LocalDate.now();
-                                LocalDate monday = today.with(DayOfWeek.MONDAY);
-
-                                // получает даты настоящей недели
-                                for (int i = 0; i < 7; i++) {
-                                    weekDates.add(monday.plusDays(i).format(DateTimeFormatter.ofPattern("dd.MM.yy")));
-                                }
-                            }
-                            else if (date.equals("full")) {
-                                return true;
-                            }
-                            else {
-                                LocalDate specificDate = LocalDate.parse(date + "." + year, DateTimeFormatter.ofPattern("dd.MM.yy"))
-                                        .withYear(LocalDate.now().getYear());
-                                LocalDate monday = specificDate.with(DayOfWeek.MONDAY);
-
-                                // получает даты недели по указанной дате
-                                for (int i = 0; i < 7; i++) {
-                                    weekDates.add(monday.plusDays(i).format(DateTimeFormatter.ofPattern("dd.MM.yy")));
-                                }
-                            }
-
-                            // проверка наличия указанной даты в неделе
-                            return weekDates.contains(s.getPinnedDate() + "." + year);
-                        }
-                        return true;
-                    }).toList();
+                    .stream().filter(s -> matchesWeek(s, date)).toList();
         else
-            schedule = scheduleRepository.findAllByGroupNameAndDayWeekAndWeekCount(name, dayWeek, weekCount)
-                    .orElse(new ArrayList<>()).stream().filter(s -> {
-                        if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
-                            return date == null || s.getPinnedDate().equals(date);
-                        }
-                        return true;
-                    }).toList();
+            schedule = scheduleRepository.findAllByGroupAndDay(versionId, groupMasterId, dayWeek, weekCount)
+                    .stream().filter(s -> matchesDay(s, date)).toList();
 
-        statService.addGroupView(name);
-        return schedule;
+        return new ScheduleView(
+                describe(schedule),
+                changeRepository.findStandaloneByGroup(versionId, groupMasterId));
     }
 
-    @Cacheable("teachers")
+    // без префикса запрос кафедры с названием, совпавшим с ФИО, вернул бы List<Teacher>
+    // там, где ожидается Teacher, — ClassCastException вместо ответа
+    @Cacheable(value = "teachers", key = "'label:' + #label")
     public Teacher getTeacher(String label) {
-        Teacher teacher = teacherRepository.findByLabel(label).orElse(null);
+        Long masterId = masterDirectoryService.teacherId(label);
+        if (masterId == null) throw new EntityNotFoundException(String.format("Преподаватель %s не найден", label));
+
+        Teacher teacher = masterDirectoryService.teachers(List.of(masterId)).get(masterId);
         if (teacher == null) throw new EntityNotFoundException(String.format("Преподаватель %s не найден", label));
         return teacher;
     }
 
-    @Cacheable("teachers")
+    /**
+     * Преподаватели сервиса.
+     *
+     * <p>Кафедра в представлении преподавателя у мастера не возвращается, поэтому отбор по
+     * ней даёт пустую выдачу — ровно как и раньше, когда колонка была, но её никто не
+     * заполнял. Без параметра возвращаются все, у кого есть расписание.
+     */
+    @Cacheable(value = "teachers", key = "'department:' + #department")
     public List<Teacher> getTeachers(String department) {
-        List<Teacher> teachers;
-        if (department == null)
-            teachers = teacherRepository.findAll();
-        else
-            teachers = teacherRepository.findAllByDepartment(department).orElse(new ArrayList<>());
-        return teachers;
+        if (department != null) {
+            log.info("Отбор преподавателей по кафедре не поддерживается справочником: {}", department);
+            return new ArrayList<>();
+        }
+        return masterDirectoryService.knownTeachers().stream()
+                .sorted(Comparator.comparing(Teacher::getLabel, Comparator.nullsLast(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
     }
 
-    @Cacheable("schedule")
-    public List<Schedule> getTeacherSchedule(String label, String dayWeek, String date, Integer weekCount) {
+    @Cacheable(value = "schedule", key = "'teacher:' + #label + ':' + #dayWeek + ':' + #date + ':' + #weekCount")
+    public ScheduleView getTeacherSchedule(String label, String dayWeek, String date, Integer weekCount) {
+        statService.addTeacherView(label);
+
+        Long teacherMasterId = masterDirectoryService.teacherId(label);
+        if (teacherMasterId == null) {
+            log.info("Преподаватель {} не найден в справочнике — расписание пусто", label);
+            return ScheduleView.empty();
+        }
+
+        Long versionId = versionService.activeId();
+
         List<Schedule> schedule;
         if (dayWeek == null)
-            schedule = scheduleRepository.findAllByTeacherLabelAndWeekCount(label, weekCount)
+            schedule = scheduleRepository.findAllByTeacher(versionId, teacherMasterId, weekCount)
                     // фильтры для заочки
-                    .orElse(new ArrayList<>()).stream().filter(s -> {
-                        if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
-
-                            List<String> weekDates = new ArrayList<>();
-                            String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
-
-                            // обратная совместимость с предыдущими версиями приложения
-                            if (date == null) {
-                                LocalDate today = LocalDate.now();
-                                LocalDate monday = today.with(DayOfWeek.MONDAY);
-
-                                // получает даты настоящей недели
-                                for (int i = 0; i < 7; i++) {
-                                    weekDates.add(monday.plusDays(i).format(DateTimeFormatter.ofPattern("dd.MM.yy")));
-                                }
-                            }
-                            else if (date.equals("full")) {
-                                return true;
-                            }
-                            else {
-                                LocalDate specificDate = LocalDate.parse(date + "." + year, DateTimeFormatter.ofPattern("dd.MM.yy"))
-                                        .withYear(LocalDate.now().getYear());
-                                LocalDate monday = specificDate.with(DayOfWeek.MONDAY);
-
-                                // получает даты недели по указанной дате
-                                for (int i = 0; i < 7; i++) {
-                                    weekDates.add(monday.plusDays(i).format(DateTimeFormatter.ofPattern("dd.MM.yy")));
-                                }
-                            }
-
-                            // проверка наличия указанной даты в неделе
-                            return weekDates.contains(s.getPinnedDate() + "." + year);
-                        }
-                        return true;
-                    }).toList();
+                    .stream().filter(s -> matchesWeek(s, date)).toList();
         else
-            schedule = scheduleRepository.findAllByTeacherLabelAndDayWeekAndWeekCount(label, dayWeek, weekCount)
-                    .orElse(new ArrayList<>()).stream().filter(s -> {
-                        if (s.getPinnedDate() != null && !s.getPinnedDate().isEmpty() && !s.getPinnedDate().isBlank()) {
-                            return date == null || s.getPinnedDate().equals(date);
-                        }
-                        return true;
-                    }).toList();
+            schedule = scheduleRepository.findAllByTeacherAndDay(versionId, teacherMasterId, dayWeek, weekCount)
+                    .stream().filter(s -> matchesDay(s, date)).toList();
 
-        statService.addTeacherView(label);
-        return schedule;
+        return new ScheduleView(
+                describe(schedule),
+                changeRepository.findStandaloneByTeacher(versionId, teacherMasterId));
     }
 
     @Cacheable("configs")
@@ -259,84 +259,174 @@ public class SchedulePersistenceService {
         configRepository.save(pair);
     }
 
+    /**
+     * Разбирает файл расписания из хранилища.
+     *
+     * <p>Имя принимается и с бакетом впереди, как присылает вебхук MinIO, и без него, как
+     * приходит из запроса на разбор — обрезает лишнее само хранилище. В {@code parseWorkbook}
+     * уходит имя целиком: по нему определяются форма обучения, курс и магистратура, и
+     * обрезанный префикс тут ничего не портит.
+     */
     @Async
-    @Transactional
-    @CacheEvict(value = "schedule", allEntries = true)
     public void persistSchedule(String fileName) throws IOException {
-        InputStream excel = storageService.getObjectByName(fileName.split("/")[1]);
-        List<Schedule> newSchedules = excelService.parseWorkbook(fileName, excel);
-
-        extractAndLoadSchedule(newSchedules);
-    }
-
-    @Transactional
-    @CacheEvict(value = "schedule", allEntries = true)
-    public void persistSchedule(List<Schedule> list) {
-        extractAndLoadSchedule(list);
-    }
-
-    @Transactional
-    @CacheEvict(value = "groups", allEntries = true)
-    public void persistGroups(List<Group> list) {
-        for (Group group : list) {
-            if (group != null) {
-                groupRepository.findByName(group.getName())
-                        .orElseGet(() -> groupRepository.saveAndFlush(group));
-            }
+        InputStream excel = storageService.getObjectByName(fileName);
+        if (excel == null) {
+            log.error("Файл {} не получен из хранилища — расписание не разобрано", fileName);
+            return;
         }
+        persistSchedule(excelService.parseWorkbook(fileName, excel));
     }
 
-    @CacheEvict(value = "teachers", allEntries = true)
-    public Teacher getOrPersistTeacher(String teacher) {
-        return teacherRepository.findByLabel(teacher)
-                .orElseGet(() -> {
-                    Teacher savable = new Teacher();
-                    savable.setLabel(teacher);
-                    return teacherRepository.saveAndFlush(savable);
-                });
+    /**
+     * Какой файл разбирать: названный или последний загруженный.
+     *
+     * @return имя файла или {@code null}, если названного в бакете нет либо бакет пуст
+     */
+    public String resolveFile(String fileName) {
+        if (fileName == null || fileName.isBlank()) return storageService.latestObjectName();
+
+        String name = fileName.trim();
+        if (!storageService.exists(name)) {
+            log.error("В бакете расписания нет файла {}", name);
+            return null;
+        }
+        return name;
     }
 
-    private void extractAndLoadSchedule(List<Schedule> list) {
-        for (Schedule schedule : list) {
-            Teacher teacher = schedule.getTeacher();
-            if (teacher != null) {
-                Teacher managedTeacher = teacherRepository.findByLabel(teacher.getLabel())
-                        .orElseGet(() -> teacherRepository.saveAndFlush(teacher));
-                schedule.setTeacher(managedTeacher);
+    /**
+     * Сохраняет разобранный файл.
+     *
+     * <p>Порядок шагов задан ссылками: группа и преподаватель хранятся в паре
+     * идентификатором справочника, поэтому обмен с мастером идёт до вставки, а не после
+     * коммита, как было при своих таблицах. Транзакция при этом остаётся только на самой
+     * вставке ({@link ScheduleWriter}) — сетевые вызовы не должны держать соединение с базой.
+     *
+     * <p>Метод рассчитан на фоновый поток: его вызывает {@code @Async}-разбор файла, и все
+     * походы в мастер-сервис происходят там же, не задерживая ответ вебхуку MinIO.
+     */
+    public void persistSchedule(List<Schedule> parsed) {
+        if (parsed == null || parsed.isEmpty()) return;
+
+        Map<String, Long> groupIds = masterSyncService.linkGroups(
+                parsed.stream().map(Schedule::getGroup).filter(Objects::nonNull).toList());
+
+        Map<String, Long> teacherIds = masterSyncService.linkTeachers(
+                parsed.stream()
+                        .map(Schedule::getTeacher)
+                        .filter(Objects::nonNull)
+                        .map(Teacher::getLabel)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toCollection(LinkedHashSet::new)));
+
+        List<Schedule> savable = new ArrayList<>();
+        Set<String> unresolved = new LinkedHashSet<>();
+
+        for (Schedule schedule : parsed) {
+            String groupName = schedule.getGroup() == null ? null : trimmed(schedule.getGroup().getName());
+            Long groupMasterId = groupName == null ? null : groupIds.get(groupName);
+
+            // пара без группы висит в воздухе: спросить её будет некому, потому что все
+            // запросы расписания идут от группы или от преподавателя
+            if (groupMasterId == null) {
+                unresolved.add(groupName == null ? "без группы" : groupName);
+                continue;
             }
 
-            Group group = schedule.getGroup();
-            if (group != null) {
-                Optional<Group> managedGroup = groupRepository.findByName(group.getName());
+            schedule.setGroupMasterId(groupMasterId);
 
-                if (managedGroup.isPresent()) {
-                    Group savable = managedGroup.get();
-                    savable.setUpdatedAt(System.currentTimeMillis());
-                    schedule.setGroup(savable);
+            String label = schedule.getTeacher() == null ? null : trimmed(schedule.getTeacher().getLabel());
+            schedule.setTeacherMasterId(label == null ? null : teacherIds.get(label));
 
-                    groupRepository.saveAndFlush(savable);
-                }
-                else {
-                    groupRepository.saveAndFlush(group);
-                    schedule.setGroup(group);
-                }
-            }
+            savable.add(schedule);
         }
 
-        Set<Long> groupIds = list.stream()
-                .map(s -> s.getGroup().getId())
-                .collect(Collectors.toSet());
-
-        Set<String> names = list.stream()
-                .map(s -> s.getGroup().getName())
-                .collect(Collectors.toSet());
-
-        for (Long groupId : groupIds) {
-            scheduleRepository.deleteAllByGroupId(groupId);
+        if (!unresolved.isEmpty()) {
+            log.error("Расписание не сохранено для групп {}: справочник не выдал идентификатор. "
+                    + "Записи появятся после повторной загрузки файла", unresolved);
         }
 
-        scheduleRepository.saveAllAndFlush(list);
-        log.info("Сохранено {} записей расписания для групп: {}", list.size(), names);
+        scheduleWriter.replace(savable);
+
+        // предмет и аудитория хранятся строками в самой паре: отдельных сущностей у них нет,
+        // поэтому в справочник уходят уникальные значения из разобранного файла. Порядок
+        // обратный группам — тип занятия считается по уже сохранённым парам
+        masterSyncService.syncSubjects(unique(savable, Schedule::getLessonName));
+        masterSyncService.syncAuditoriums(unique(savable, Schedule::getAuditory));
+    }
+
+    /**
+     * Достраивает пары названиями из справочника.
+     *
+     * <p>В базе от группы и преподавателя остались одни идентификаторы, а ответ API отдаёт
+     * названия. Справочник читается двумя пачками на весь список: поштучное чтение
+     * превратило бы выдачу недельного расписания в сотню походов в Redis.
+     */
+    private List<Schedule> describe(List<Schedule> schedule) {
+        if (schedule.isEmpty()) return new ArrayList<>();
+
+        Map<Long, Group> groups = masterDirectoryService.groups(
+                schedule.stream().map(Schedule::getGroupMasterId).filter(Objects::nonNull).toList());
+
+        Map<Long, Teacher> teachers = masterDirectoryService.teachers(
+                schedule.stream().map(Schedule::getTeacherMasterId).filter(Objects::nonNull).toList());
+
+        // изменения одним запросом на всю выдачу: в недельном расписании группы под сорок
+        // пар, и спрашивать по одной значило бы сорок походов в базу вместо одного
+        Map<Long, List<Change>> changes = changeRepository
+                .findAllBySchedules(schedule.stream().map(Schedule::getId).toList())
+                .stream()
+                .collect(Collectors.groupingBy(change -> change.getSchedule().getId()));
+
+        for (Schedule pair : schedule) {
+            pair.setGroup(groups.get(pair.getGroupMasterId()));
+            pair.setTeacher(teachers.get(pair.getTeacherMasterId()));
+            pair.setChanges(changes.getOrDefault(pair.getId(), List.of()));
+        }
+
+        return new ArrayList<>(schedule);
+    }
+
+    /** Попадает ли закреплённая дата пары в неделю запрошенной даты. */
+    private static boolean matchesWeek(Schedule schedule, String date) {
+        String pinnedDate = schedule.getPinnedDate();
+        if (pinnedDate == null || pinnedDate.isBlank()) return true;
+        if ("full".equals(date)) return true;
+
+        String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
+
+        // обратная совместимость с предыдущими версиями приложения
+        LocalDate anchor = date == null
+                ? LocalDate.now()
+                : LocalDate.parse(date + "." + year, DateTimeFormatter.ofPattern("dd.MM.yy"))
+                        .withYear(LocalDate.now().getYear());
+
+        LocalDate monday = anchor.with(DayOfWeek.MONDAY);
+        List<String> weekDates = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            weekDates.add(monday.plusDays(i).format(DateTimeFormatter.ofPattern("dd.MM.yy")));
+        }
+
+        return weekDates.contains(pinnedDate + "." + year);
+    }
+
+    /** Совпадает ли закреплённая дата пары с запрошенной. */
+    private static boolean matchesDay(Schedule schedule, String date) {
+        String pinnedDate = schedule.getPinnedDate();
+        if (pinnedDate == null || pinnedDate.isBlank()) return true;
+        return date == null || pinnedDate.equals(date);
+    }
+
+    private static Set<String> unique(List<Schedule> schedule, Function<Schedule, String> field) {
+        return schedule.stream()
+                .map(field)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private static String trimmed(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
 }

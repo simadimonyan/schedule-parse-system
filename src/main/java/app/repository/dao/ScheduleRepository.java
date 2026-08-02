@@ -7,25 +7,140 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * Хранилище пар расписания.
+ *
+ * <p>Группа и преподаватель задаются идентификатором мастер-сервиса: названия в таблице
+ * больше нет, и запросам по имени взяться неоткуда. Имя из запроса клиента переводится в
+ * идентификатор выше — в {@code MasterDirectoryService}, по локальному индексу связей, — а
+ * сюда приходит уже готовый {@code master_id}.
+ *
+ * <p>Каждая выборка ограничена версией. Без неё чтение вернуло бы пары всех снимков сразу:
+ * старые версии из таблицы не удаляются, в этом и смысл — на них откатываются.
+ */
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
-    Optional<List<Schedule>> findAllByGroupNameAndWeekCount(String groupName, Integer weekCount);
+    @Query("""
+            SELECT s FROM Schedule s
+            WHERE s.version.id = :versionId AND s.groupMasterId = :groupMasterId
+              AND s.weekCount = :weekCount AND s.isDeleted = false
+            """)
+    List<Schedule> findAllByGroup(
+            @Param("versionId") Long versionId,
+            @Param("groupMasterId") Long groupMasterId,
+            @Param("weekCount") Integer weekCount);
 
-    Optional<List<Schedule>> findAllByGroupNameAndDayWeekAndWeekCount(String groupName, String dayWeek, Integer weekCount);
+    @Query("""
+            SELECT s FROM Schedule s
+            WHERE s.version.id = :versionId AND s.groupMasterId = :groupMasterId
+              AND s.dayWeek = :dayWeek AND s.weekCount = :weekCount AND s.isDeleted = false
+            """)
+    List<Schedule> findAllByGroupAndDay(
+            @Param("versionId") Long versionId,
+            @Param("groupMasterId") Long groupMasterId,
+            @Param("dayWeek") String dayWeek,
+            @Param("weekCount") Integer weekCount);
 
-    Optional<List<Schedule>> findAllByTeacherLabelAndWeekCount(String groupName, Integer weekCount);
+    @Query("""
+            SELECT s FROM Schedule s
+            WHERE s.version.id = :versionId AND s.teacherMasterId = :teacherMasterId
+              AND s.weekCount = :weekCount AND s.isDeleted = false
+            """)
+    List<Schedule> findAllByTeacher(
+            @Param("versionId") Long versionId,
+            @Param("teacherMasterId") Long teacherMasterId,
+            @Param("weekCount") Integer weekCount);
 
-    Optional<List<Schedule>> findAllByTeacherLabelAndDayWeekAndWeekCount(String groupName, String dayWeek, Integer weekCount);
+    @Query("""
+            SELECT s FROM Schedule s
+            WHERE s.version.id = :versionId AND s.teacherMasterId = :teacherMasterId
+              AND s.dayWeek = :dayWeek AND s.weekCount = :weekCount AND s.isDeleted = false
+            """)
+    List<Schedule> findAllByTeacherAndDay(
+            @Param("versionId") Long versionId,
+            @Param("teacherMasterId") Long teacherMasterId,
+            @Param("dayWeek") String dayWeek,
+            @Param("weekCount") Integer weekCount);
 
+    /** Все пары версии — читает копирование при заведении черновика. */
+    @Query("SELECT s FROM Schedule s WHERE s.version.id = :versionId")
+    List<Schedule> findAllByVersion(@Param("versionId") Long versionId);
+
+    /**
+     * Сносит пары групп внутри одной версии.
+     *
+     * <p>Ограничение по версии обязательно: файл заменяет расписание своих групп в черновике,
+     * а не во всех снимках сразу, иначе загрузка нового расписания стирала бы то, ради чего
+     * версии и заведены — состояние, на которое можно откатиться.
+     */
     @Modifying
     @Transactional
-    @Query("DELETE FROM Schedule s WHERE s.group.id = :groupId")
-    void deleteAllByGroupId(@Param("groupId") Long groupId);
+    @Query("DELETE FROM Schedule s WHERE s.version.id = :versionId AND s.groupMasterId IN :groupMasterIds")
+    void deleteByVersionAndGroupMasterIdIn(
+            @Param("versionId") Long versionId,
+            @Param("groupMasterIds") Collection<Long> groupMasterIds);
 
-    Optional<Schedule> findByGroupIdAndDayWeekAndTimePeriodAndLessonNameAndWeekCountAndPinnedDate(
-            Long groupId, String dayWeek, String timePeriod, String lessonName, Integer weekCount, String pinnedDate);
+    /** Все пары версии — используется при удалении черновика. */
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Schedule s WHERE s.version.id = :versionId")
+    void deleteByVersion(@Param("versionId") Long versionId);
+
+    /**
+     * Группы, у которых есть расписание.
+     *
+     * <p>Заменяет таблицу-реплику в выдаче списков: перечень групп сервиса — это ровно те,
+     * чьи пары он хранит. Название, курс и уровень к идентификаторам добавляет справочник.
+     */
+    @Query("""
+            SELECT DISTINCT s.groupMasterId FROM Schedule s
+            WHERE s.version.id = :versionId AND s.groupMasterId IS NOT NULL AND s.isDeleted = false
+            """)
+    List<Long> findDistinctGroupMasterIds(@Param("versionId") Long versionId);
+
+    /** Преподаватели, у которых есть расписание. */
+    @Query("""
+            SELECT DISTINCT s.teacherMasterId FROM Schedule s
+            WHERE s.version.id = :versionId AND s.teacherMasterId IS NOT NULL AND s.isDeleted = false
+            """)
+    List<Long> findDistinctTeacherMasterIds(@Param("versionId") Long versionId);
+
+    /**
+     * Пары «предмет — тип занятия» для предметов, у которых тип единственный во всём
+     * расписании версии.
+     *
+     * <p>Считать по одному файлу нельзя: предмет, который в файле очной формы идёт только
+     * лекцией, в файле заочной может оказаться только практикой, и значение в справочнике
+     * прыгало бы вслед за последней загрузкой. Однозначность определяется по всем
+     * разобранным файлам версии сразу.
+     */
+    @Query("""
+            SELECT s.lessonName, MIN(s.lessonType) FROM Schedule s
+            WHERE s.version.id = :versionId AND s.lessonName IN :names
+              AND s.lessonType IS NOT NULL AND s.lessonType <> ''
+            GROUP BY s.lessonName
+            HAVING COUNT(DISTINCT s.lessonType) = 1
+            """)
+    List<Object[]> findUnambiguousLessonTypes(
+            @Param("versionId") Long versionId,
+            @Param("names") Collection<String> names);
+
+    /** Сколько пар осталось без версии — их подбирает начальная миграция при первом старте. */
+    @Query("SELECT count(s) FROM Schedule s WHERE s.version IS NULL")
+    long countOrphans();
+
+    /**
+     * Отдаёт версии все пары, загруженные до появления версий.
+     *
+     * <p>Одним запросом, а не перебором сущностей: на рабочей базе это десятки тысяч строк, и
+     * поднимать их в память ради проставления одной ссылки незачем.
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE Schedule s SET s.version.id = :versionId WHERE s.version IS NULL")
+    int adopt(@Param("versionId") Long versionId);
 
 }

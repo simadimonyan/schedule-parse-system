@@ -146,13 +146,16 @@ services:
       - schedule_net
 
   app_db:
-    image: postgres:17.6
+    image: postgres:18.4
     container_name: app_db
     restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      # в PG18 дефолтный PGDATA — /var/lib/postgresql/<major>/docker;
+      # задаём явно, чтобы смена мажора не переносила каталог данных
+      - PGDATA=/var/lib/postgresql/data
 
       - TZ=Europe/Moscow
     volumes:

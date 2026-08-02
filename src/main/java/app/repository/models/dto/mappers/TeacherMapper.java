@@ -2,7 +2,7 @@ package app.repository.models.dto.mappers;
 
 import app.repository.models.dto.api.teacher.TeacherResponse;
 import app.repository.models.dto.api.teacher.TeachersResponse;
-import app.repository.models.entity.Teacher;
+import app.repository.models.dto.directory.Teacher;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

@@ -47,6 +47,9 @@ dependencies {
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
+    // Kafka (события справочников мастер-сервиса)
+    implementation("org.springframework.kafka:spring-kafka")
+
     // S3
     implementation("io.minio:minio:8.5.17")
 
