@@ -21,11 +21,15 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     // Spring (Boot, Web, Data, Security, Web Flux)
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    // Токен для вызовов мастер-сервиса по client_credentials. Имя стартера — для Boot 3.x;
+    // в Boot 4 он называется spring-boot-starter-security-oauth2-client
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -64,6 +68,16 @@ dependencies {
     implementation(platform("io.micrometer:micrometer-bom:1.15.4"))
     implementation("io.micrometer:micrometer-registry-otlp")
 
+}
+
+dependencyManagement {
+    imports {
+        // Релизный поезд Spring Cloud привязан к мажору Spring Boot:
+        // 2024.0.x → Boot 3.4.x, 2025.0.x → Boot 3.5.x, 2025.1.x → Boot 4.x.
+        // При 2025.1.2 на Boot 3.5.6 падает NoClassDefFoundError
+        // org/springframework/boot/bootstrap/ConfigurableBootstrapContext.
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2025.0.3")
+    }
 }
 
 tasks.test {

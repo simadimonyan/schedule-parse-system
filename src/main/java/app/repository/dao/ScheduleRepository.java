@@ -137,8 +137,14 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
      *
      * <p>Одним запросом, а не перебором сущностей: на рабочей базе это десятки тысяч строк, и
      * поднимать их в память ради проставления одной ссылки незачем.
+     *
+     * <p>{@code flushAutomatically} обязателен. Начальная версия заводится в той же
+     * транзакции, а её id выдаёт последовательность — INSERT остаётся висеть в контексте
+     * персистентности. Bulk-update идёт в БД мимо контекста и сам его не сбрасывает: таблицы
+     * разные, автосброса по пересечению не случается. Без флага UPDATE проставляет ссылку на
+     * строку version_table, которой в базе ещё нет, и падает по внешнему ключу.
      */
-    @Modifying
+    @Modifying(flushAutomatically = true)
     @Transactional
     @Query("UPDATE Schedule s SET s.version.id = :versionId WHERE s.version IS NULL")
     int adopt(@Param("versionId") Long versionId);

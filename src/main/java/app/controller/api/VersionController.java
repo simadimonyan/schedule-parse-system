@@ -8,6 +8,7 @@ import app.service.domain.version.VersionService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/versions")
+@RequestMapping("/api/v1/schedule/versions")
 @SecurityRequirement(name = "Authorization")
 public class VersionController {
 
@@ -39,6 +40,7 @@ public class VersionController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<VersionsResponse> list() {
         log.info("GET Запрос: /api/v1/versions");
         return ResponseEntity.ok(new VersionsResponse(
@@ -46,6 +48,7 @@ public class VersionController {
     }
 
     @GetMapping("/active")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<VersionResponse> active() {
         log.info("GET Запрос: /api/v1/versions/active");
         return ResponseEntity.ok(toResponse(versionService.active()));
@@ -59,6 +62,7 @@ public class VersionController {
      * Пока черновика нет, разбор пишет прямо в активную версию.
      */
     @PostMapping("/draft")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<VersionResponse> draft(
             @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
     ) {
@@ -69,6 +73,7 @@ public class VersionController {
 
     /** Делает версию активной. Тем же вызовом откатываются на старую. */
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<VersionResponse> activate(
             @PathVariable("id") Long id,
             @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
@@ -79,6 +84,7 @@ public class VersionController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<String> discard(
             @PathVariable("id") Long id,
             @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
