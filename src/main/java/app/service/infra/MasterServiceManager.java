@@ -45,11 +45,15 @@ public class MasterServiceManager {
     // Ограничение пакета у мастера — от 1 до 500 записей
     private static final int BATCH_LIMIT = 500;
 
-    private static final String GROUPS = "/api/v1/groups";
-    private static final String TEACHERS = "/api/v1/teachers";
-    private static final String SUBJECTS = "/api/v1/subjects";
-    private static final String BLOCKS = "/api/v1/blocks";
-    private static final String AUDITORIUMS = "/api/v1/auditoriums";
+    // Префикс /master обязателен: у мастер-сервиса свои контроллеры висят на
+    // /api/v1/master/**, а /api/v1/** — это пути самого сервиса расписания
+    private static final String MASTER_API = "/api/v1/master";
+
+    private static final String GROUPS = MASTER_API + "/groups";
+    private static final String TEACHERS = MASTER_API + "/teachers";
+    private static final String SUBJECTS = MASTER_API + "/subjects";
+    private static final String BLOCKS = MASTER_API + "/blocks";
+    private static final String AUDITORIUMS = MASTER_API + "/auditoriums";
 
     private static final ParameterizedTypeReference<MasterBatchResponse<MasterGroupView>> GROUP_BATCH =
             new ParameterizedTypeReference<>() {};

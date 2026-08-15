@@ -8,6 +8,7 @@ import app.service.domain.slot.SlotService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/slots")
+@RequestMapping("/api/v1/schedule/slots")
 @SecurityRequirement(name = "Authorization")
 public class SlotController {
 
@@ -43,6 +44,7 @@ public class SlotController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<SlotResponse.Envelope> list(
             @RequestParam(value = "versionId", required = false) Long versionId
     ) {
@@ -51,6 +53,7 @@ public class SlotController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<SlotResponse> create(
             @RequestBody SlotRequest request,
             @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
@@ -61,6 +64,7 @@ public class SlotController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<SlotResponse> update(
             @PathVariable("id") Long id,
             @RequestBody SlotRequest request,
@@ -72,6 +76,7 @@ public class SlotController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<String> delete(
             @PathVariable("id") Long id,
             @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken

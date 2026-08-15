@@ -27,6 +27,13 @@ services:
       - MASTER_DEFAULT_BLOCK_ID=${MASTER_DEFAULT_BLOCK_ID:-1}
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
 
+      # Удостоверение для вызовов мастера — docs/infrastructure/service-auth.md.
+      # Пока SCHEDULE_KEYCLOAK_CLIENT_SECRET пуст, ходим переходным общим секретом
+      - KEYCLOAK_CLIENT_ID=${SCHEDULE_KEYCLOAK_CLIENT_ID:-schedule-service}
+      - KEYCLOAK_CLIENT_SECRET=${SCHEDULE_KEYCLOAK_CLIENT_SECRET:-}
+      - KEYCLOAK_TOKEN_URI=${KEYCLOAK_TOKEN_URI:-http://keycloak:8080/realms/schedule/protocol/openid-connect/token}
+      - MASTER_LEGACY_TOKEN=${MASTER_LEGACY_TOKEN:-}
+
       - TZ=Europe/Moscow
     dns:
       - 8.8.8.8

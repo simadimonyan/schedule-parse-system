@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -25,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/configuration")
+@RequestMapping("/api/v1/schedule/configuration")
 @SecurityRequirement(name = "Authorization")
 public class ConfigController {
 
@@ -54,12 +55,14 @@ public class ConfigController {
   }
 
     @GetMapping("/week")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<WeekResponse> week() throws EntityNotFoundException {
         log.info("GET Запрос: /api/v1/configuration/week");
         return ResponseEntity.ok(new WeekResponse(Integer.parseInt(persistenceService.getConfig("weekCount").getValue())));
     }
 
     @PostMapping("/week/swap")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> swapWeek(@RequestBody String token) throws EntityNotFoundException {
         log.info("POST Запрос: /api/v1/configuration/week/swap");
         if (token.startsWith("Bearer") && token.substring(7).equals(adminToken)) {
@@ -71,6 +74,7 @@ public class ConfigController {
     }
 
     @PostMapping("/online/heartbeat/{uuid}")
+    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_STUDENT', 'ROLE_SCHEDULE')")
     public ResponseEntity<?> heartbeat(@PathVariable("uuid") UUID uuid) {
         log.info("POST Запрос: /api/v1/configuration/online/heartbeat/%s".formatted(uuid));
         onlineService.heartbeat(uuid);
@@ -78,6 +82,7 @@ public class ConfigController {
     }
 
     @GetMapping(value = "/online/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_STUDENT', 'ROLE_SCHEDULE')")
     public SseEmitter stream(HttpServletResponse response) {
         // X-Accel-Buffering=no выключает буферизацию в nginx — без этого
         // заголовка прокси копит весь body и отдаёт его клиенту только
@@ -116,6 +121,7 @@ public class ConfigController {
     }
 
     @GetMapping("/online/top/{mode}")
+    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_STUDENT', 'ROLE_SCHEDULE')")
     public ResponseEntity<?> top(@PathVariable("mode") String mode) {
         log.info("GET Запрос: /api/v1/configuration/online/top?mode=%s".formatted(mode));
         return ResponseEntity.ok(mode.equals("groups") ? statService.getTopGroupsByViews() : statService.getTopTeachersByViews());

@@ -4,26 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ prerequisites">
+    <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ service integration &amp; controllers &amp; db schema">
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/schedule/CraftService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose.integrate.dev.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.integrate.dev.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose.integrate.prod.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.integrate.prod.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minio-auto-init-webhook.sh" beforeDir="false" afterPath="$PROJECT_DIR$/minio-auto-init-webhook.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/dao/GroupRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/configuration/MasterServiceConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/configuration/MasterServiceConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/ChangeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ChangeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/ParseController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ParseController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/SlotController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/SlotController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/VersionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/VersionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/WorkScheduleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/WorkScheduleController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/dao/ScheduleRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/ScheduleRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/dao/TeacherRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/GroupMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/GroupMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/ScheduleMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/ScheduleMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/TeacherMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/TeacherMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Group.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Schedule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Schedule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Teacher.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/cache/CacheService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/cache/CacheService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/excel/ExcelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/excel/ExcelService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/persistence/SchedulePersistenceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/persistence/SchedulePersistenceService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/service/infra/MasterServiceManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/infra/MasterServiceManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
@@ -33,7 +29,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="99852" />
+    <option name="cachedIndexableFilesCount" value="99850" />
   </component>
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
@@ -90,61 +86,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.8312435144733703" />
-      <entry key="MS500" value="3.2164518443065475" />
-      <entry key="S2" value="5.723124135086246" />
-      <entry key="S5" value="8.778462860184606" />
-      <entry key="S10" value="11.68441250067941" />
-      <entry key="S30" value="16.028666685174137" />
-      <entry key="S60" value="17.792937305176952" />
-      <entry key="M2" value="18.83358352580647" />
-      <entry key="M5" value="19.637062686416723" />
-      <entry key="M10" value="21.138229193207863" />
-      <entry key="M15" value="22.962394225925006" />
-      <entry key="M30" value="26.988583739960816" />
-      <entry key="H1" value="30.59463765230022" />
-      <entry key="H2" value="33.02426240666691" />
-      <entry key="H4" value="34.43671826631102" />
-      <entry key="D1" value="35.72831085557241" />
-      <entry key="W1" value="35.96090523503539" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.00006022994976" />
+      <entry key="S2" value="1.139428627464996" />
+      <entry key="S5" value="1.7039260299626153" />
+      <entry key="S10" value="2.7796583844404745" />
+      <entry key="S30" value="11.219592590160508" />
+      <entry key="S60" value="20.3679442447295" />
+      <entry key="M2" value="28.296468182372546" />
+      <entry key="M5" value="34.86319582042682" />
+      <entry key="M10" value="38.55766688216531" />
+      <entry key="M15" value="41.131698684446285" />
+      <entry key="M30" value="45.96163375856368" />
+      <entry key="H1" value="50.03268063114471" />
+      <entry key="H2" value="52.72709101144122" />
+      <entry key="H4" value="54.283439970921336" />
+      <entry key="D1" value="55.70205036347707" />
+      <entry key="W1" value="55.95713537753072" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="3.604100721611907E-306" />
-      <entry key="S5" value="1.3411184746009705E-122" />
-      <entry key="S10" value="2.7553132159130936E-61" />
-      <entry key="S30" value="2.48549276873922E-20" />
-      <entry key="S60" value="4.432441841212281E-10" />
-      <entry key="M2" value="5.945828611807356E-5" />
-      <entry key="M5" value="0.0710202075605993" />
-      <entry key="M10" value="0.7537195887974979" />
-      <entry key="M15" value="1.656395537392237" />
-      <entry key="M30" value="3.640190513572734" />
-      <entry key="H1" value="5.396427215419153" />
-      <entry key="H2" value="6.570493255497514" />
-      <entry key="H4" value="7.250098968623518" />
-      <entry key="D1" value="7.869835212232185" />
-      <entry key="W1" value="7.98127404125332" />
+      <entry key="MS100" value="1.670327892769022E-26" />
+      <entry key="MS500" value="7.456043664932499E-6" />
+      <entry key="S2" value="0.09266758669086402" />
+      <entry key="S5" value="0.7540390991273827" />
+      <entry key="S10" value="1.6890081740652934" />
+      <entry key="S30" value="3.301625938900327" />
+      <entry key="S60" value="4.028883472442387" />
+      <entry key="M2" value="4.478251899593164" />
+      <entry key="M5" value="4.842709303343699" />
+      <entry key="M10" value="5.5876890478508345" />
+      <entry key="M15" value="6.500226773890158" />
+      <entry key="M30" value="8.511723443375061" />
+      <entry key="H1" value="10.30973000151349" />
+      <entry key="H2" value="11.51960540335232" />
+      <entry key="H4" value="12.222468353975431" />
+      <entry key="D1" value="12.864897323155855" />
+      <entry key="W1" value="12.980560073811313" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.787909701570033" />
-      <entry key="MS500" value="3.198840596784137" />
-      <entry key="S2" value="5.710533445327769" />
-      <entry key="S5" value="8.768855434321678" />
-      <entry key="S10" value="11.677762290632636" />
-      <entry key="S30" value="16.025632053563186" />
-      <entry key="S60" value="17.791261311301756" />
-      <entry key="M2" value="18.83275795751151" />
-      <entry key="M5" value="19.70731427418426" />
-      <entry key="M10" value="21.889561704752648" />
-      <entry key="M15" value="24.615407192507085" />
-      <entry key="M30" value="30.62509496138365" />
-      <entry key="H1" value="35.988338974660024" />
-      <entry key="H2" value="39.59309538653927" />
-      <entry key="H4" value="41.68590088084571" />
-      <entry key="D1" value="43.59798022329446" />
-      <entry key="W1" value="43.94215524701041" />
+      <entry key="MS100" value="0.5904963307147653" />
+      <entry key="MS500" value="0.9000584285004325" />
+      <entry key="S2" value="1.1778106100056427" />
+      <entry key="S5" value="2.3600545382182982" />
+      <entry key="S10" value="4.362636020536521" />
+      <entry key="S30" value="14.44635717505399" />
+      <entry key="S60" value="24.349052976784563" />
+      <entry key="M2" value="32.74742151254787" />
+      <entry key="M5" value="39.69368155361005" />
+      <entry key="M10" value="44.1372031248415" />
+      <entry key="M15" value="47.62471358217524" />
+      <entry key="M30" value="54.467753427765096" />
+      <entry key="H1" value="60.33870615604112" />
+      <entry key="H2" value="64.24453900661852" />
+      <entry key="H4" value="66.50474076758469" />
+      <entry key="D1" value="68.5667395387067" />
+      <entry key="W1" value="68.93766536702717" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -315,14 +311,6 @@
       <workItem from="1777420516576" duration="2090000" />
       <workItem from="1777485612359" duration="782000" />
       <workItem from="1777648288965" duration="507000" />
-    </task>
-    <task id="LOCAL-00012" summary="+ updated /levels &amp; added /courses requests">
-      <option name="closed" value="true" />
-      <created>1759935912975</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1759935912975</updated>
     </task>
     <task id="LOCAL-00013" summary="+ updated cron in ScheduleService">
       <option name="closed" value="true" />
@@ -708,11 +696,22 @@
       <option name="project" value="LOCAL" />
       <updated>1785185039661</updated>
     </task>
-    <option name="localTasksCounter" value="61" />
+    <task id="LOCAL-00061" summary="+ service integration &amp; controllers &amp; db schema">
+      <option name="closed" value="true" />
+      <created>1785712044600</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1785712044600</updated>
+    </task>
+    <option name="localTasksCounter" value="62" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="nginx.conf" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -726,7 +725,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="+ teacher idempotency &amp; eios links" />
     <MESSAGE value="+ master degree schedule support" />
     <MESSAGE value="+ internal-distant education" />
     <MESSAGE value="+ distant study form" />
@@ -751,7 +749,8 @@
     <MESSAGE value="+ sse refactor" />
     <MESSAGE value="+ security fix" />
     <MESSAGE value="+ prerequisites" />
-    <option name="LAST_COMMIT_MESSAGE" value="+ prerequisites" />
+    <MESSAGE value="+ service integration &amp; controllers &amp; db schema" />
+    <option name="LAST_COMMIT_MESSAGE" value="+ service integration &amp; controllers &amp; db schema" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

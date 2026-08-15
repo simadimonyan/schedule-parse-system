@@ -11,11 +11,12 @@ import app.service.domain.persistence.SchedulePersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/groups")
+@RequestMapping("/api/v1/schedule/groups")
 @SecurityRequirement(name = "Authorization")
 public class GroupController {
 
@@ -30,30 +31,35 @@ public class GroupController {
     }
 
     @GetMapping("/{group}")
+    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_TEACHER')")
     public ResponseEntity<GroupResponse> getGroup(@PathVariable("group") String groupName) {
         log.info("GET Запрос: /api/v1/groups/{}", groupName);
         return ResponseEntity.ok(groupMapper.toGroupResponse(persistenceService.getGroup(groupName)));
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_TEACHER')")
     public ResponseEntity<GroupsResponse> search(@RequestParam("course") Integer course, @RequestParam(value = "level", required = false) String level) {
         log.info("GET Запрос: /api/v1/groups/search?course={}&level={}", course, level);
         return ResponseEntity.ok(groupMapper.toGroupsResponse(persistenceService.getGroups(course, level)));
     }
 
     @GetMapping("/levels")
+    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_TEACHER')")
     public ResponseEntity<GroupLevelsResponse> getLevels(@RequestParam("course") Integer course) {
         log.info("GET Запрос: /api/v1/groups/levels?course={}", course);
         return ResponseEntity.ok(new GroupLevelsResponse(persistenceService.getLevels(course)));
     }
 
     @GetMapping("/courses")
+    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_TEACHER')")
     public ResponseEntity<GroupCoursesResponse> getCourses() {
         log.info("GET Запрос: /api/v1/groups/courses");
         return ResponseEntity.ok(new GroupCoursesResponse(persistenceService.getCourses()));
     }
 
     @GetMapping("/schedule")
+    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_TEACHER')")
     public ResponseEntity<ScheduleResponse> getSchedule(
             @RequestParam("group") String groupName,
             @RequestParam(value = "dayWeek", required = false) String dayWeek,

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +37,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/changes")
+@RequestMapping("/api/v1/schedule/changes")
 @SecurityRequirement(name = "Authorization")
 public class ChangeController {
 
@@ -58,6 +59,7 @@ public class ChangeController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<ChangeResponse.Envelope> list(
             @RequestParam(value = "group", required = false) String groupName,
             @RequestParam(value = "teacher", required = false) String teacherLabel,
@@ -85,6 +87,7 @@ public class ChangeController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<ChangeResponse> create(
             @RequestBody ChangeRequest request,
             @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
@@ -95,6 +98,7 @@ public class ChangeController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<ChangeResponse> update(
             @PathVariable("id") Long id,
             @RequestBody ChangeRequest request,
@@ -106,6 +110,7 @@ public class ChangeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<String> delete(
             @PathVariable("id") Long id,
             @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken

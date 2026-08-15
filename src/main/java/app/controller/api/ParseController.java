@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +29,7 @@ import java.io.IOException;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/schedule")
+@RequestMapping("/api/v1/schedule/schedule")
 @SecurityRequirement(name = "Authorization")
 public class ParseController {
 
@@ -41,6 +42,7 @@ public class ParseController {
     }
 
     @PostMapping("/parse")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<ParseResponse> parse(
             @RequestParam(value = "file", required = false) String fileName,
             @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
