@@ -78,4 +78,21 @@ public class TimeSlot implements Serializable {
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
+    /**
+     * Заготовка слота: место в сетке названо, но ячейка ещё не подобрана.
+     *
+     * <p>Так место в неделе едет от разбора файла и от пачки редактора до
+     * {@code SlotResolver}: тот сверит заготовку с сеткой версии и либо подставит паре
+     * готовый слот, либо заведёт этот. Отдельных колонок в {@link Schedule} под день,
+     * чётность, номер и время больше нет — их единственное место здесь.
+     */
+    public static TimeSlot draft(String dayWeek, Integer weekCount, Integer lessonCount, String timeRange) {
+        TimeSlot draft = new TimeSlot();
+        draft.setDayWeek(dayWeek);
+        draft.setWeekCount(weekCount);
+        draft.setLessonCount(lessonCount);
+        draft.setTimeRange(timeRange);
+        return draft;
+    }
+
 }

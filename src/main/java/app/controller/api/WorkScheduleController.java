@@ -3,7 +3,6 @@ package app.controller.api;
 import app.repository.models.dto.api.workschedule.WorkScheduleRequest;
 import app.repository.models.dto.api.workschedule.WorkScheduleResponse;
 import app.repository.models.dto.mappers.WorkScheduleMapper;
-import app.security.AdminAccess;
 import app.service.domain.workschedule.WorkScheduleService;
 import app.service.infra.MasterDirectoryService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +27,9 @@ import java.util.List;
  * <p>Чтение — по ФИО, как и везде в сервисе; запись — идентификатором справочника. Пустой
  * график означает «ограничений нет»: заполнять его на всех преподавателей не требуется.
  *
- * <p>Правка требует административного токена в заголовке {@code X-Admin-Token}.
+ * <p>Правка требует роли {@code schedule}: ею ходит учебный отдел. Тот же доступ даёт
+ * административный токен {@code X-Admin-Token} — он превращается в ту же роль в
+ * {@code AccessFilter}, пока роли не выданы всем, кому положено.
  */
 @Slf4j
 @RestController
@@ -40,22 +40,18 @@ public class WorkScheduleController {
     private final WorkScheduleService workScheduleService;
     private final WorkScheduleMapper workScheduleMapper;
     private final MasterDirectoryService masterDirectoryService;
-    private final AdminAccess adminAccess;
 
     public WorkScheduleController(
             WorkScheduleService workScheduleService,
             WorkScheduleMapper workScheduleMapper,
-            MasterDirectoryService masterDirectoryService,
-            AdminAccess adminAccess
+            MasterDirectoryService masterDirectoryService
     ) {
         this.workScheduleService = workScheduleService;
         this.workScheduleMapper = workScheduleMapper;
         this.masterDirectoryService = masterDirectoryService;
-        this.adminAccess = adminAccess;
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<WorkScheduleResponse.Envelope> list(
             @RequestParam(value = "teacher", required = false) String teacherLabel
     ) {
@@ -73,34 +69,28 @@ public class WorkScheduleController {
     @PostMapping
     @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<WorkScheduleResponse> create(
-            @RequestBody WorkScheduleRequest request,
-            @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
+            @RequestBody WorkScheduleRequest request
     ) {
         log.info("POST Запрос: /api/v1/work-schedules \n Body:\n {}", request);
-        adminAccess.require(adminToken, "создание графика занятости");
         return ResponseEntity.ok(workScheduleMapper.toResponse(workScheduleService.create(request)));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<WorkScheduleResponse> update(
             @PathVariable("id") Long id,
-            @RequestBody WorkScheduleRequest request,
-            @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
+            @RequestBody WorkScheduleRequest request
     ) {
         log.info("PUT Запрос: /api/v1/work-schedules/{}", id);
-        adminAccess.require(adminToken, "правка графика занятости " + id);
         return ResponseEntity.ok(workScheduleMapper.toResponse(workScheduleService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<String> delete(
-            @PathVariable("id") Long id,
-            @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
+            @PathVariable("id") Long id
     ) {
         log.info("DELETE Запрос: /api/v1/work-schedules/{}", id);
-        adminAccess.require(adminToken, "удаление графика занятости " + id);
-
         workScheduleService.delete(id);
         return ResponseEntity.ok("График занятости удалён");
     }

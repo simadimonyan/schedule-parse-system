@@ -3,11 +3,16 @@ package app.service.domain.persistence;
 import app.repository.dao.ChangeRepository;
 import app.repository.dao.ConfigRepository;
 import app.repository.dao.ScheduleRepository;
+import app.repository.dao.VersionRepository;
+import app.repository.models.dto.api.schedule.ScheduleBatch;
 import app.repository.models.dto.directory.Group;
+import app.repository.models.dto.event.ScheduleEvent;
 import app.repository.models.dto.directory.Teacher;
+import app.repository.models.dto.mappers.ScheduleMapper;
 import app.repository.models.entity.Change;
 import app.repository.models.entity.Config;
 import app.repository.models.entity.Schedule;
+import app.repository.models.entity.Version;
 import app.service.domain.excel.ExcelService;
 import app.service.domain.version.VersionService;
 import app.service.infra.MasterDirectoryService;
@@ -19,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -55,20 +61,26 @@ public class SchedulePersistenceService {
 
     private final ExcelService excelService;
     private final StorageService storageService;
+    private final MasterDirectoryService masterDirectoryService;
+    private final StatService statService;
+    private final MasterSyncService masterSyncService;
+    private final VersionService versionService;
 
+    private final VersionRepository versionRepository;
     private final ScheduleRepository scheduleRepository;
     private final ChangeRepository changeRepository;
     private final ConfigRepository configRepository;
-    private final StatService statService;
-    private final MasterSyncService masterSyncService;
-    private final MasterDirectoryService masterDirectoryService;
+
+    private final ScheduleMapper scheduleMapper;
     private final ScheduleWriter scheduleWriter;
-    private final VersionService versionService;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     @Autowired
     public SchedulePersistenceService(
             ExcelService excelService,
             StorageService storageService,
+            VersionRepository versionRepository,
             ScheduleRepository scheduleRepository,
             ChangeRepository changeRepository,
             ConfigRepository configRepository,
@@ -76,10 +88,13 @@ public class SchedulePersistenceService {
             MasterSyncService masterSyncService,
             MasterDirectoryService masterDirectoryService,
             ScheduleWriter scheduleWriter,
-            VersionService versionService
+            VersionService versionService,
+            ScheduleMapper scheduleMapper,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.excelService = excelService;
         this.storageService = storageService;
+        this.versionRepository = versionRepository;
         this.scheduleRepository = scheduleRepository;
         this.changeRepository = changeRepository;
         this.configRepository = configRepository;
@@ -88,6 +103,8 @@ public class SchedulePersistenceService {
         this.masterDirectoryService = masterDirectoryService;
         this.scheduleWriter = scheduleWriter;
         this.versionService = versionService;
+        this.scheduleMapper = scheduleMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     @Cacheable(value = "groups", key = "'name:' + #name")
@@ -159,6 +176,98 @@ public class SchedulePersistenceService {
                 changeRepository.findStandaloneByGroup(versionId, groupMasterId));
     }
 
+    /**
+     * Расписание пачкой: пары приходят готовыми полями, а не файлом.
+     *
+     * <p>Сетка недели заводится по ходу. Слота, в который встаёт пара, может ещё не быть —
+     * группу заводят и до первой загрузки файла, — и ждать его неоткуда, поэтому недостающие
+     * ячейки создаёт {@link SlotResolver} внутри {@link ScheduleWriter}. Ключ у него тот же,
+     * что и у разбора файла: день, чётность, номер пары и время. Значит, вторая пачка на то же
+     * место переиспользует заведённый слот, а не положит рядом копию, и загруженный потом файл
+     * встанет в ту же сетку.
+     *
+     * <p>Заменяется ячейка, а не расписание группы: редактор присылает одну пару и ждёт, что
+     * встанет ровно она. Замена по группе — дело загрузки файла, где пачка и есть вся неделя.
+     *
+     * <p>Версию называет клиент, но писать он может только в открытую на запись — в черновик,
+     * пока тот есть, иначе в активную. Пришедший id сверяется с ней: молча положить правку в
+     * опубликованный снимок хуже, чем отказать, — расписание уехало бы клиентам сразу.
+     *
+     * <p>Неразрешённая ссылка — отказ с объяснением, а не пустой ответ с кодом 200: диспетчер
+     * увидел бы пару в сетке, а после перезагрузки её бы не стало.
+     */
+    public ScheduleView updateAndSetSchedule(ScheduleBatch batch) {
+        if (batch == null || batch.schedule() == null || batch.schedule().isEmpty()) {
+            log.info("Пустая пачка расписания — писать нечего");
+            return ScheduleView.empty();
+        }
+
+        List<ScheduleBatch.ScheduleUnitRequest> requests = batch.schedule();
+
+        // Группа и преподаватель приходят идентификаторами справочника мастера — это и есть
+        // те самые master id, по которым хранится пара. Своих таблиц у справочника здесь нет,
+        // поэтому запись только проверяется на существование у мастера — и сразу на всю
+        // пачку: поштучный вопрос превратил бы неделю расписания в сотню походов в Redis.
+        Map<Long, Group> groups = masterDirectoryService.groups(
+                requests.stream().map(ScheduleBatch.ScheduleUnitRequest::group).filter(Objects::nonNull).toList());
+        Map<Long, Teacher> teachers = masterDirectoryService.teachers(
+                requests.stream().map(ScheduleBatch.ScheduleUnitRequest::teacher).filter(Objects::nonNull).toList());
+
+        Version target = versionService.writable();
+        List<ScheduleBatch.ScheduleBatchUnit> batchUnits = new ArrayList<>();
+
+        for (ScheduleBatch.ScheduleUnitRequest item : requests) {
+            if (!Objects.equals(item.version(), target.getId())) {
+                // разные ответы на разные беды: несуществующую версию клиент исправит в
+                // запросе, а закрытую на запись — открыв черновик
+                if (item.version() == null || versionRepository.findByIdAndIsDeletedFalse(item.version()).isEmpty()) {
+                    throw new EntityNotFoundException(
+                            String.format("Версия %s не найдена — пачка не записана", item.version()));
+                }
+                throw new IllegalStateException(String.format(
+                        "Версия %s закрыта на запись: правки идут в версию %s (%s). "
+                                + "Откройте черновик или выберите её на экране",
+                        item.version(), target.getId(),
+                        Boolean.TRUE.equals(target.getIsDraft()) ? "черновик" : "активная"));
+            }
+
+            Group group = item.group() == null ? null : groups.get(item.group());
+            if (group == null) {
+                throw new EntityNotFoundException(
+                        String.format("Группа %s не найдена в справочнике — пачка не записана", item.group()));
+            }
+
+            // преподаватель необязателен: в файле он тоже стоит не у всякой пары
+            Teacher teacher = item.teacher() == null ? null : teachers.get(item.teacher());
+            if (item.teacher() != null && teacher == null) {
+                throw new EntityNotFoundException(String.format(
+                        "Преподаватель %s не найден в справочнике — пачка не записана", item.teacher()));
+            }
+
+            batchUnits.add(new ScheduleBatch.ScheduleBatchUnit(
+                    target,
+                    group,
+                    item.group(),
+                    item.dayWeek(),
+                    item.timePeriod(),
+                    item.weekCount(),
+                    item.lessonCount(),
+                    item.lessonType(),
+                    item.lessonName(),
+                    teacher,
+                    item.teacher(),
+                    item.pinnedDate(),
+                    item.auditory(),
+                    item.eiosLink()
+            ));
+        }
+
+        List<Schedule> schedule = scheduleMapper.toSchedule(batchUnits);
+        scheduleWriter.upsert(target, schedule);
+
+        return new ScheduleView(describe(schedule), List.of());
+    }
+
     // без префикса запрос кафедры с названием, совпавшим с ФИО, вернул бы List<Teacher>
     // там, где ожидается Teacher, — ClassCastException вместо ответа
     @Cacheable(value = "teachers", key = "'label:' + #label")
@@ -222,23 +331,47 @@ public class SchedulePersistenceService {
         return pair;
     }
 
+    /**
+     * Чётность недели, показываемая просмотрщику.
+     *
+     * <p>Ключа в базе может не быть: заводит его только переключение чётности, и на свежей
+     * базе до первого переключения его нет ни у кого. Отсутствие — это не ошибка, а «идёт
+     * первая неделя»: значение проставляется здесь же, чтобы переключение дальше работало
+     * от известного, а не заводило ключ заново.
+     */
+    public int weekCount() {
+        Config pair = configRepository.findAllByKey("weekCount").orElse(null);
+        if (pair != null) return Integer.parseInt(pair.getValue());
+
+        log.info("Инициализация параметра: weekCount - присвоено значение 1");
+        setConfig("weekCount", "1");
+        return 1;
+    }
+
     @CacheEvict(value = "configs", allEntries = true)
     public void swapWeek() {
         try {
             Config pair = configRepository.findAllByKey("weekCount").orElse(null);
+            String value;
+
             if (pair == null) {
                 log.info("Инициализация параметра: weekCount - присвоено значение 1");
-                setConfig("weekCount", "1");
+                value = "1";
             }
-
             else if (pair.getValue().equals("1")) {
                 log.info("Переключение четности недели: старое значение = {}, новое значение = 2", pair.getValue());
-                setConfig("weekCount", "2");
+                value = "2";
             }
             else {
                 log.info("Переключение четности недели: старое значение = {}, новое значение = 1", pair.getValue());
-                setConfig("weekCount", "1");
+                value = "1";
             }
+
+            setConfig("weekCount", value);
+
+            // расписание не менялось — сменилась показываемая половина. Подписчику этого
+            // достаточно, чтобы перечитать выдачу, и не нужно версии: чётность одна на сервис
+            eventPublisher.publishEvent(ScheduleEvent.weekSwapped(Integer.valueOf(value)));
         }
         catch (Exception e) {
             log.error("Ошибка при переключении четности недели", e);

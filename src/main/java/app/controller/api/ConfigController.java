@@ -55,26 +55,27 @@ public class ConfigController {
   }
 
     @GetMapping("/week")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<WeekResponse> week() throws EntityNotFoundException {
         log.info("GET Запрос: /api/v1/configuration/week");
-        return ResponseEntity.ok(new WeekResponse(Integer.parseInt(persistenceService.getConfig("weekCount").getValue())));
+        return ResponseEntity.ok(new WeekResponse(persistenceService.weekCount()));
     }
 
     @PostMapping("/week/swap")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    // ROLE_SCHEDULE, а не ROLE_ADMIN: такой роли в Keycloak нет ни у кого, и с включённой
+    // проверкой методов смена чётности отказывала бы всем. Свой разбор токена ниже остаётся —
+    // он и был настоящей защитой, пока аннотации не работали
+    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<?> swapWeek(@RequestBody String token) throws EntityNotFoundException {
         log.info("POST Запрос: /api/v1/configuration/week/swap");
         if (token.startsWith("Bearer") && token.substring(7).equals(adminToken)) {
             persistenceService.swapWeek();
-            return ResponseEntity.ok(new WeekResponse(Integer.parseInt(persistenceService.getConfig("weekCount").getValue())));
+            return ResponseEntity.ok(new WeekResponse(persistenceService.weekCount()));
         }
         log.warn("Попытка доступа к административным функциям - доступ отказан");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ отказан");
     }
 
     @PostMapping("/online/heartbeat/{uuid}")
-    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_STUDENT', 'ROLE_SCHEDULE')")
     public ResponseEntity<?> heartbeat(@PathVariable("uuid") UUID uuid) {
         log.info("POST Запрос: /api/v1/configuration/online/heartbeat/%s".formatted(uuid));
         onlineService.heartbeat(uuid);
@@ -82,7 +83,6 @@ public class ConfigController {
     }
 
     @GetMapping(value = "/online/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_STUDENT', 'ROLE_SCHEDULE')")
     public SseEmitter stream(HttpServletResponse response) {
         // X-Accel-Buffering=no выключает буферизацию в nginx — без этого
         // заголовка прокси копит весь body и отдаёт его клиенту только
@@ -121,7 +121,6 @@ public class ConfigController {
     }
 
     @GetMapping("/online/top/{mode}")
-    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_STUDENT', 'ROLE_SCHEDULE')")
     public ResponseEntity<?> top(@PathVariable("mode") String mode) {
         log.info("GET Запрос: /api/v1/configuration/online/top?mode=%s".formatted(mode));
         return ResponseEntity.ok(mode.equals("groups") ? statService.getTopGroupsByViews() : statService.getTopTeachersByViews());

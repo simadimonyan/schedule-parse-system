@@ -13,6 +13,11 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./:/service/schedule-parse-service
+      # Кэш gradle переживает пересоздание контейнера. Проект собирается при каждом
+      # старте (bootRun по смонтированному исходнику), и без этого тома любой
+      # `--force-recreate` означает повторную выкачку всех зависимостей — минуты
+      # ожидания и отказ, если сеть моргнёт
+      - schedule_gradle_cache:/root/.gradle
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     depends_on:
@@ -34,6 +39,16 @@ services:
       - KEYCLOAK_TOKEN_URI=${KEYCLOAK_TOKEN_URI:-http://keycloak:8080/realms/schedule/protocol/openid-connect/token}
       - MASTER_LEGACY_TOKEN=${MASTER_LEGACY_TOKEN:-}
 
+      # Кому из браузера разрешено ходить в сервис. На стенде это dev-сервер кабинета
+      # (5173) и предпросмотр сборки (4173); без них CorsFilter отвечает 403, и это
+      # неотличимо от нехватки прав
+      - SCHEDULE_ALLOWED_ORIGINS=${SCHEDULE_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:4173}
+
+      # Резолвер отдаёт этому образу только AAAA-записи (getent hosts plugins.gradle.org
+      # → 2606:4700::…), а маршрута в IPv6 у контейнера нет: сборка падала с
+      # «Temporary failure in name resolution» и «plugin not found», хотя сеть работала.
+      # JAVA_TOOL_OPTIONS наследуют все JVM — и запускалка gradle, и его демон, и bootRun
+      - JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true
       - TZ=Europe/Moscow
     dns:
       - 8.8.8.8
@@ -71,3 +86,6 @@ services:
         max-file: 1
     networks:
       - schedule_net
+
+volumes:
+  schedule_gradle_cache:

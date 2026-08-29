@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -31,21 +30,18 @@ public class TeacherController {
     }
 
     @GetMapping("/{teacher}")
-    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_TEACHER')")
     public ResponseEntity<TeacherResponse> getTeacher(@PathVariable("teacher") String teacherLabel) {
         log.info("GET Запрос: /api/v1/teachers/{}", teacherLabel);
         return ResponseEntity.ok(teacherMapper.toTeacherResponse(persistenceService.getTeacher(teacherLabel)));
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_TEACHER')")
     public ResponseEntity<TeachersResponse> search(@RequestParam(value = "department", required = false) String department) {
         log.info("GET Запрос: /api/v1/teachers?department={}", department);
         return ResponseEntity.ok(teacherMapper.toTeachersResponse(persistenceService.getTeachers(department)));
     }
 
     @GetMapping("/schedule")
-    @PreAuthorize("hasRoles('ROLE_STUDENT', 'ROLE_TEACHER')")
     public ResponseEntity<ScheduleResponse> getSchedule(
             @RequestParam("teacher") String teacherName,
             @RequestParam(value = "dayWeek", required = false) String dayWeek,

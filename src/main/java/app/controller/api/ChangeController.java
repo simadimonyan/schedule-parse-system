@@ -3,7 +3,6 @@ package app.controller.api;
 import app.repository.models.dto.api.change.ChangeRequest;
 import app.repository.models.dto.api.change.ChangeResponse;
 import app.repository.models.dto.mappers.ChangeMapper;
-import app.security.AdminAccess;
 import app.service.domain.change.ChangeService;
 import app.service.infra.MasterDirectoryService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,7 +31,9 @@ import java.util.List;
  * Запись, наоборот, идёт идентификаторами: изменение заводит администратор, у которого
  * группа уже выбрана из списка, и разбирать по имени там нечего.
  *
- * <p>Правка требует административного токена в заголовке {@code X-Admin-Token}.
+ * <p>Правка требует роли {@code schedule}: ею ходит учебный отдел. Тот же доступ даёт
+ * административный токен {@code X-Admin-Token} — он превращается в ту же роль в
+ * {@code AccessFilter}, пока роли не выданы всем, кому положено.
  */
 @Slf4j
 @RestController
@@ -44,22 +44,18 @@ public class ChangeController {
     private final ChangeService changeService;
     private final ChangeMapper changeMapper;
     private final MasterDirectoryService masterDirectoryService;
-    private final AdminAccess adminAccess;
 
     public ChangeController(
             ChangeService changeService,
             ChangeMapper changeMapper,
-            MasterDirectoryService masterDirectoryService,
-            AdminAccess adminAccess
+            MasterDirectoryService masterDirectoryService
     ) {
         this.changeService = changeService;
         this.changeMapper = changeMapper;
         this.masterDirectoryService = masterDirectoryService;
-        this.adminAccess = adminAccess;
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<ChangeResponse.Envelope> list(
             @RequestParam(value = "group", required = false) String groupName,
             @RequestParam(value = "teacher", required = false) String teacherLabel,
@@ -89,11 +85,9 @@ public class ChangeController {
     @PostMapping
     @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<ChangeResponse> create(
-            @RequestBody ChangeRequest request,
-            @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
+            @RequestBody ChangeRequest request
     ) {
         log.info("POST Запрос: /api/v1/changes \n Body:\n {}", request);
-        adminAccess.require(adminToken, "создание изменения");
         return ResponseEntity.ok(changeMapper.toResponse(changeService.create(request)));
     }
 
@@ -101,23 +95,18 @@ public class ChangeController {
     @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<ChangeResponse> update(
             @PathVariable("id") Long id,
-            @RequestBody ChangeRequest request,
-            @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
+            @RequestBody ChangeRequest request
     ) {
         log.info("PUT Запрос: /api/v1/changes/{}", id);
-        adminAccess.require(adminToken, "правка изменения " + id);
         return ResponseEntity.ok(changeMapper.toResponse(changeService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<String> delete(
-            @PathVariable("id") Long id,
-            @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
+            @PathVariable("id") Long id
     ) {
         log.info("DELETE Запрос: /api/v1/changes/{}", id);
-        adminAccess.require(adminToken, "удаление изменения " + id);
-
         changeService.delete(id);
         return ResponseEntity.ok("Изменение удалено");
     }

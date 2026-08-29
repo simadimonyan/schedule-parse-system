@@ -31,9 +31,10 @@ import java.util.List;
  * ссылка. В справочник мастера они уходят отдельно, при разборе.
  *
  * <p>Пара принадлежит {@link Version}: читатели видят только активную версию, разбор пишет в
- * черновик. День недели, чётность и время продублированы колонками рядом со ссылкой на
- * {@link #slot} — по ним идут все выборки расписания, и джойн ради трёх значений на каждой
- * строке недельной выдачи не окупается.
+ * черновик. День недели, чётность, номер пары и время хранит {@link #slot} и только он:
+ * пока те же значения лежали колонками рядом со ссылкой, правка сетки меняла слот, а пары
+ * оставались со старым временем — расписание расходилось само с собой. Выборки берут их
+ * джойном, слот подтягивается вместе с парой ({@code join fetch}).
  */
 @Data
 @Entity
@@ -55,20 +56,21 @@ public class Schedule implements Serializable {
     @JoinColumn(name = "version_id")
     private Version version;
 
-    /** Ячейка недельной сетки, в которой стоит пара. */
+    /**
+     * Ячейка недельной сетки, в которой стоит пара: день, чётность, номер и время.
+     *
+     * <p>До сохранения здесь может лежать заготовка ({@link TimeSlot#draft}) — место названо,
+     * но слот версии ещё не подобран. Подменяет её на настоящий {@code SlotResolver}.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "slot_id")
     private TimeSlot slot;
-
 
     @Column(name = "teacher_master_id")
     private Long teacherMasterId;
 
     @Column(name = "group_master_id")
     private Long groupMasterId;
-
-    @Column(name = "lesson_count")
-    private Integer lessonCount;
 
     @Column(name = "lesson_type")
     private String lessonType;
@@ -79,18 +81,9 @@ public class Schedule implements Serializable {
     @Column(name = "auditory")
     private String auditory;
 
-    @Column(name = "day_week")
-    private String dayWeek;
-
     // закрепленная дата
     @Column(name = "pinned_date")
     private String pinnedDate;
-
-    @Column(name = "week_count")
-    private Integer weekCount;
-
-    @Column(name = "time_period")
-    private String timePeriod;
 
     @Column(name = "eios")
     private String eiosLink;

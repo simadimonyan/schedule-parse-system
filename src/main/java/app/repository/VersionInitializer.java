@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -19,8 +20,12 @@ import org.springframework.stereotype.Component;
  * <p>Работает один раз: после первого прохода строк без версии не остаётся, и повторный
  * запуск ничего не делает. Новая база сюда тоже попадает — там просто нечего подбирать,
  * версия заводится пустой.
+ *
+ * <p>Идёт первым: {@link SlotBackfill} разбирает те же строки, а слот заводится внутри
+ * версии — без неё ему не в чем появиться.
  */
 @Slf4j
+@Order(1)
 @Component
 public class VersionInitializer implements ApplicationRunner {
 

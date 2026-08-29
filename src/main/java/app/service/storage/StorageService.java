@@ -20,6 +20,16 @@ public class StorageService {
 
     private static final String BUCKET = "schedule";
 
+    /**
+     * Маска, по которой MinIO дёргает вебхук разбора (см. {@link #setupWebhook()}).
+     *
+     * <p>Вынесена в константы, потому что о ней нужно знать не только вебхуку: ручка
+     * загрузки обязана понимать, разберётся ли положенный файл сам собой. Иначе
+     * загрузка с последующим разбором даёт двойной проход по одному файлу.
+     */
+    private static final String WEBHOOK_PREFIX = "schedule";
+    private static final String WEBHOOK_SUFFIX = "xlsx";
+
     private final MinioClient client;
 
     @Autowired
@@ -100,6 +110,46 @@ public class StorageService {
         }
     }
 
+    /**
+     * Кладёт файл в бакет расписания.
+     *
+     * <p>Загрузка идёт потоком с известным размером: {@code -1} в качестве размера части
+     * заставил бы клиента MinIO буферизовать файл целиком в памяти, а размер приходит от
+     * загрузившего и известен заранее.
+     *
+     * @return {@code true}, если файл лёг в бакет
+     */
+    public boolean put(String objectName, InputStream stream, long size, String contentType) {
+        try {
+            client.putObject(PutObjectArgs.builder()
+                    .bucket(BUCKET)
+                    .object(objectKey(objectName))
+                    .stream(stream, size, -1)
+                    .contentType(contentType == null || contentType.isBlank()
+                            ? "application/octet-stream" : contentType)
+                    .build());
+            log.info("В бакет {} загружен файл {} ({} байт)", BUCKET, objectName, size);
+            return true;
+        } catch (Exception e) {
+            log.error("Не удалось загрузить файл {} в бакет {}", objectName, BUCKET, e);
+            return false;
+        }
+    }
+
+    /**
+     * Разберётся ли такой файл сам, по вебхуку MinIO.
+     *
+     * <p>Тот, кто загрузил файл и хочет его разобрать, должен спросить об этом до того, как
+     * звать разбор руками: подходящий под маску файл MinIO уже отправил в разбор, и второй
+     * вызов прошёл бы по нему повторно.
+     */
+    public static boolean triggersWebhook(String objectName) {
+        if (objectName == null) return false;
+
+        String name = objectKey(objectName);
+        return name.startsWith(WEBHOOK_PREFIX) && name.endsWith(WEBHOOK_SUFFIX);
+    }
+
     private void setupWebhook() {
         try {
             NotificationConfiguration notification = new NotificationConfiguration();
@@ -112,15 +162,15 @@ public class StorageService {
             List<EventType> eventTypeList = new LinkedList<>();
             eventTypeList.add(EventType.OBJECT_CREATED_ANY);
             queueConfiguration.setEvents(eventTypeList);
-            queueConfiguration.setPrefixRule("schedule");
-            queueConfiguration.setSuffixRule("xlsx");
+            queueConfiguration.setPrefixRule(WEBHOOK_PREFIX);
+            queueConfiguration.setSuffixRule(WEBHOOK_SUFFIX);
 
             queueConfigurationList.add(queueConfiguration);
             notification.setQueueConfigurationList(queueConfigurationList);
 
             client.setBucketNotification(
                 SetBucketNotificationArgs.builder()
-                    .bucket("schedule")
+                    .bucket(BUCKET)
                     .config(notification)
                     .build()
             );

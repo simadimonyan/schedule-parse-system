@@ -92,6 +92,17 @@ public interface ChangeRepository extends JpaRepository<Change, Long> {
             @Param("versionId") Long versionId,
             @Param("groupMasterIds") Collection<Long> groupMasterIds);
 
+    /** То же самое, но для одной ячейки сетки — пары, которую перезаписывает редактор. */
+    @Modifying
+    @Transactional
+    @Query("UPDATE Change c SET c.schedule = null WHERE c.schedule.id IN (" +
+            "SELECT s.id FROM Schedule s WHERE s.version.id = :versionId "
+            + "AND s.groupMasterId = :groupMasterId AND s.slot.id = :slotId)")
+    int detachFromCell(
+            @Param("versionId") Long versionId,
+            @Param("groupMasterId") Long groupMasterId,
+            @Param("slotId") Long slotId);
+
     @Query("""
             SELECT c FROM Change c
             WHERE c.version.id = :versionId AND c.changeDate BETWEEN :from AND :to AND c.isDeleted = false

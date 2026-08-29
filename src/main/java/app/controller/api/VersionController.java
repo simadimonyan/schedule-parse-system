@@ -3,7 +3,6 @@ package app.controller.api;
 import app.repository.models.dto.api.version.VersionResponse;
 import app.repository.models.dto.api.version.VersionsResponse;
 import app.repository.models.entity.Version;
-import app.security.AdminAccess;
 import app.service.domain.version.VersionService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,9 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
  * Управление версиями расписания.
  *
  * <p>Чтение открыто всем, у кого есть токен сервиса: список версий — часть картины
- * расписания. Переключение, публикация и удаление требуют административного токена в
- * заголовке {@code X-Admin-Token}: одна такая операция меняет то, что видят все клиенты
- * сразу.
+ * расписания. Переключение, публикация и удаление требуют роли {@code schedule} (или
+ * административного токена, который даёт её же): одна такая операция меняет то, что видят
+ * все клиенты сразу.
  */
 @Slf4j
 @RestController
@@ -32,15 +30,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class VersionController {
 
     private final VersionService versionService;
-    private final AdminAccess adminAccess;
 
-    public VersionController(VersionService versionService, AdminAccess adminAccess) {
+    public VersionController(VersionService versionService) {
         this.versionService = versionService;
-        this.adminAccess = adminAccess;
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<VersionsResponse> list() {
         log.info("GET Запрос: /api/v1/versions");
         return ResponseEntity.ok(new VersionsResponse(
@@ -48,7 +43,6 @@ public class VersionController {
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<VersionResponse> active() {
         log.info("GET Запрос: /api/v1/versions/active");
         return ResponseEntity.ok(toResponse(versionService.active()));
@@ -64,10 +58,8 @@ public class VersionController {
     @PostMapping("/draft")
     @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<VersionResponse> draft(
-            @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
     ) {
         log.info("POST Запрос: /api/v1/versions/draft");
-        adminAccess.require(adminToken, "открытие черновика версии");
         return ResponseEntity.ok(toResponse(versionService.draft()));
     }
 
@@ -75,23 +67,18 @@ public class VersionController {
     @PostMapping("/{id}/activate")
     @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<VersionResponse> activate(
-            @PathVariable("id") Long id,
-            @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
+            @PathVariable("id") Long id
     ) {
         log.info("POST Запрос: /api/v1/versions/{}/activate", id);
-        adminAccess.require(adminToken, "публикация версии " + id);
         return ResponseEntity.ok(toResponse(versionService.activate(id)));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_SCHEDULE')")
     public ResponseEntity<String> discard(
-            @PathVariable("id") Long id,
-            @RequestHeader(value = AdminAccess.HEADER, required = false) String adminToken
+            @PathVariable("id") Long id
     ) {
         log.info("DELETE Запрос: /api/v1/versions/{}", id);
-        adminAccess.require(adminToken, "удаление версии " + id);
-
         versionService.discard(id);
         return ResponseEntity.ok("Версия удалена");
     }

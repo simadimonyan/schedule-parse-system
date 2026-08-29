@@ -5,12 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="102efdb7-6a60-41e7-997b-8addfdbbfbf3" name="Changes" comment="+ service integration &amp; controllers &amp; db schema">
-      <change afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/schedule/CraftService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ScheduleController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/api/schedule/ScheduleBatch.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose.integrate.dev.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.integrate.dev.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose.integrate.prod.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.integrate.prod.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/configuration/MasterServiceConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/configuration/MasterServiceConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/configuration/KafkaConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/configuration/KafkaConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/configuration/SecurityConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/configuration/SecurityConfiguration.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/ChangeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ChangeController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/ConfigController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/GroupController.java" afterDir="false" />
@@ -19,8 +20,24 @@
       <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/TeacherController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/VersionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/VersionController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/api/WorkScheduleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/api/WorkScheduleController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/controller/exceptions/ExceptionListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/controller/exceptions/ExceptionListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/VersionInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/VersionInitializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/dao/ChangeRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/ChangeRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/dao/ScheduleRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/dao/ScheduleRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/infra/MasterServiceManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/infra/MasterServiceManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/ScheduleMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/dto/mappers/ScheduleMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Schedule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/Schedule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/TimeSlot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/repository/models/entity/TimeSlot.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/security/AccessFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/security/AccessFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/security/AdminAccess.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/security/AdminAccess.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/change/ChangeService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/change/ChangeService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/excel/ExcelService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/excel/ExcelService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/persistence/SchedulePersistenceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/persistence/SchedulePersistenceService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/persistence/ScheduleWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/persistence/ScheduleWriter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/persistence/SlotResolver.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/persistence/SlotResolver.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/slot/SlotService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/slot/SlotService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/version/VersionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/version/VersionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/domain/workschedule/WorkScheduleService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/domain/workschedule/WorkScheduleService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/app/service/storage/StorageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/app/service/storage/StorageService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -51,8 +68,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Interface" />
         <option value="Record" />
+        <option value="Interface" />
         <option value="Class" />
       </list>
     </option>
