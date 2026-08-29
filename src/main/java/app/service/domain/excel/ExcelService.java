@@ -2,6 +2,7 @@ package app.service.domain.excel;
 
 import app.repository.models.dto.directory.Group;
 import app.repository.models.entity.Schedule;
+import app.repository.models.entity.TimeSlot;
 import app.repository.models.dto.directory.Teacher;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.util.HSSFColor;
@@ -242,26 +243,28 @@ public class ExcelService {
 
                                             schedule.setGroup(group);
                                             schedule.setAuditory(currentCell.location == null ? "Нет аудитории" : currentCell.location.trim());
-                                            schedule.setDayWeek(dayWeek);
 
                                             // конвертировать время из одного формата в другой
                                             String finalTimePeriod = timePeriod;
-                                            schedule.setTimePeriod(lessonNumberMap.entrySet().stream()
+                                            String slotTime = lessonNumberMap.entrySet().stream()
                                                     .filter(entry -> entry.getValue().equals(lessonDistantMap.get(finalTimePeriod)))
                                                     .map(Map.Entry::getKey)
-                                                    .findFirst().orElse("Время не найдено"));
+                                                    .findFirst().orElse("Время не найдено");
 
-                                            schedule.setLessonCount(lessonDistantMap.get(timePeriod));
-                                            schedule.setWeekCount(w);
+                                            // место в неделе — заготовкой слота: своих колонок под день, чётность,
+                                            // номер и время у пары нет, ячейку сетки подберёт сохранение
+                                            schedule.setSlot(TimeSlot.draft(
+                                                    dayWeek, w, lessonDistantMap.get(timePeriod), slotTime));
+
                                             schedule.setEiosLink("");
                                             schedule.setPinnedDate(pinnedDate);
 
                                             schedules.add(schedule);
 
                                             log.info("Индексировано занятие: {}:{}:{} | {} | {} - {} - {} - {}",
-                                                    schedule.getDayWeek(),
-                                                    schedule.getTimePeriod(),
-                                                    schedule.getWeekCount(),
+                                                    dayWeek,
+                                                    slotTime,
+                                                    w,
                                                     schedule.getGroup().getName(),
                                                     schedule.getLessonType(),
                                                     schedule.getLessonName(),
@@ -472,18 +475,19 @@ public class ExcelService {
                                         schedule.setLessonType(type);
                                         schedule.setLessonName(subject.trim());
                                         schedule.setAuditory(auditory == null ? "Нет аудитории" : auditory.trim());
-                                        schedule.setDayWeek(dayWeek);
-                                        schedule.setTimePeriod(timePeriod);
-                                        schedule.setLessonCount(lessonNumberMap.get(timePeriod));
-                                        schedule.setWeekCount(weekOdd ? 1 : 2);
+
+                                        // место в неделе — заготовкой слота: ячейку сетки подберёт сохранение
+                                        schedule.setSlot(TimeSlot.draft(
+                                                dayWeek, weekOdd ? 1 : 2, lessonNumberMap.get(timePeriod), timePeriod));
+
                                         schedule.setEiosLink(eiosLink);
                                         schedule.setPinnedDate("");
 
                                         schedules.add(schedule);
                                         log.info("Индексировано занятие: {}:{}:{} | {} | {} - {} - {} - {} | {}",
-                                                schedule.getDayWeek(),
-                                                schedule.getTimePeriod(),
-                                                schedule.getWeekCount(),
+                                                dayWeek,
+                                                timePeriod,
+                                                weekOdd ? 1 : 2,
                                                 schedule.getGroup().getName(),
                                                 schedule.getLessonType(),
                                                 schedule.getLessonName(),

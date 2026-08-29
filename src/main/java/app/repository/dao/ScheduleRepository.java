@@ -20,13 +20,18 @@ import java.util.List;
  *
  * <p>Каждая выборка ограничена версией. Без неё чтение вернуло бы пары всех снимков сразу:
  * старые версии из таблицы не удаляются, в этом и смысл — на них откатываются.
+ *
+ * <p>День, чётность, номер пары и время лежат в слоте, поэтому отбор по ним идёт джойном, а
+ * слот подтягивается тем же запросом: выдача сразу за ним и пойдёт, и без {@code fetch} на
+ * каждую пару недели ушёл бы отдельный select. Джойн внутренний — пара без слота не стоит
+ * нигде в сетке, и показывать её негде.
  */
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     @Query("""
-            SELECT s FROM Schedule s
+            SELECT s FROM Schedule s JOIN FETCH s.slot slot
             WHERE s.version.id = :versionId AND s.groupMasterId = :groupMasterId
-              AND s.weekCount = :weekCount AND s.isDeleted = false
+              AND slot.weekCount = :weekCount AND s.isDeleted = false
             """)
     List<Schedule> findAllByGroup(
             @Param("versionId") Long versionId,
@@ -34,9 +39,9 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("weekCount") Integer weekCount);
 
     @Query("""
-            SELECT s FROM Schedule s
+            SELECT s FROM Schedule s JOIN FETCH s.slot slot
             WHERE s.version.id = :versionId AND s.groupMasterId = :groupMasterId
-              AND s.dayWeek = :dayWeek AND s.weekCount = :weekCount AND s.isDeleted = false
+              AND slot.dayWeek = :dayWeek AND slot.weekCount = :weekCount AND s.isDeleted = false
             """)
     List<Schedule> findAllByGroupAndDay(
             @Param("versionId") Long versionId,
@@ -45,9 +50,9 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("weekCount") Integer weekCount);
 
     @Query("""
-            SELECT s FROM Schedule s
+            SELECT s FROM Schedule s JOIN FETCH s.slot slot
             WHERE s.version.id = :versionId AND s.teacherMasterId = :teacherMasterId
-              AND s.weekCount = :weekCount AND s.isDeleted = false
+              AND slot.weekCount = :weekCount AND s.isDeleted = false
             """)
     List<Schedule> findAllByTeacher(
             @Param("versionId") Long versionId,
@@ -55,9 +60,9 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("weekCount") Integer weekCount);
 
     @Query("""
-            SELECT s FROM Schedule s
+            SELECT s FROM Schedule s JOIN FETCH s.slot slot
             WHERE s.version.id = :versionId AND s.teacherMasterId = :teacherMasterId
-              AND s.dayWeek = :dayWeek AND s.weekCount = :weekCount AND s.isDeleted = false
+              AND slot.dayWeek = :dayWeek AND slot.weekCount = :weekCount AND s.isDeleted = false
             """)
     List<Schedule> findAllByTeacherAndDay(
             @Param("versionId") Long versionId,
@@ -65,8 +70,13 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("dayWeek") String dayWeek,
             @Param("weekCount") Integer weekCount);
 
-    /** Все пары версии — читает копирование при заведении черновика. */
-    @Query("SELECT s FROM Schedule s WHERE s.version.id = :versionId")
+    /**
+     * Все пары версии — читает копирование при заведении черновика.
+     *
+     * <p>Джойн левый, в отличие от выдачи: копия обязана повторить снимок как есть, включая
+     * пары, которым слот ещё не подобран, — иначе черновик молча терял бы строки.
+     */
+    @Query("SELECT s FROM Schedule s LEFT JOIN FETCH s.slot WHERE s.version.id = :versionId")
     List<Schedule> findAllByVersion(@Param("versionId") Long versionId);
 
     /**
@@ -82,6 +92,25 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     void deleteByVersionAndGroupMasterIdIn(
             @Param("versionId") Long versionId,
             @Param("groupMasterIds") Collection<Long> groupMasterIds);
+
+    /**
+     * Сносит пары одной ячейки: группа в своём слоте внутри версии.
+     *
+     * <p>Мельче, чем замена по группе, и в этом весь смысл. Файл приносит расписание группы
+     * целиком, а редактор — одну пару: диспетчер ставит её в клетку сетки и ждёт, что
+     * остальная неделя останется на месте. Замена по группе стёрла бы её всю.
+     *
+     * <p>Подгруппы при этом уживаются: ячейка чистится один раз на всю пачку, и обе пары,
+     * пришедшие в неё вместе, встают рядом.
+     */
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Schedule s WHERE s.version.id = :versionId "
+            + "AND s.groupMasterId = :groupMasterId AND s.slot.id = :slotId")
+    int deleteCell(
+            @Param("versionId") Long versionId,
+            @Param("groupMasterId") Long groupMasterId,
+            @Param("slotId") Long slotId);
 
     /** Все пары версии — используется при удалении черновика. */
     @Modifying

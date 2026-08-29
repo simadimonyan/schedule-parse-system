@@ -17,11 +17,12 @@ import java.util.Map;
 /**
  * Подставляет разобранным парам ячейку недельной сетки.
  *
- * <p>Слот собирается из того же, чем пара уже описана в файле: день недели, чётность, номер
- * пары и время. Отдельной сущностью он нужен затем, что сетка — свойство версии, а не строки:
- * по ней строят пустое расписание, ищут окна у преподавателя и проверяют, что две пары не
- * встали в одно место. Пока слот жил колонками внутри пары, ни одного из этих вопросов
- * задать было нельзя.
+ * <p>Место в неделе приходит заготовкой слота ({@link TimeSlot#draft}): разбор файла и пачка
+ * редактора называют день, чётность, номер пары и время, но какой это слот версии — знает
+ * только сетка. Отдельной сущностью слот нужен затем, что сетка — свойство версии, а не
+ * строки: по ней строят пустое расписание, ищут окна у преподавателя и проверяют, что две
+ * пары не встали в одно место. Пока те же значения дублировались колонками внутри пары, эти
+ * вопросы задавались двум источникам сразу и получали расходящиеся ответы.
  *
  * <p>Сетка версии читается разом и держится в памяти на весь разбор: файл даёт тысячи строк
  * на несколько десятков слотов, и поштучный поиск в базе был бы тысячей запросов ради
@@ -42,6 +43,11 @@ public class SlotResolver {
     /**
      * Проставляет парам слоты версии, заводя недостающие.
      *
+     * <p>Пара приходит с заготовкой слота вместо ссылки. Совпала с сеткой — заготовка
+     * выбрасывается, пара встаёт в готовую ячейку; не совпала — заготовка ею и становится.
+     * Уже разрешённый слот (с идентификатором) не трогается: так пары, пришедшие вперемешку с
+     * копированием версии, не заводят сетке двойников.
+     *
      * @return сколько слотов пришлось создать — в норме их немного и только на первой загрузке
      */
     public int resolve(Version version, List<Schedule> schedule) {
@@ -52,21 +58,30 @@ public class SlotResolver {
 
         List<TimeSlot> created = new ArrayList<>();
         for (Schedule pair : schedule) {
-            String timeRange = pair.getTimePeriod() == null ? "" : pair.getTimePeriod().trim();
-            String key = key(pair.getDayWeek(), pair.getWeekCount(), pair.getLessonCount(), timeRange);
+            TimeSlot draft = pair.getSlot();
+
+            // места в сетке у пары нет вовсе — ни ячейки, ни заготовки. Ставить её некуда:
+            // выборки расписания идут через слот, и такая пара просто не нашлась бы
+            if (draft == null) {
+                log.error("Пара «{}» группы {} пришла без места в сетке — слот не подобран",
+                        pair.getLessonName(), pair.getGroupMasterId());
+                continue;
+            }
+
+            if (draft.getId() != null) continue;
+
+            String timeRange = draft.getTimeRange() == null ? "" : draft.getTimeRange().trim();
+            String key = key(draft.getDayWeek(), draft.getWeekCount(), draft.getLessonCount(), timeRange);
 
             TimeSlot slot = grid.get(key);
             if (slot == null) {
-                slot = new TimeSlot();
-                slot.setVersion(version);
-                slot.setDayWeek(pair.getDayWeek());
-                slot.setWeekCount(pair.getWeekCount());
-                slot.setLessonCount(pair.getLessonCount());
-                slot.setTimeRange(timeRange);
-                slot.setStartedAt(bound(timeRange, 0));
-                slot.setFinishedAt(bound(timeRange, 1));
-                grid.put(key, slot);
-                created.add(slot);
+                draft.setVersion(version);
+                draft.setTimeRange(timeRange);
+                draft.setStartedAt(bound(timeRange, 0));
+                draft.setFinishedAt(bound(timeRange, 1));
+                grid.put(key, draft);
+                created.add(draft);
+                slot = draft;
             }
             pair.setSlot(slot);
         }

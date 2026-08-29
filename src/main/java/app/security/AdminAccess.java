@@ -14,6 +14,11 @@ import org.springframework.stereotype.Component;
  * <p>Через {@code Authorization} его тоже не передать —
  * {@link TokenAuthenticationProvider} сверяет заголовок только с общим токеном доступа и
  * административный отклонит как чужой ещё в фильтре, до контроллера.
+ *
+ * <p>Сам по себе класс ничего не запрещает: он только отвечает, подошёл ли токен. Отказ
+ * выносит {@code @PreAuthorize} на методе — {@code AccessFilter} по этому ответу выдаёт
+ * запросу роль {@code ROLE_SCHEDULE}, ту же, что приезжает в токене человека из Keycloak.
+ * Так право названо в одном месте, а доказать его можно двумя способами.
  */
 @Slf4j
 @Component
@@ -30,21 +35,6 @@ public class AdminAccess {
 
         String value = token.startsWith("Bearer ") ? token.substring(7) : token;
         return value.equals(adminToken);
-    }
-
-    /** Бросает отказ, если токен не подошёл: контроллерам остаётся одна строка проверки. */
-    public void require(String token, String operation) {
-        if (granted(token)) return;
-
-        log.warn("Отказано в административной операции: {}", operation);
-        throw new AdminAccessDeniedException("Доступ отказан: операция требует административного токена");
-    }
-
-    /** Отказ в административной операции — превращается в 403 в {@code ExceptionListener}. */
-    public static class AdminAccessDeniedException extends RuntimeException {
-        public AdminAccessDeniedException(String message) {
-            super(message);
-        }
     }
 
 }

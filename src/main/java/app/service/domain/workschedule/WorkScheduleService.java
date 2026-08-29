@@ -2,12 +2,14 @@ package app.service.domain.workschedule;
 
 import app.repository.dao.WorkScheduleRepository;
 import app.repository.models.dto.api.workschedule.WorkScheduleRequest;
+import app.repository.models.dto.event.ScheduleEvent;
 import app.repository.models.entity.Version;
 import app.repository.models.entity.WorkSchedule;
 import app.service.domain.version.VersionService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,10 +27,16 @@ public class WorkScheduleService {
 
     private final WorkScheduleRepository workScheduleRepository;
     private final VersionService versionService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public WorkScheduleService(WorkScheduleRepository workScheduleRepository, VersionService versionService) {
+    public WorkScheduleService(
+            WorkScheduleRepository workScheduleRepository,
+            VersionService versionService,
+            ApplicationEventPublisher eventPublisher
+    ) {
         this.workScheduleRepository = workScheduleRepository;
         this.versionService = versionService;
+        this.eventPublisher = eventPublisher;
     }
 
     /** График активной версии: одного преподавателя или всех сразу. */
@@ -55,6 +63,11 @@ public class WorkScheduleService {
         WorkSchedule saved = workScheduleRepository.save(work);
         log.info("График занятости преподавателя {} на {} сохранён в версии {}",
                 saved.getTeacherMasterId(), saved.getDayWeek(), version.getId());
+
+        // ограничение на раскладку, а не расписание: событие нужно тем, кто эту раскладку
+        // строит, — самих пар оно не меняет
+        eventPublisher.publishEvent(ScheduleEvent.workScheduleUpdated(
+                version.getId(), saved.getId(), saved.getTeacherMasterId(), "окно заведено"));
         return saved;
     }
 
@@ -66,7 +79,11 @@ public class WorkScheduleService {
                 .orElseThrow(() -> new EntityNotFoundException("График занятости " + workScheduleId + " не найден"));
 
         apply(work, request);
-        return workScheduleRepository.save(work);
+
+        WorkSchedule saved = workScheduleRepository.save(work);
+        eventPublisher.publishEvent(ScheduleEvent.workScheduleUpdated(
+                versionId(saved), saved.getId(), saved.getTeacherMasterId(), "окно изменено"));
+        return saved;
     }
 
     @Transactional
@@ -77,6 +94,14 @@ public class WorkScheduleService {
         work.setIsDeleted(true);
         workScheduleRepository.save(work);
         log.info("График занятости {} помечен удалённым", workScheduleId);
+
+        eventPublisher.publishEvent(ScheduleEvent.workScheduleUpdated(
+                versionId(work), workScheduleId, work.getTeacherMasterId(), "окно снято"));
+    }
+
+    /** Версия графика: у скопированных из старых снимков её может не быть проставлено. */
+    private static Long versionId(WorkSchedule work) {
+        return work.getVersion() == null ? null : work.getVersion().getId();
     }
 
     private static void apply(WorkSchedule work, WorkScheduleRequest request) {

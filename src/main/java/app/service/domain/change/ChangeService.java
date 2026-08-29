@@ -4,6 +4,8 @@ import app.repository.dao.ChangeRepository;
 import app.repository.dao.ScheduleRepository;
 import app.repository.dao.TimeSlotRepository;
 import app.repository.models.dto.api.change.ChangeRequest;
+import app.repository.models.dto.event.ScheduleEvent;
+import app.repository.models.dto.event.ScheduleEventType;
 import app.repository.models.entity.Change;
 import app.repository.models.entity.Schedule;
 import app.repository.models.entity.TimeSlot;
@@ -12,6 +14,7 @@ import app.service.domain.version.VersionService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -37,17 +40,20 @@ public class ChangeService {
     private final TimeSlotRepository timeSlotRepository;
     private final ScheduleRepository scheduleRepository;
     private final VersionService versionService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ChangeService(
             ChangeRepository changeRepository,
             TimeSlotRepository timeSlotRepository,
             ScheduleRepository scheduleRepository,
-            VersionService versionService
+            VersionService versionService,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.changeRepository = changeRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.scheduleRepository = scheduleRepository;
         this.versionService = versionService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -87,6 +93,10 @@ public class ChangeService {
         Change saved = changeRepository.save(change);
         log.info("Изменение {} на {} сохранено в версии {}",
                 saved.getChangeType(), saved.getChangeDate(), version.getId());
+
+        // отмена и перенос — то, ради чего расписание вообще перечитывают в тот же день:
+        // событие несёт группу, преподавателя и дату, чтобы подписчику не идти за ними в API
+        eventPublisher.publishEvent(ScheduleEvent.change(ScheduleEventType.CHANGE_CREATED, saved));
         return saved;
     }
 
@@ -101,7 +111,9 @@ public class ChangeService {
         change.setSchedule(schedule(request.scheduleId(), change.getVersion()));
         apply(change, request);
 
-        return changeRepository.save(change);
+        Change saved = changeRepository.save(change);
+        eventPublisher.publishEvent(ScheduleEvent.change(ScheduleEventType.CHANGE_UPDATED, saved));
+        return saved;
     }
 
     /** Мягкое удаление: отменённая отмена возвращает паре её обычный вид. */
@@ -111,8 +123,12 @@ public class ChangeService {
                 .orElseThrow(() -> new EntityNotFoundException("Изменение " + changeId + " не найдено"));
 
         change.setIsDeleted(true);
-        changeRepository.save(change);
+        Change saved = changeRepository.save(change);
         log.info("Изменение {} помечено удалённым", changeId);
+
+        // снятая отмена — такое же изменение расписания, как сама отмена: подписчик,
+        // успевший разослать «пары не будет», должен узнать, что она снова есть
+        eventPublisher.publishEvent(ScheduleEvent.change(ScheduleEventType.CHANGE_DELETED, saved));
     }
 
     private static void apply(Change change, ChangeRequest request) {

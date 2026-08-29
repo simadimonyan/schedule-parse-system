@@ -30,6 +30,10 @@ dependencies {
     // Токен для вызовов мастер-сервиса по client_credentials. Имя стартера — для Boot 3.x;
     // в Boot 4 он называется spring-boot-starter-security-oauth2-client
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+    // Проверка входящих токенов Keycloak: за шлюзом человек приходит со своим JWT,
+    // а не с общим токеном чтения. Клиент выше — про исходящие вызовы, входящие
+    // он не проверяет, это разные стартеры.
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

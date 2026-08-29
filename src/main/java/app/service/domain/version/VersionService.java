@@ -6,6 +6,7 @@ import app.repository.dao.ScheduleRepository;
 import app.repository.dao.TimeSlotRepository;
 import app.repository.dao.VersionRepository;
 import app.repository.dao.WorkScheduleRepository;
+import app.repository.models.dto.event.ScheduleEvent;
 import app.repository.models.entity.Change;
 import app.repository.models.entity.Config;
 import app.repository.models.entity.Schedule;
@@ -16,6 +17,7 @@ import app.service.cache.CacheService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -56,6 +58,7 @@ public class VersionService {
     private final WorkScheduleRepository workScheduleRepository;
     private final ConfigRepository configRepository;
     private final CacheService cacheService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public VersionService(
             VersionRepository versionRepository,
@@ -64,7 +67,8 @@ public class VersionService {
             ChangeRepository changeRepository,
             WorkScheduleRepository workScheduleRepository,
             ConfigRepository configRepository,
-            CacheService cacheService
+            CacheService cacheService,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.versionRepository = versionRepository;
         this.scheduleRepository = scheduleRepository;
@@ -73,6 +77,7 @@ public class VersionService {
         this.workScheduleRepository = workScheduleRepository;
         this.configRepository = configRepository;
         this.cacheService = cacheService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -175,6 +180,10 @@ public class VersionService {
         cacheService.clearAllCaches();
 
         log.info("Активной стала версия {} ({})", published.getId(), published.getName());
+
+        // самое крупное событие сервиса: у подписчиков разом устарело всё расписание, а не
+        // отдельные группы — свой сброс кеша выше сделан ровно по этой причине
+        eventPublisher.publishEvent(ScheduleEvent.versionPublished(published.getId(), published.getName()));
         return published;
     }
 
@@ -211,6 +220,7 @@ public class VersionService {
         versionRepository.save(version);
 
         log.info("Версия {} удалена", versionId);
+        eventPublisher.publishEvent(ScheduleEvent.versionDiscarded(versionId));
     }
 
     /**
@@ -249,14 +259,10 @@ public class VersionService {
             copy.setSlot(schedule.getSlot() == null ? null : slots.get(schedule.getSlot().getId()));
             copy.setTeacherMasterId(schedule.getTeacherMasterId());
             copy.setGroupMasterId(schedule.getGroupMasterId());
-            copy.setLessonCount(schedule.getLessonCount());
             copy.setLessonType(schedule.getLessonType());
             copy.setLessonName(schedule.getLessonName());
             copy.setAuditory(schedule.getAuditory());
-            copy.setDayWeek(schedule.getDayWeek());
             copy.setPinnedDate(schedule.getPinnedDate());
-            copy.setWeekCount(schedule.getWeekCount());
-            copy.setTimePeriod(schedule.getTimePeriod());
             copy.setEiosLink(schedule.getEiosLink());
             copy.setIsDeleted(schedule.getIsDeleted());
             savableSchedule.add(copy);

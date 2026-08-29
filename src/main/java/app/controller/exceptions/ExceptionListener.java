@@ -1,10 +1,10 @@
 package app.controller.exceptions;
 
-import app.security.AdminAccess;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import app.repository.models.dto.api.errors.ErrorResponse;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -38,8 +38,15 @@ public class ExceptionListener {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("409", e.getMessage()));
     }
 
-    @ExceptionHandler(AdminAccess.AdminAccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAdminAccess(AdminAccess.AdminAccessDeniedException e) {
+    /**
+     * Не хватило права на операцию — отказ {@code @PreAuthorize}.
+     *
+     * <p>Без этого обработчика Spring отдаёт свою страницу ошибки, а клиент ждёт от сервиса
+     * единый {@code ErrorResponse}: раньше сюда приходил отказ административного токена,
+     * который контроллеры бросали руками.
+     */
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AuthorizationDeniedException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("403", e.getMessage()));
     }
 

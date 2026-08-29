@@ -2,12 +2,14 @@ package app.service.domain.slot;
 
 import app.repository.dao.TimeSlotRepository;
 import app.repository.models.dto.api.slot.SlotRequest;
+import app.repository.models.dto.event.ScheduleEvent;
 import app.repository.models.entity.TimeSlot;
 import app.repository.models.entity.Version;
 import app.service.domain.version.VersionService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,10 +31,16 @@ public class SlotService {
 
     private final TimeSlotRepository timeSlotRepository;
     private final VersionService versionService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public SlotService(TimeSlotRepository timeSlotRepository, VersionService versionService) {
+    public SlotService(
+            TimeSlotRepository timeSlotRepository,
+            VersionService versionService,
+            ApplicationEventPublisher eventPublisher
+    ) {
         this.timeSlotRepository = timeSlotRepository;
         this.versionService = versionService;
+        this.eventPublisher = eventPublisher;
     }
 
     /** Сетка активной версии или указанной, если версию назвали явно. */
@@ -75,6 +83,11 @@ public class SlotService {
         log.info("Слот {} {} пара {} ({}) сохранён в версии {}",
                 saved.getDayWeek(), saved.getWeekCount(), saved.getLessonCount(),
                 saved.getTimeRange(), version.getId());
+
+        // событие одно на заведение, правку и снятие слота: подписчику важно, что время пар
+        // версии сдвинулось, а не какая именно ячейка сетки этому причиной
+        eventPublisher.publishEvent(ScheduleEvent.slotsUpdated(
+                version.getId(), saved.getId(), "слот заведён"));
         return saved;
     }
 
@@ -92,7 +105,10 @@ public class SlotService {
         slot.setStartedAt(request.startedAt());
         slot.setFinishedAt(request.finishedAt());
 
-        return timeSlotRepository.save(slot);
+        TimeSlot saved = timeSlotRepository.save(slot);
+        eventPublisher.publishEvent(ScheduleEvent.slotsUpdated(
+                versionId(saved), saved.getId(), "время слота изменено"));
+        return saved;
     }
 
     /**
@@ -110,6 +126,14 @@ public class SlotService {
         slot.setIsDeleted(true);
         timeSlotRepository.save(slot);
         log.info("Слот {} помечен удалённым", slotId);
+
+        eventPublisher.publishEvent(ScheduleEvent.slotsUpdated(
+                versionId(slot), slotId, "слот снят из сетки"));
+    }
+
+    /** Версия слота: у скопированных из старых снимков её может не быть проставлено. */
+    private static Long versionId(TimeSlot slot) {
+        return slot.getVersion() == null ? null : slot.getVersion().getId();
     }
 
     private static void validate(SlotRequest request) {
