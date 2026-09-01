@@ -84,6 +84,25 @@ public class ConfigController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ отказан");
     }
 
+    /**
+     * Полный обход: расписание всех групп подряд, фоном, с паузой между группами
+     * (по умолчанию 5 минут — чтобы не долбить сторонний сервер очередью запросов).
+     */
+    @PostMapping("/schedule/load/all")
+    public ResponseEntity<?> loadAllExternalSchedules(
+            @RequestParam(value = "pauseMinutes", required = false) Integer pauseMinutes,
+            @RequestBody String token
+    ) {
+        int pause = pauseMinutes == null ? MaxService.DEFAULT_SWEEP_PAUSE_MINUTES : pauseMinutes;
+        log.info("POST Запрос: /api/v1/configuration/schedule/load/all?pauseMinutes={}", pause);
+        if (token.startsWith("Bearer") && token.substring(7).equals(adminToken)) {
+            maxService.loadAndPersistAllSchedules(pause);
+            return ResponseEntity.ok("Процесс запущен! Пауза между группами: %d мин".formatted(pause));
+        }
+        log.warn("Попытка доступа к административным функциям - доступ отказан");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ отказан");
+    }
+
     @PostMapping("/schedule/load/{group}")
     public ResponseEntity<?> loadExternalSchedule(@PathVariable("group") String groupName, @RequestBody String token) {
         log.info("POST Запрос: /api/v1/configuration/schedule/load");

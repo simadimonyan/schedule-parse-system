@@ -22,4 +22,21 @@ public class AsyncConfiguration {
         return executor;
     }
 
+    /**
+     * Отдельный однопоточный пул под полный обход всех групп: обход идёт часами
+     * (между группами пауза), и занимать под него поток общего пула нельзя.
+     * Очередь на один элемент — второй обход просто не встанет в очередь,
+     * повторный запуск отсекается ещё и флагом в MaxService.
+     */
+    @Bean(name = "sweepExecutor")
+    public Executor sweepExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(1);
+        executor.setThreadNamePrefix("Schedule-Sweep-");
+        executor.initialize();
+        return executor;
+    }
+
 }

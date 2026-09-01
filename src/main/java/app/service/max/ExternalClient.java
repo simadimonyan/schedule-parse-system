@@ -1,5 +1,6 @@
 package app.service.max;
 
+import app.configuration.ExternalConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -39,7 +40,7 @@ public class ExternalClient {
     public ExternalClient(
             @Qualifier("externalWebClient") WebClient webClient,
             @Qualifier("externalAuthWebClient") WebClient authClient,
-            @Value("${external.server.url}") String serverUrl
+            @Value("${external.rasp.url:" + ExternalConfiguration.DEFAULT_URL + "}") String serverUrl
     ) {
         this.webClient = webClient;
         this.authClient = authClient;
