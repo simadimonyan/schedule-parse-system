@@ -15,12 +15,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
+/**
+ * Синхронизация со сторонним сервером расписания (rasp.imsit.ru, приложение в MAX).
+ *
+ * Сервер отдаёт две страницы:
+ *   ?page=search&study_form=...                     — datalist#group-list со всеми группами формы обучения;
+ *   ?page=schedule&mode=student&study_form=...&group=<название>&show=1
+ *                                                   — календарь на весь учебный год для одной группы.
+ *
+ * Параметров week и day больше нет: за один запрос приходит весь год, четность недели
+ * лежит на самой паре в data-week. Календарь дублируется в вёрстке (сетка месяца для
+ * десктопа и недельные слайды для мобильного), поэтому пары берутся только из
+ * .calendar-date-cell, а даты дедуплицируются: соседние месяцы делят пограничные дни.
+ */
 @Slf4j
 @Service
 public class MaxService {
@@ -28,9 +41,10 @@ public class MaxService {
     private final SchedulePersistenceService persistenceService;
     private final GroupRepository groupRepository;
     private final ScheduleRepository scheduleRepository;
-    private final WebClient webClient;
+    private final ExternalClient externalClient;
 
-    // очно / очно-заочно
+    private static final DateTimeFormatter PINNED_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM");
+
     private static final Map<Integer, String> lessonNumberMap = Map.of(
             1, "08.00-09.30",
             2, "09.40-11.10",
@@ -51,24 +65,20 @@ public class MaxService {
             "18.10-19.40", 7
     );
 
-    // заочно
-    private static final Map<String, Integer> lessonDistantMap = Map.of(
-            "08:00", 1,
-            "09:40", 2,
-            "11:30", 3,
-            "13:10", 4,
-            "14:50", 5,
-            "16:30", 6,
-            "18:10", 7
+    private static final Map<DayOfWeek, String> dayWeekMap = Map.of(
+            DayOfWeek.MONDAY, "Понедельник",
+            DayOfWeek.TUESDAY, "Вторник",
+            DayOfWeek.WEDNESDAY, "Среда",
+            DayOfWeek.THURSDAY, "Четверг",
+            DayOfWeek.FRIDAY, "Пятница",
+            DayOfWeek.SATURDAY, "Суббота",
+            DayOfWeek.SUNDAY, "Воскресенье"
     );
 
-    private static final Map<String, String> dayWeekDistantMap = Map.of(
-            "пн", "Понедельник",
-            "вт", "Вторник",
-            "ср", "Среда",
-            "чт", "Четверг",
-            "пт", "Пятница",
-            "сб", "Суббота"
+    private static final Map<String, String> lessonTypeMap = Map.of(
+            "л", "Лекция",
+            "лаб", "Лабораторная",
+            "пр", "Практика"
     );
 
     @Autowired
@@ -76,12 +86,12 @@ public class MaxService {
             SchedulePersistenceService persistenceService,
             GroupRepository groupRepository,
             ScheduleRepository scheduleRepository,
-            String url
+            ExternalClient externalClient
     ) {
         this.persistenceService = persistenceService;
         this.scheduleRepository = scheduleRepository;
         this.groupRepository = groupRepository;
-        this.webClient = WebClient.create(url);
+        this.externalClient = externalClient;
     }
 
     @Async
@@ -89,18 +99,27 @@ public class MaxService {
     public void loadAndPersistGroups() {
        log.info("Начало синхронизации групп со сторонним сервером!");
 
-       Map<String, ArrayList<String>> map = getGroups();
-       List<Group> groups = map.values().stream().flatMap(Collection::stream).map(label -> {
-           Group group = new Group();
-           group.setCourse(extractCourse(label));
-           group.setStudyForm(map.get("очная").contains(label) ? "Очная" : "Заочная");
-           group.setLevel(label.contains("СПО") ? "СПО" : label.contains("Мг") ? "Магистратура" : "Бакалавриат");
-           group.setName(label);
-           return group;
-       }).toList();
+       Map<String, List<String>> map = getGroups();
+
+       // группа может встретиться в обеих формах обучения — очная приоритетнее
+       Set<String> seen = new HashSet<>();
+       List<Group> groups = new ArrayList<>();
+
+       for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+           for (String label : entry.getValue()) {
+               if (!seen.add(label)) continue;
+
+               Group group = new Group();
+               group.setCourse(extractCourse(label));
+               group.setStudyForm(entry.getKey().equals("очная") ? "Очная" : "Заочная");
+               group.setLevel(label.contains("СПО") ? "СПО" : label.contains("Мг") ? "Магистратура" : "Бакалавриат");
+               group.setName(label);
+               groups.add(group);
+           }
+       }
 
        persistenceService.persistGroups(groups);
-       log.info("Синхронизация групп завершена!");
+       log.info("Синхронизация групп завершена! Всего групп: {}", groups.size());
     }
 
     @Async
@@ -136,11 +155,11 @@ public class MaxService {
     @Async
     @Transactional
     public void loadAndPersistSchedule(String label) {
-        Group group = groupRepository.findByName(label).get();
-
-        log.info("Начало синхронизации расписания %s со сторонним сервером!".formatted(group.getName()));
+        Group group = groupRepository.findByName(label).orElse(null);
 
         if (group != null) {
+            log.info("Начало синхронизации расписания %s со сторонним сервером!".formatted(group.getName()));
+
             List<Schedule> schedule = getSchedule(group);
 
             scheduleRepository.deleteAllByGroupId(group.getId());
@@ -151,32 +170,34 @@ public class MaxService {
             log.info("Группа %s не найдена!".formatted(label));
     }
 
-    private Map<String, ArrayList<String>> getGroups() {
-        Map<String, ArrayList<String>> map = new HashMap<>();
+    /** Список групп по формам обучения: ?page=search&study_form=... → datalist#group-list. */
+    private Map<String, List<String>> getGroups() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
 
-        for (int i = 0; i <= 1; i++) {
-            int finalI = i;
-            String studyForm = (finalI == 0) ? "очная" : "заочная";
-            String response = webClient.get().uri(uriBuilder -> uriBuilder
-                         .queryParam("study_form", studyForm)
-                         .build())
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .doOnError(e -> log.error("Ошибка сети: {}", e.getMessage()))
-                    .onErrorReturn("")
-                    .block();
+        for (String studyForm : List.of("очная", "заочная")) {
+            String response = externalClient.get(uriBuilder -> uriBuilder
+                    .queryParam("page", "search")
+                    .queryParam("mode", "student")
+                    .queryParam("study_form", studyForm)
+                    .build());
 
-            ArrayList<String> groups = new ArrayList<>();
+            List<String> groups = new ArrayList<>();
             if (response != null && !response.isEmpty()) {
                 Document doc = Jsoup.parse(response);
                 Element element = doc.getElementById("group-list");
                 if (element != null) {
-                    groups = (ArrayList<String>) element.select("option").stream()
-                            .map(option -> option.attr("value"))
-                            .collect(Collectors.toList());
+                    groups = element.select("option").stream()
+                            .map(option -> option.attr("value").trim())
+                            .filter(value -> !value.isEmpty())
+                            .toList();
                 }
+                else
+                    log.warn("[{}] Список групп не найден: элемент #group-list отсутствует", studyForm);
             }
+            else
+                log.warn("[{}] Список групп не получен: пустой ответ от сервера", studyForm);
 
+            log.info("[{}] Получено групп: {}", studyForm, groups.size());
             map.put(studyForm, groups);
         }
 
@@ -184,198 +205,117 @@ public class MaxService {
     }
 
     private List<Schedule> getSchedule(Group group) {
-        ArrayList<Schedule> schedule = new ArrayList<>();
+        boolean distant = "Заочная".equals(group.getStudyForm());
+        String studyForm = distant ? "заочная" : "очная";
+
         log.info("Парсинг расписания для группы {} (форма: {}, курс: {})", group.getName(), group.getStudyForm(), group.getCourse());
 
-        if (group.getStudyForm().equals("Очная")) {
-            for (int i = 0; i <= 1; i++) {
-                int finalI = i;
-                String response = webClient.get().uri(uriBuilder -> uriBuilder
-                            .queryParam("mode", "student")
-                            .queryParam("study_form", "очная")
-                            .queryParam("week", finalI + 1)
-                            .queryParam("day", "all")
-                            .queryParam("group", group.getName())
-                            .queryParam("show", 1)
-                            .build())
-                        .retrieve()
-                        .bodyToMono(String.class)
-                        .block();
+        String response = externalClient.get(uriBuilder -> uriBuilder
+                .queryParam("page", "schedule")
+                .queryParam("mode", "student")
+                .queryParam("study_form", studyForm)
+                .queryParam("group", group.getName())
+                .queryParam("show", 1)
+                .build());
 
-                if (response == null) {
-                    log.warn("[Очная] [{}] Неделя {}: пустой ответ от сервера", group.getName(), finalI + 1);
-                    continue;
-                }
-
-                Document doc = Jsoup.parse(response);
-                Element lessons = doc.getElementsByClass("lessons").first();
-                if (lessons == null) {
-                    log.warn("[Очная] [{}] Неделя {}: элемент .lessons не найден — расписание пустое", group.getName(), finalI + 1);
-                    continue;
-                }
-
-                log.info("[Очная] [{}] Неделя {}: начало парсинга", group.getName(), finalI + 1);
-                AtomicReference<String> dayWeek = new AtomicReference<>("");
-
-                schedule.addAll(lessons.getElementsByClass("lesson-day").stream().flatMap(day -> {
-                    dayWeek.set(day.getElementsByClass("lesson-day-title").first().text().trim());
-                    log.debug("[Очная] [{}] Неделя {}: парсинг дня «{}»", group.getName(), finalI + 1, dayWeek.get());
-                    int lessonCardCount = day.getElementsByClass("lesson-card").size();
-                    log.info("[Очная] [{}] Неделя {}: найдено {} lesson-card в дне {}", group.getName(), finalI + 1, lessonCardCount, dayWeek.get());
-                    return day.getElementsByClass("lesson-card").stream();
-                }).map(data -> {
-                    try {
-                        String time = data.getElementsByClass("lesson-time").first().text();
-                        Integer lessonCount = lessonTimeMap.get(time);
-                        String subject = data.getElementsByClass("lesson-subject").first().text().trim();
-                        Integer weekCount = Integer.parseInt(data.getElementsByClass("lesson-chip-week").first().text().split(":")[1].trim());
-
-                        AtomicReference<String> type = new AtomicReference<>("");
-                        AtomicReference<String> location = new AtomicReference<>("");
-                        AtomicReference<String> teacher = new AtomicReference<>("");
-
-                        data.getElementsByClass("lesson-meta").first().getElementsByClass("lesson-chip").stream().forEach(meta -> {
-                            String[] parts = meta.text().split(": ", 2);
-                            if (parts.length < 2) return;
-                            String val = parts[1].trim();
-                            switch (parts[0]) {
-                                case "Тип" -> type.set(val.equals("л") ? "Лекция" : val.equals("лаб") ? "Лабораторная"
-                                        : val.equals("пр") ? "Практика" : val);
-                                case "Ауд." -> location.set(val);
-                                case "Преп." -> teacher.set(val);
-                            }
-                        });
-
-                        log.debug("[Очная] [{}] Пара: день={}, время={}, предмет={}, тип={}, ауд={}, преп={}",
-                                group.getName(), dayWeek.get(), time, subject, type.get(), location.get(), teacher.get());
-
-                        Schedule savable = new Schedule();
-                        savable.setGroup(group);
-                        savable.setDayWeek(dayWeek.get());
-                        savable.setTimePeriod(time);
-                        savable.setLessonCount(lessonCount);
-                        savable.setPinnedDate("");
-                        savable.setLessonName(subject);
-                        savable.setWeekCount(weekCount);
-                        savable.setLessonType(type.get());
-                        savable.setAuditory(location.get());
-                        savable.setEiosLink("");
-
-                        Teacher teach = persistenceService.getOrPersistTeacher(teacher.get());
-                        savable.setTeacher(teach);
-
-                        return savable;
-                    } catch (Exception e) {
-                        log.error("[Очная] [{}] Ошибка парсинга пары: {}", group.getName(), e.getMessage(), e);
-                        return null;
-                    }
-                }).filter(s -> s != null).collect(Collectors.toList()));
-                log.info("[Очная] [{}] Неделя {}: после фильтра {} пар", group.getName(), finalI + 1, schedule.stream().filter(s -> s != null).count());
-            }
-        } else if (group.getStudyForm().equals("Заочная")) {
-            for (int i = 0; i <= 3; i++) {
-                int finalI = i;
-                String response = webClient.get().uri(uriBuilder -> uriBuilder
-                                .queryParam("mode", "student")
-                                .queryParam("study_form", "заочная")
-                                .queryParam("week", finalI + 1)
-                                .queryParam("day", "all")
-                                .queryParam("group", group.getName())
-                                .queryParam("show", 1)
-                                .build())
-                        .retrieve()
-                        .bodyToMono(String.class)
-                        .block();
-
-                if (response == null) {
-                    log.warn("[Заочная] [{}] Неделя {}: пустой ответ от сервера", group.getName(), finalI + 1);
-                    continue;
-                }
-
-                Document doc = Jsoup.parse(response);
-                Element lessons = doc.getElementsByClass("lessons").first();
-                if (lessons == null) {
-                    log.warn("[Заочная] [{}] Неделя {}: элемент .lessons не найден — расписание пустое", group.getName(), finalI + 1);
-                    continue;
-                }
-
-                log.info("[Заочная] [{}] Неделя {}: начало парсинга", group.getName(), finalI + 1);
-                AtomicReference<String> dayWeek = new AtomicReference<>("");
-                AtomicReference<String> pinnedDate = new AtomicReference<>("");
-
-                // head format: "День недели: ср · Дата: 01.04"
-                schedule.addAll(lessons.getElementsByClass("lesson-day").stream().flatMap(day -> {
-                    String head = day.getElementsByClass("lesson-day-title").first().text().trim();
-                    log.debug("[Заочная] [{}] Неделя {}: парсинг дня «{}»", group.getName(), finalI + 1, head);
-                    dayWeek.set(dayWeekDistantMap.get(head.split(" ")[2]));
-                    pinnedDate.set(head.split("Дата: ")[1]);
-                    int lessonCardCount = day.getElementsByClass("lesson-card").size();
-                    log.info("[Заочная] [{}] Неделя {}: найдено {} lesson-card в дне {}", group.getName(), finalI + 1, lessonCardCount, head);
-                    return day.getElementsByClass("lesson-card").stream();
-                }).map(data -> {
-                    try {
-                        String rawTime = data.getElementsByClass("lesson-time").first().text();
-                        String normalizedTime = rawTime.equals("8:00") ? "08:00"
-                                : rawTime.equals("9:40") ? "09:40" : rawTime;
-                        String time = lessonNumberMap.get(lessonDistantMap.get(normalizedTime));
-                        Integer lessonCount = lessonDistantMap.get(normalizedTime);
-                        String subject = data.getElementsByClass("lesson-subject").first().text().trim();
-
-                        if (time == null) {
-                            log.warn("[Заочная] [{}] Неизвестное время пары: «{}» — пара пропущена", group.getName(), rawTime);
-                            return null;
-                        }
-
-                        AtomicReference<String> type = new AtomicReference<>("");
-                        AtomicReference<String> location = new AtomicReference<>("");
-                        AtomicReference<String> teacher = new AtomicReference<>("");
-
-                        Element metaElement = data.getElementsByClass("lesson-meta").first();
-                        if (metaElement != null) {
-                            metaElement.getElementsByClass("lesson-chip").stream().forEach(meta -> {
-                                String[] parts = meta.text().split(": ", 2);
-                                if (parts.length < 2) return;
-                                String val = parts[1].trim();
-                                switch (parts[0]) {
-                                    case "Тип" -> type.set(val.substring(0, 1).toUpperCase() + val.substring(1));
-                                    case "Ауд." -> location.set(val);
-                                    case "Преп." -> teacher.set(val);
-                                }
-                            });
-                        }
-
-                        log.debug("[Заочная] [{}] Пара: день={}, дата={}, время={}, предмет={}, тип={}, ауд={}, преп={}",
-                                group.getName(), dayWeek.get(), pinnedDate.get(), time, subject, type.get(), location.get(), teacher.get());
-
-                        Schedule savable = new Schedule();
-                        savable.setGroup(group);
-                        savable.setDayWeek(dayWeek.get());
-                        savable.setTimePeriod(time);
-                        savable.setLessonName(subject);
-                        savable.setWeekCount(1);
-                        savable.setLessonCount(lessonCount);
-                        savable.setLessonType(type.get());
-                        savable.setAuditory(location.get());
-                        savable.setPinnedDate(pinnedDate.get());
-                        savable.setEiosLink("");
-
-                        Teacher teach = persistenceService.getOrPersistTeacher(teacher.get());
-                        savable.setTeacher(teach);
-
-                        return savable;
-                    } catch (Exception e) {
-                        log.error("[Заочная] [{}] Ошибка парсинга пары: {}", group.getName(), e.getMessage(), e);
-                        return null;
-                    }
-                }).filter(Objects::nonNull).toList());
-                log.info("[Заочная] [{}] Неделя {}: после фильтра {} пар", group.getName(), finalI + 1, schedule.stream().filter(Objects::nonNull).count());
-                log.info("[Заочная] [{}] Неделя {}: спаршено {} пар", group.getName(), finalI + 1, schedule.size());
-            }
-        } else {
-            log.warn("Неизвестная форма обучения для группы {}: {}", group.getName(), group.getStudyForm());
+        if (response == null || response.isEmpty()) {
+            log.warn("[{}] [{}] Пустой ответ от сервера", studyForm, group.getName());
+            return List.of();
         }
 
-        if (group.getStudyForm().equals("Заочная")) {
+        return parseSchedule(group, response);
+    }
+
+    /** Разбор страницы расписания в записи базы. Отделено от загрузки, чтобы разбор можно было проверить тестом. */
+    List<Schedule> parseSchedule(Group group, String response) {
+        boolean distant = "Заочная".equals(group.getStudyForm());
+        String studyForm = distant ? "заочная" : "очная";
+
+        Document doc = Jsoup.parse(response);
+        Map<String, Element> days = collectDays(doc);
+
+        if (days.isEmpty()) {
+            log.warn("[{}] [{}] Календарь не найден — расписание пустое", studyForm, group.getName());
+            return List.of();
+        }
+
+        // ключ склейки: за год пара повторяется 20+ раз, в базе нужен один слот двухнедельного цикла
+        Map<String, Schedule> unique = new LinkedHashMap<>();
+        int cards = 0;
+        int skipped = 0;
+
+        for (Map.Entry<String, Element> day : days.entrySet()) {
+            LocalDate date;
+            try {
+                date = LocalDate.parse(day.getKey());
+            }
+            catch (Exception e) {
+                log.warn("[{}] [{}] Неизвестный формат даты: «{}» — день пропущен", studyForm, group.getName(), day.getKey());
+                continue;
+            }
+
+            String dayWeek = dayWeekMap.get(date.getDayOfWeek());
+            String pinnedDate = distant ? date.format(PINNED_DATE_FORMAT) : "";
+
+            for (Element card : day.getValue().getElementsByClass("lesson-card")) {
+                cards++;
+
+                String time = card.attr("data-time").trim();
+                Integer lessonCount = lessonTimeMap.get(time);
+                if (lessonCount == null) {
+                    log.warn("[{}] [{}] Неизвестное время пары: «{}» — пара пропущена", studyForm, group.getName(), time);
+                    skipped++;
+                    continue;
+                }
+
+                String subject = card.attr("data-subject").trim();
+                String lessonType = lessonTypeMap.getOrDefault(card.attr("data-type").trim(), card.attr("data-type").trim());
+                String auditory = card.attr("data-room").trim();
+                String teacher = card.attr("data-teacher").trim();
+
+                Integer weekCount;
+                if (distant)
+                    // у заочки пара привязана к дате, а не к четности — она видна на любой неделе
+                    weekCount = 1;
+                else {
+                    weekCount = parseWeek(card.attr("data-week"));
+                    if (weekCount == null) {
+                        log.warn("[{}] [{}] Неизвестная четность недели: «{}» — пара пропущена", studyForm, group.getName(), card.attr("data-week"));
+                        skipped++;
+                        continue;
+                    }
+                }
+
+                String key = String.join("|", pinnedDate, dayWeek, weekCount.toString(),
+                        lessonCount.toString(), subject, lessonType, auditory, teacher);
+
+                // преподаватель ищется в базе только для новой пары: за год одна и та же пара повторяется 20+ раз
+                if (unique.containsKey(key)) continue;
+
+                Schedule savable = new Schedule();
+                savable.setGroup(group);
+                savable.setDayWeek(dayWeek);
+                savable.setTimePeriod(lessonNumberMap.get(lessonCount));
+                savable.setLessonCount(lessonCount);
+                savable.setPinnedDate(pinnedDate);
+                savable.setLessonName(subject);
+                savable.setWeekCount(weekCount);
+                savable.setLessonType(lessonType);
+                savable.setAuditory(auditory);
+                savable.setEiosLink("");
+                savable.setTeacher(persistenceService.getOrPersistTeacher(teacher));
+
+                unique.put(key, savable);
+                log.debug("[{}] [{}] Пара: неделя={}, день={}, дата={}, время={}, предмет={}, тип={}, ауд={}, преп={}",
+                        studyForm, group.getName(), weekCount, dayWeek, pinnedDate, savable.getTimePeriod(),
+                        subject, lessonType, auditory, teacher);
+            }
+        }
+
+        List<Schedule> schedule = new ArrayList<>(unique.values());
+
+        // заочка дублируется на обе четности: даты сессии не зависят от номера недели
+        if (distant) {
             List<Schedule> copies = schedule.stream().map(it -> {
                 Schedule copy = new Schedule();
                 copy.setGroup(it.getGroup());
@@ -394,10 +334,43 @@ public class MaxService {
             schedule.addAll(copies);
         }
 
+        log.info("[{}] [{}] Дней в календаре: {}, пар за год: {}, пропущено: {}, сохранится записей: {}",
+                studyForm, group.getName(), days.size(), cards, skipped, schedule.size());
+
         return schedule;
     }
 
-private int extractCourse(String label) {
+    /**
+     * Дни календаря по дате. Пограничные дни попадают в сетки двух соседних месяцев,
+     * поэтому на дату остаётся ячейка с наибольшим числом пар.
+     */
+    private Map<String, Element> collectDays(Document doc) {
+        Map<String, Element> days = new LinkedHashMap<>();
+
+        for (Element cell : doc.getElementsByClass("calendar-date-cell")) {
+            String date = cell.attr("data-date").trim();
+            if (date.isEmpty()) continue;
+
+            Element previous = days.get(date);
+            if (previous == null
+                    || previous.getElementsByClass("lesson-card").size() < cell.getElementsByClass("lesson-card").size())
+                days.put(date, cell);
+        }
+
+        return days;
+    }
+
+    private Integer parseWeek(String value) {
+        try {
+            int week = Integer.parseInt(value.trim());
+            return (week == 1 || week == 2) ? week : null;
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+
+    private int extractCourse(String label) {
         try {
             int year = Integer.parseInt(label.split("-")[0]);
             int currentYear = Calendar.getInstance().get(Calendar.YEAR);
