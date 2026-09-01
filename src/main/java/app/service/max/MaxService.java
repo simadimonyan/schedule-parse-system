@@ -20,6 +20,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Синхронизация со сторонним сервером расписания (rasp.imsit.ru, приложение в MAX).
@@ -44,6 +46,13 @@ public class MaxService {
     private final ExternalClient externalClient;
 
     private static final DateTimeFormatter PINNED_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM");
+
+    /** Пауза между группами при полном обходе, если её не задали в запросе. */
+    public static final int DEFAULT_SWEEP_PAUSE_MINUTES = 5;
+    private static final int MAX_SWEEP_PAUSE_MINUTES = 60;
+
+    /** Полный обход идёт часами — второй одновременно не запускаем. */
+    private final AtomicBoolean sweeping = new AtomicBoolean(false);
 
     private static final Map<Integer, String> lessonNumberMap = Map.of(
             1, "08.00-09.30",
@@ -168,6 +177,77 @@ public class MaxService {
         }
         else
             log.info("Группа %s не найдена!".formatted(label));
+    }
+
+    /**
+     * Полный обход: расписание всех групп подряд, по одному запросу к стороннему серверу
+     * раз в pauseMinutes минут. Обход длится часами, поэтому идёт на отдельном пуле,
+     * без общей транзакции — каждая группа сохраняется своей.
+     */
+    @Async("sweepExecutor")
+    public void loadAndPersistAllSchedules(int pauseMinutes) {
+        if (!sweeping.compareAndSet(false, true)) {
+            log.warn("Полный обход расписания уже идёт — повторный запуск проигнорирован");
+            return;
+        }
+
+        int pause = Math.max(0, Math.min(pauseMinutes, MAX_SWEEP_PAUSE_MINUTES));
+        long pauseMillis = TimeUnit.MINUTES.toMillis(pause);
+
+        try {
+            List<Group> groups = groupRepository.findAll();
+            groups.sort(Comparator.comparing(Group::getId));
+
+            if (groups.isEmpty()) {
+                log.warn("Полный обход расписания отменён: в базе нет групп — сначала /configuration/groups/load");
+                return;
+            }
+
+            log.info("Начало полного обхода расписания: групп {}, пауза между группами {} мин, ориентировочно {} ч",
+                    groups.size(), pause, String.format("%.1f", groups.size() * pause / 60.0));
+
+            int loaded = 0;
+            int empty = 0;
+            int failed = 0;
+
+            for (int i = 0; i < groups.size(); i++) {
+                Group group = groups.get(i);
+                try {
+                    List<Schedule> schedule = getSchedule(group);
+
+                    if (schedule.isEmpty()) {
+                        empty++;
+                        log.warn("[{}/{}] {}: расписание пустое — прошлые записи оставлены как есть",
+                                i + 1, groups.size(), group.getName());
+                    }
+                    else {
+                        persistenceService.persistSchedule(schedule);
+                        loaded++;
+                        log.info("[{}/{}] {}: сохранено записей {}", i + 1, groups.size(), group.getName(), schedule.size());
+                    }
+                }
+                catch (Exception e) {
+                    failed++;
+                    log.error("[{}/{}] {}: синхронизация не удалась — {}", i + 1, groups.size(), group.getName(), e.getMessage());
+                }
+
+                if (i < groups.size() - 1 && pauseMillis > 0) {
+                    try {
+                        Thread.sleep(pauseMillis);
+                    }
+                    catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        log.warn("Полный обход расписания прерван на группе {} из {}", i + 1, groups.size());
+                        break;
+                    }
+                }
+            }
+
+            log.info("Полный обход расписания завершён: загружено {}, пусто {}, с ошибкой {}", loaded, empty, failed);
+        }
+        finally {
+            sweeping.set(false);
+        }
     }
 
     /** Список групп по формам обучения: ?page=search&study_form=... → datalist#group-list. */

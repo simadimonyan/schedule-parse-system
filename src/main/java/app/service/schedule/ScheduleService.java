@@ -31,13 +31,14 @@ public class ScheduleService {
     }
 
     // один раз в 08:00 кроме воскресенья
-    @Scheduled(cron = "0 0 8 * * 1-6", zone = "Europe/Moscow")
+    @Scheduled(cron = "${schedule.sync.groups.cron:0 0 8 * * 1-6}", zone = "Europe/Moscow")
     public void loadAndPersistGroups() {
         maxService.loadAndPersistGroups();
     }
 
-    // с 8 до 8 каждые 3 минуты кроме воскресенья
-    @Scheduled(cron = "0 3/3 8-19 * * 1-6", zone = "Europe/Moscow")
+    // одна группа за тик: каждую минуту с 8 до 19 кроме воскресенья.
+    // Дефолт продублирован здесь, потому что application.properties на прод не деплоится.
+    @Scheduled(cron = "${schedule.sync.schedule.cron:0 * 8-19 * * 1-6}", zone = "Europe/Moscow")
     public void loadAndPersistSchedule() {
         maxService.loadAndPersistSchedule();
     }
