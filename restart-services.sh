@@ -76,17 +76,24 @@ cd /root/schedule-parse-system/
 echo "Checking SSL certificates..."
 bash init-certs.sh
 
-# Stop all containers
-echo "Stopping all Docker containers..."
-docker stop $(docker ps -aq) 2>/dev/null || true
+# Stop containers of this stack (and ботов — их поднимем в конце).
+# Сторож (guard) не трогаем намеренно: он живёт отдельно от стека и должен
+# пережить перезапуск, чтобы рассказать о нём в топик.
+echo "Stopping stack containers..."
+docker compose down --remove-orphans 2>/dev/null || true
+docker stop bots 2>/dev/null || true
 
 # Remove ClickHouse volume
 echo "Removing ClickHouse volumes..."
 rm -f -r volumes/clickhouse/ 2>/dev/null || true
 
-# Clean Docker system
+# Clean Docker system.
+# Без --volumes и без system prune: тома (в том числе память сторожа) остаются,
+# а место освобождают образы остановленных контейнеров — их тут большинство.
 echo "Cleaning Docker system..."
-docker system prune -a -f --volumes
+docker container prune -f
+docker image prune -af
+docker builder prune -af
 
 # Restore local MinIO image (prune above wipes it, а с Docker Hub он уже не тянется)
 echo "Loading local MinIO image..."
@@ -181,8 +188,8 @@ bash minio-auto-init-webhook.sh
 # готовы. Папка с .env живёт на сервере рядом со стеком; нет папки — пропускаем.
 BOTS_DIR="${BOTS_DIR:-/root/schedule-bot-service}"
 if [ -d "$BOTS_DIR" ]; then
-    echo "Starting schedule bots..."
-    if (cd "$BOTS_DIR" && docker compose up -d --build bots); then
+    echo "Starting schedule bots and guard..."
+    if (cd "$BOTS_DIR" && docker compose up -d --build); then
         echo "Bots are up"
     else
         echo "WARNING: боты не поднялись — смотри docker logs bots" >&2

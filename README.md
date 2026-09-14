@@ -124,13 +124,18 @@ crontab -e
 0 1,12 * * * /usr/bin/bash /root/schedule-parse-system/restart-services.sh  
 ```
 
-12. Вместе со стеком скрипт поднимает и ботов расписания (репозиторий `schedule-bot-service`).
-`docker system prune -a` сносит контейнер `bots` заодно со всеми, поэтому в конце
-`restart-services.sh` идёт `docker compose up -d --build bots` в папке сервиса ботов —
-по умолчанию `/root/schedule-bot-service`, переопределяется переменной `BOTS_DIR`.
-Там же лежит `.env` ботов (токены Telegram и MAX, `BOTS_API_TOKEN` = `schedule.access.token`,
+12. Вместе со стеком скрипт поднимает и сервисы ботов (репозиторий `schedule-bot-service`):
+в конце `restart-services.sh` идёт `docker compose up -d --build` в их папке — по умолчанию
+`/root/schedule-bot-service`, переопределяется переменной `BOTS_DIR`. Там же лежит их `.env`
+(токены Telegram и MAX, `BOTS_API_TOKEN` = `schedule.access.token`,
 `BOTS_API_URL=http://app:8080/schedule`). Нет папки — шаг пропускается с предупреждением,
 на стек это не влияет.
+
+Важно: чистка намеренно не трогает контейнер `guard` — это сторож, который следит за
+стеком снаружи и должен пережить перезапуск, чтобы о нём рассказать. Поэтому скрипт
+останавливает только свои сервисы (`docker compose down`) и контейнер `bots`, а вместо
+`docker system prune -a --volumes` делает `container/image/builder prune` без томов:
+иначе прунер сносил бы и сторожа вместе с его памятью.
 
 ### Настройка API
 
