@@ -47,3 +47,6 @@ test
 ### Локальные образы (см. minio-image.sh) ###
 images/*.tar
 images/*.tar.gz
+
+### Локальное окружение (см. .env.example) ###
+.env
