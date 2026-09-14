@@ -43,3 +43,7 @@ bin/
 
 volumes
 test
+
+### Локальные образы (см. minio-image.sh) ###
+images/*.tar
+images/*.tar.gz

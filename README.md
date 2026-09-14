@@ -72,9 +72,21 @@ SystemMaxUse=100M
 | `GF_SECURITY_ADMIN_USER` | Имя администратора Grafana |
 | `GF_SECURITY_ADMIN_PASSWORD` | Пароль администратора Grafana |
 
+### Образ MinIO
+
+Образ не тянется из Docker Hub — он лежит локально в `./images` и загружается скриптом.
+Перед первым запуском (и после `docker system prune`):
+
+```bash
+./minio-image.sh load
+```
+
+Подробности — раздел [MinIO](#minio).
+
 ### Запуск
 
 ```bash
+./minio-image.sh load
 sudo docker compose up
 ```
 При проблемах с правами доступа, где pgAdmin и grafana бесконечно перезапускаются, выполните:
@@ -153,6 +165,112 @@ Bearer <admin-token> (application.properties)
 - Добавьте datasource (адрес: clickhouse)
 - Импортируйте дашборд из `/configs/grafana/MonitorDashboard.json`.
 - При ошибках подключения — перезапустите сервис базы `clickhouse`.
+
+## MinIO
+
+Объектное хранилище, через которое в сервис попадает расписание: загружаешь `.xlsx`
+в бакет `schedule` — MinIO дёргает вебхук приложения — парсер разбирает файл и
+раскладывает пары по базе. Плюс это же хранилище отдаёт файлы обратно по API.
+
+### Откуда берётся образ
+
+Docker Hub репозиторий `minio/minio` закрыт: registry отвечает `401`, `docker pull`
+не работает ни с тегом, ни с digest. Официальный источник образа теперь —
+**quay.io/minio/minio**, а в проекте лежит его локальная копия, чтобы прод не зависел
+от внешнего registry вовсе:
+
+```
+compose.yaml → image: local/minio:RELEASE.2025-09-07T16-13-09Z
+               pull_policy: never        # ходить за образом некуда и незачем
+images/minio-RELEASE.2025-09-07T16-13-09Z-amd64.tar.gz    64 МБ  ← сервер
+images/minio-RELEASE.2025-09-07T16-13-09Z-arm64.tar.gz    59 МБ  ← Mac (Apple Silicon)
+```
+
+Архивы не в git. На новую машину их завозят руками:
+
+```bash
+scp images/minio-RELEASE.2025-09-07T16-13-09Z-amd64.tar.gz \
+    root@server:/root/schedule-parse-system/images/
+```
+
+### Установка
+
+```bash
+./minio-image.sh load     # распаковать образ в docker (сам выберет amd64/arm64)
+./minio-image.sh check    # что есть локально: образ, архивы, архитектура
+docker compose up -d minio
+docker logs minio | tail -5      # должно быть: API :9000, WebUI :9001
+```
+
+`load` идемпотентен: если образ уже в docker, он ничего не делает. Скрипт вызывается
+из `restart-services.sh` автоматически — там перед стартом идёт `docker system prune -a`,
+который образы стирает, а заново их взять неоткуда.
+
+Если образа нет и архива нет (чистый сервер, забыли scp):
+
+```bash
+./minio-image.sh save     # тянет обе платформы с quay.io и кладёт в ./images
+```
+
+### Настройка
+
+Переменные в `.env` (описаны в разделе [Переменные окружения](#переменные-окружения)):
+`MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_WEBHOOK_AUTH_TOKEN`,
+`MINIO_SERVER_URL`, `MINIO_BROWSER_REDIRECT_URL`.
+
+Данные и сертификаты — на bind-mount'ах `./volumes/minio/data` и `./volumes/minio/certs`,
+поэтому пересоздание контейнера и смена образа бакеты не трогают.
+
+Ключи для приложения и вебхук настраиваются один раз — по шагам из
+[Настройка MinIO и приложения](#настройка-minio-и-приложения):
+`minio-generate-keys.sh` создаёт access/secret для пользователя, они прописываются в
+`application.properties` (`minio.access.key`, `minio.secret.key`), затем
+`minio-manual-init-webhook.sh` заводит бакет `schedule`, регистрирует
+`notify_webhook:1` на `/minio-webhook` приложения и вешает событие `put`.
+
+### Использование
+
+Веб-интерфейс — `http://localhost:9001` (на проде `https://admin.myimsit.ru/console/`),
+логин/пароль — `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`. Туда же кладут файл расписания,
+если делают это руками.
+
+Консольный клиент `mc` уже внутри образа — отдельно ставить не нужно:
+
+```bash
+docker exec -it minio /bin/sh
+mc alias set myminio http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+
+mc ls myminio/schedule                     # что лежит в бакете
+mc cp raspisanie.xlsx myminio/schedule/    # залить файл → сработает парсер
+mc event list myminio/schedule             # вебхук на месте?
+mc admin config get myminio notify_webhook # куда он стучится
+mc admin info myminio                      # состояние хранилища
+```
+
+Событие приходит только на `put` в бакет `schedule`; всё остальное парсер игнорирует.
+
+### Обновление образа
+
+```bash
+./minio-image.sh save    # поднимет свежий релиз с quay.io в ./images
+```
+Затем поменять тег `RELEASE.*` в `compose.yaml` и в шапке `minio-image.sh`,
+загрузить и пересоздать контейнер:
+```bash
+./minio-image.sh load && docker compose up -d --force-recreate minio
+```
+Публично на quay сейчас лежат `RELEASE.2025-09-07T16-13-09Z` (последний обычный релиз)
+и более свежие сборки с суффиксом `.hotfix.*`.
+
+### Если что-то не так
+
+| Симптом | Причина и что делать |
+|---|---|
+| `Error response from daemon: No such image: local/minio:…` | образ не загружен → `./minio-image.sh load` |
+| `нет архива images/…-amd64.tar.gz` | архив не доехал на сервер → `scp` или `./minio-image.sh save` |
+| `exec format error` при старте | загружен архив чужой платформы (arm64 на сервере) → взять `-amd64` |
+| контейнер healthy, но расписание не парсится | слетел вебхук после перезапуска `app` → `bash minio-manual-init-webhook.sh` |
+| `docker pull minio/minio` отвечает `401` | так и должно быть, Hub закрыт — образ берётся локально |
 
 ## URL
 

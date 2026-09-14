@@ -88,6 +88,10 @@ rm -f -r volumes/clickhouse/ 2>/dev/null || true
 echo "Cleaning Docker system..."
 docker system prune -a -f --volumes
 
+# Restore local MinIO image (prune above wipes it, а с Docker Hub он уже не тянется)
+echo "Loading local MinIO image..."
+bash minio-image.sh load
+
 # Start services
 echo "Starting services with docker compose..."
 docker compose up -d
