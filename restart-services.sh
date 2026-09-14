@@ -80,8 +80,8 @@ bash init-certs.sh
 # Сторож (guard) не трогаем намеренно: он живёт отдельно от стека и должен
 # пережить перезапуск, чтобы рассказать о нём в топик.
 echo "Stopping stack containers..."
+docker stop bots 2>/dev/null || true       # первыми: их отметка о штатной остановке лежит в app_db
 docker compose down --remove-orphans 2>/dev/null || true
-docker stop bots 2>/dev/null || true
 
 # Remove ClickHouse volume
 echo "Removing ClickHouse volumes..."
@@ -189,7 +189,8 @@ bash minio-auto-init-webhook.sh
 BOTS_DIR="${BOTS_DIR:-/root/schedule-bot-service}"
 if [ -d "$BOTS_DIR" ]; then
     echo "Starting schedule bots and guard..."
-    if (cd "$BOTS_DIR" && docker compose up -d --build); then
+    if (cd "$BOTS_DIR" && docker compose up -d --build bots \
+            && docker compose up -d --no-recreate guard); then
         echo "Bots are up"
     else
         echo "WARNING: боты не поднялись — смотри docker logs bots" >&2
