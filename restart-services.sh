@@ -174,6 +174,23 @@ export MINIO_SECRET_KEY='$MINIO_SECRET_KEY'
 bash minio-auto-init-webhook.sh
 "
 
+# --- Боты расписания ---------------------------------------------------------
+# Сервис лежит в отдельном репозитории (schedule-bot-service) и подключается к
+# сети этого стека. Прунер выше сносит его контейнер вместе с остальными, а свой
+# compose up его не поднимает — поэтому поднимаем здесь, когда бэкенд и MinIO уже
+# готовы. Папка с .env живёт на сервере рядом со стеком; нет папки — пропускаем.
+BOTS_DIR="${BOTS_DIR:-/root/schedule-bot-service}"
+if [ -d "$BOTS_DIR" ]; then
+    echo "Starting schedule bots..."
+    if (cd "$BOTS_DIR" && docker compose up -d --build bots); then
+        echo "Bots are up"
+    else
+        echo "WARNING: боты не поднялись — смотри docker logs bots" >&2
+    fi
+else
+    echo "WARNING: $BOTS_DIR не найден — боты пропущены" >&2
+fi
+
 echo "=== Service restart and initialization completed successfully ==="
 
 
