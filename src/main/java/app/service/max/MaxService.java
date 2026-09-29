@@ -351,6 +351,8 @@ public class MaxService {
                 String subject = card.attr("data-subject").trim();
                 String lessonType = lessonTypeMap.getOrDefault(card.attr("data-type").trim(), card.attr("data-type").trim());
                 String auditory = card.attr("data-room").trim();
+                // у онлайн-пары аудитории нет: вместо неё ссылка на курс в ЕИОС
+                String roomUrl = card.attr("data-room-url").trim();
                 String teacher = card.attr("data-teacher").trim();
 
                 Integer weekCount;
@@ -382,7 +384,7 @@ public class MaxService {
                 savable.setWeekCount(weekCount);
                 savable.setLessonType(lessonType);
                 savable.setAuditory(auditory);
-                savable.setEiosLink("");
+                savable.setEiosLink(roomUrl);
                 savable.setTeacher(persistenceService.getOrPersistTeacher(teacher));
 
                 unique.put(key, savable);
