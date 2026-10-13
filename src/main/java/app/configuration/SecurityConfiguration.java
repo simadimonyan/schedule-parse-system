@@ -69,7 +69,7 @@ public class SecurityConfiguration {
                 "https://myimsit.ru"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Cache-Control"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Cache-Control", "X-User-Token"));
         config.setExposedHeaders(List.of("Content-Type", "Cache-Control"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
