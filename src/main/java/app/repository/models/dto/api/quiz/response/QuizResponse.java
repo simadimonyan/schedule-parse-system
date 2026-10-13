@@ -4,7 +4,10 @@ import app.repository.models.dto.api.quiz.unit.QuestionUnit;
 
 import java.util.List;
 
-/** status: draft, scheduled, active, closed */
+/**
+ * status: draft, scheduled, active, closed.
+ * recurrence: null или "monthly"; period — текущий месяц "yyyy-MM" (по Москве) для monthly, иначе null
+ */
 public record QuizResponse(
     Long id,
     String name,
@@ -15,5 +18,7 @@ public record QuizResponse(
     List<QuestionUnit> questions,
     String startDate,
     String endDate,
-    Long applications
+    Long applications,
+    String recurrence,
+    String period
 ) {}

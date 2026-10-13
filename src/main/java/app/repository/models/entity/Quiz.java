@@ -22,6 +22,8 @@ import java.util.Set;
 @Table(name = "quiz_table")
 public class Quiz implements Serializable {
 
+    public static final String MONTHLY = "monthly";
+
     @Id
     @GeneratedValue
     @Column(name = "quiz_id")
@@ -45,6 +47,13 @@ public class Quiz implements Serializable {
 
     @Column(name = "end_date")
     private LocalDateTime endDate;
+
+    /**
+     * Повтор опроса: null — пройти можно один раз, {@link #MONTHLY} — раз в каждом месяце.
+     * Колонка nullable, старые опросы остаются одноразовыми
+     */
+    @Column(name = "recurrence")
+    private String recurrence;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

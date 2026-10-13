@@ -5,14 +5,14 @@ import app.controller.exceptions.ServiceException;
 import app.repository.dao.ApplicationRepository;
 import app.repository.dao.QuizRepository;
 import app.repository.dao.SubmissionRepository;
+import app.repository.models.dto.api.quiz.request.QuizImportRequest;
 import app.repository.models.dto.api.quiz.request.QuizRequest;
 import app.repository.models.dto.api.quiz.request.SubmitRequest;
 import app.repository.models.dto.api.quiz.response.OptionResult;
 import app.repository.models.dto.api.quiz.response.QuestionResult;
+import app.repository.models.dto.api.quiz.response.QuizExportResponse;
 import app.repository.models.dto.api.quiz.response.QuizResultsResponse;
-import app.repository.models.dto.api.quiz.unit.AnswerUnit;
-import app.repository.models.dto.api.quiz.unit.QuestionUnit;
-import app.repository.models.dto.api.quiz.unit.SubmitUnit;
+import app.repository.models.dto.api.quiz.unit.*;
 import app.repository.models.entity.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -26,6 +26,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
@@ -73,9 +74,25 @@ public class QuizPersistenceService {
         return quizRepository.findAllByOrderByIdDesc();
     }
 
+    /** Опросы для экспорта в порядке создания; ids пусто или null — все */
+    public List<Quiz> getQuizzesForExport(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) return quizRepository.findAllByOrderByIdAsc();
+        Set<Long> wanted = new LinkedHashSet<>(ids);
+        wanted.remove(null);
+        if (wanted.isEmpty()) return quizRepository.findAllByOrderByIdAsc();
+        List<Quiz> quizzes = quizRepository.findAllByIdInOrderByIdAsc(wanted);
+        if (quizzes.size() < wanted.size()) {
+            Set<Long> missing = new TreeSet<>(wanted);
+            quizzes.forEach(q -> missing.remove(q.getId()));
+            throw new EntityNotFoundException("База не содержит опросов по id: " + missing);
+        }
+        return quizzes;
+    }
+
     /**
      * Опросы, которые сейчас можно пройти: для всех и для указанной группы.
      * С respondent из списка убираются уже пройденные им опросы
+     * (ежемесячные — только если на них ответили в текущем месяце)
      */
     public List<Quiz> getActiveQuizzes(String group, String respondent) {
         LocalDateTime now = QuizStatus.now();
@@ -86,7 +103,7 @@ public class QuizPersistenceService {
         if (respondent == null || respondent.isBlank() || quizzes.isEmpty()) return quizzes;
 
         Map<String, Long> byHash = new HashMap<>();
-        for (Quiz quiz : quizzes) byHash.put(respondentHash(quiz.getId(), respondent), quiz.getId());
+        for (Quiz quiz : quizzes) byHash.put(submissionHash(quiz, respondent, QuizStatus.period(quiz, now)), quiz.getId());
         Set<Long> answered = new HashSet<>(submissionRepository.findQuizIdsByRespondentHashes(byHash.keySet()));
         quizzes.removeIf(q -> answered.contains(q.getId()));
         return quizzes;
@@ -109,6 +126,13 @@ public class QuizPersistenceService {
 
     @Transactional(rollbackOn = Exception.class)
     public Quiz publishQuiz(QuizRequest request) throws ServiceException {
+        Quiz saved = quizRepository.save(buildQuiz(request));
+        log.info("Создан опрос {} «{}», вопросов: {}", saved.getId(), saved.getName(), saved.getQuestions().size());
+        return saved;
+    }
+
+    /** Новый опрос из запроса, проверенный, но ещё не сохранённый */
+    private Quiz buildQuiz(QuizRequest request) throws ServiceException {
         Quiz quiz = new Quiz();
         LocalDateTime now = QuizStatus.now();
         quiz.setCreatedAt(now);
@@ -118,10 +142,61 @@ public class QuizPersistenceService {
         if (request.questions() == null || request.questions().isEmpty()) throw new ServiceException("В опросе должен быть хотя бы один вопрос");
         applyMeta(quiz, request, true);
         replaceQuestions(quiz, request.questions());
+        return quiz;
+    }
 
-        Quiz saved = quizRepository.save(quiz);
-        log.info("Создан опрос {} «{}», вопросов: {}", saved.getId(), saved.getName(), saved.getQuestions().size());
+    /**
+     * Импорт документа экспорта: всегда создаёт новые опросы, всё или ничего.
+     * Сначала проверяются и собираются все опросы, сохраняются — только если ошибок нет
+     * (и всё в одной транзакции); ошибка — ServiceException «Опрос N: причина», N с единицы.
+     * draft — все опросы становятся черновиками
+     */
+    @Transactional(rollbackOn = Exception.class)
+    public List<Quiz> importQuizzes(QuizImportRequest request, boolean draft) throws ServiceException {
+        if (!QuizExportResponse.FORMAT.equals(request.format())) {
+            throw new ServiceException("Неизвестный формат «%s», ожидается %s".formatted(request.format(), QuizExportResponse.FORMAT));
+        }
+        if (request.version() == null || request.version() != QuizExportResponse.VERSION) {
+            throw new ServiceException("Неподдерживаемая версия документа %s, ожидается %d".formatted(request.version(), QuizExportResponse.VERSION));
+        }
+        if (request.quizzes() == null || request.quizzes().isEmpty()) throw new ServiceException("В документе нет опросов");
+
+        List<Quiz> quizzes = new ArrayList<>();
+        int number = 0;
+        for (QuizExportUnit unit : request.quizzes()) {
+            number++;
+            try {
+                if (unit == null) throw new ServiceException("пустая запись");
+                quizzes.add(buildQuiz(toQuizRequest(unit, draft)));
+            } catch (ServiceException e) {
+                throw new ServiceException("Опрос %d: %s".formatted(number, e.getMessage()));
+            }
+        }
+
+        List<Quiz> saved = quizRepository.saveAll(quizzes);
+        log.info("Импортировано опросов: {}{}", saved.size(), draft ? " (черновиками)" : "");
         return saved;
+    }
+
+    private static QuizRequest toQuizRequest(QuizExportUnit unit, boolean draft) {
+        List<QuestionUnit> questions = null;
+        if (unit.questions() != null) {
+            questions = new ArrayList<>();
+            for (QuestionExportUnit q : unit.questions()) {
+                if (q == null) {
+                    questions.add(null);
+                    continue;
+                }
+                List<AnswerUnit> answers = new ArrayList<>();
+                if (q.answers() != null) {
+                    for (OptionExportUnit o : q.answers()) answers.add(o == null ? null : new AnswerUnit(null, o.label()));
+                }
+                questions.add(new QuestionUnit(null, q.label(), q.description(), q.type(), q.required(), q.scale(), answers));
+            }
+        }
+        Boolean published = draft ? Boolean.FALSE : unit.published();
+        return new QuizRequest(null, unit.name(), unit.description(), unit.completionMessage(), unit.groups(),
+            questions, unit.startDate(), unit.endDate(), published, unit.recurrence());
     }
 
     /**
@@ -178,6 +253,8 @@ public class QuizPersistenceService {
             quiz.getGroups().clear();
             quiz.getGroups().addAll(groups);
         }
+
+        if (creating || request.recurrence() != null) quiz.setRecurrence(parseRecurrence(request.recurrence()));
 
         if (creating || request.startDate() != null) quiz.setStartDate(parseDate(request.startDate(), false));
         if (creating || request.endDate() != null) quiz.setEndDate(parseDate(request.endDate(), true));
@@ -256,16 +333,19 @@ public class QuizPersistenceService {
         String matchedGroup = matchGroup(quiz, group);
         if (matchedGroup == null) throw new ServiceException("Опрос проводится не для этой группы");
 
-        String hash = respondentHash(quiz.getId(), respondent);
+        LocalDateTime now = QuizStatus.now();
+        String period = QuizStatus.period(quiz, now);
+        String hash = submissionHash(quiz, respondent, period);
         if (submissionRepository.existsByQuizIdAndRespondentHash(quiz.getId(), hash)) {
-            throw new ConflictException("Вы уже прошли этот опрос");
+            throw new ConflictException(period == null ? "Вы уже прошли этот опрос" : "Вы уже прошли этот опрос в этом месяце");
         }
 
         Submission submission = new Submission();
         submission.setQuiz(quiz);
         submission.setRespondentHash(hash);
+        submission.setPeriod(period);
         submission.setGroup(matchedGroup.isEmpty() ? group : matchedGroup);
-        submission.setCreatedAt(QuizStatus.now());
+        submission.setCreatedAt(now);
         submission.getApplications().addAll(toApplications(quiz, submission, request.answers()));
 
         submissionRepository.saveAndFlush(submission);
@@ -351,16 +431,21 @@ public class QuizPersistenceService {
 
     // ---------------------------------------------------------------- итоги
 
-    /** Сводка ответов по каждому вопросу; group — только анкеты этой группы */
-    @Transactional
-    public QuizResultsResponse getResults(Long id, String group) {
+    /**
+     * Сводка ответов по каждому вопросу; group — только анкеты этой группы,
+     * period ("yyyy-MM") — только анкеты этого месяца ежемесячного опроса
+     */
+    @Transactional(rollbackOn = Exception.class)
+    public QuizResultsResponse getResults(Long id, String group, String period) throws ServiceException {
         Quiz quiz = getQuiz(id);
         String filter = trimToNull(group);
+        String month = parsePeriod(period);
 
         Map<Long, List<Application>> byQuestion = new HashMap<>();
         Set<Long> submissions = new HashSet<>();
         for (Application a : applicationRepository.findAllForResults(id)) {
             if (filter != null && !filter.equalsIgnoreCase(a.getSubmission().getGroup())) continue;
+            if (month != null && !month.equals(a.getSubmission().getPeriod())) continue;
             submissions.add(a.getSubmission().getId());
             byQuestion.computeIfAbsent(a.getQuestion().getId(), k -> new ArrayList<>()).add(a);
         }
@@ -369,7 +454,7 @@ public class QuizPersistenceService {
         for (Question question : quiz.getQuestions()) {
             results.add(questionResult(question, byQuestion.getOrDefault(question.getId(), List.of())));
         }
-        return new QuizResultsResponse(quiz.getId(), quiz.getName(), QuizStatus.of(quiz, QuizStatus.now()).label(), filter, (long) submissions.size(), results);
+        return new QuizResultsResponse(quiz.getId(), quiz.getName(), QuizStatus.of(quiz, QuizStatus.now()).label(), filter, month, (long) submissions.size(), results);
     }
 
     static QuestionResult questionResult(Question question, List<Application> applications) {
@@ -434,6 +519,34 @@ public class QuizPersistenceService {
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * Хеш анкеты: у одноразового опроса — от «опрос + respondent» (как было всегда),
+     * у ежемесячного к respondent добавляется месяц, поэтому в новом месяце можно ответить снова
+     */
+    static String submissionHash(Quiz quiz, String respondent, String period) {
+        String who = respondent.trim();
+        return respondentHash(quiz.getId(), period == null ? who : who + "@" + period);
+    }
+
+    /** null или пусто — одноразовый ("" и "once" нужны, чтобы снять повтор при правке); иначе только monthly */
+    static String parseRecurrence(String value) throws ServiceException {
+        String recurrence = trimToNull(value);
+        if (recurrence == null || recurrence.equalsIgnoreCase("once")) return null;
+        if (recurrence.equalsIgnoreCase(Quiz.MONTHLY)) return Quiz.MONTHLY;
+        throw new ServiceException("Неизвестная повторяемость «%s», допустимо monthly или пусто".formatted(value));
+    }
+
+    /** "yyyy-MM" или пусто — без фильтра */
+    static String parsePeriod(String value) throws ServiceException {
+        String period = trimToNull(value);
+        if (period == null) return null;
+        try {
+            return YearMonth.parse(period).toString();
+        } catch (DateTimeParseException e) {
+            throw new ServiceException("Неверный период «%s», ожидается yyyy-MM".formatted(value));
         }
     }
 

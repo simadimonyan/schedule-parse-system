@@ -14,7 +14,8 @@ import java.util.List;
  * Таблица submission_table используется для хранения
  * заполненных анкет: одна строка — один респондент в одном опросе.
  * Сам идентификатор респондента не хранится, только его хеш —
- * его хватает, чтобы не принять анкету дважды
+ * его хватает, чтобы не принять анкету дважды.
+ * У ежемесячного опроса в хеш входит и месяц — одна анкета в месяц
  */
 @Data
 @Entity
@@ -40,6 +41,10 @@ public class Submission implements Serializable {
 
     @Column(name = "group_name")
     private String group;
+
+    /** Месяц анкеты "yyyy-MM" для ежемесячных опросов; у одноразовых — null */
+    @Column(name = "period", length = 7)
+    private String period;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

@@ -3,6 +3,8 @@ package app.controller.api;
 import app.controller.exceptions.ConflictException;
 import app.controller.exceptions.ServiceException;
 import app.repository.models.dto.api.auth.AdminToken;
+import app.repository.models.dto.api.quiz.request.QuizExportRequest;
+import app.repository.models.dto.api.quiz.request.QuizImportRequest;
 import app.repository.models.dto.api.quiz.request.QuizRequest;
 import app.repository.models.dto.api.quiz.request.SubmitRequest;
 import app.repository.models.dto.api.quiz.response.QuizResponse;
@@ -11,6 +13,7 @@ import app.repository.models.dto.api.quiz.response.QuizzesResponse;
 import app.repository.models.dto.api.quiz.response.SubmitResponse;
 import app.repository.models.dto.mappers.QuizMapper;
 import app.repository.models.entity.Quiz;
+import app.repository.models.entity.QuizStatus;
 import app.security.AdminAccess;
 import app.service.persistence.QuizPersistenceService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Опросы с обратной связью. Клиенты (приложение, боты) получают активные опросы
@@ -80,18 +84,53 @@ public class QuizController {
         return ResponseEntity.ok(quizMapper.toQuizzesResponse(quizzes, persistenceService.countApplications(quizzes.stream().map(Quiz::getId).toList())));
     }
 
-    /** Итоги опроса: распределения ответов, средние оценки, свободные ответы */
+    /**
+     * Итоги опроса: распределения ответов, средние оценки, свободные ответы.
+     * period=yyyy-MM — только анкеты этого месяца (для ежемесячных опросов), без него — все
+     */
     @PostMapping("/{id}/results")
     public ResponseEntity<?> results(
             @PathVariable("id") Long id,
             @RequestParam(value = "group", required = false) String group,
+            @RequestParam(value = "period", required = false) String period,
             @RequestBody(required = false) AdminToken token,
             @RequestHeader(value = AdminAccess.HEADER, required = false) String userToken
-    ) {
-        log.info("POST Запрос: /api/v1/quizzes/{}/results?group={}", id, group);
+    ) throws ServiceException {
+        log.info("POST Запрос: /api/v1/quizzes/{}/results?group={}&period={}", id, group, period);
         if (!isAdmin(token, userToken)) return forbidden();
-        QuizResultsResponse results = persistenceService.getResults(id, group);
+        QuizResultsResponse results = persistenceService.getResults(id, group, period);
         return ResponseEntity.ok(results);
+    }
+
+    /**
+     * Выгрузка опросов в переносимый JSON (format "isuer.quizzes", version 1):
+     * без id вопросов и вариантов и без анкет. ids пусто — все опросы
+     */
+    @PostMapping("/admin/export")
+    public ResponseEntity<?> export(
+            @RequestBody(required = false) QuizExportRequest request,
+            @RequestHeader(value = AdminAccess.HEADER, required = false) String userToken
+    ) {
+        log.info("POST Запрос: /api/v1/quizzes/admin/export");
+        if (!isAdmin(request == null ? null : new AdminToken(request.token()), userToken)) return forbidden();
+        List<Quiz> quizzes = persistenceService.getQuizzesForExport(request == null ? null : request.ids());
+        return ResponseEntity.ok(quizMapper.toExportResponse(quizzes, QuizStatus.now()));
+    }
+
+    /**
+     * Загрузка документа экспорта: всегда создаёт новые опросы, всё или ничего —
+     * при ошибке ничего не создаётся, 400 «Опрос N: причина». draft=true — все черновиками
+     */
+    @PostMapping("/admin/import")
+    public ResponseEntity<?> importQuizzes(
+            @RequestParam(value = "draft", required = false, defaultValue = "false") boolean draft,
+            @RequestBody QuizImportRequest request,
+            @RequestHeader(value = AdminAccess.HEADER, required = false) String userToken
+    ) throws ServiceException {
+        log.info("POST Запрос: /api/v1/quizzes/admin/import?draft={}", draft);
+        if (!isAdmin(new AdminToken(request.token()), userToken)) return forbidden();
+        List<Quiz> created = persistenceService.importQuizzes(request, draft);
+        return ResponseEntity.ok(quizMapper.toQuizzesResponse(created, Map.of()));
     }
 
     @PostMapping("/publish")

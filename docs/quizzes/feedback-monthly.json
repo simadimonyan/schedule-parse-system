@@ -1,0 +1,22 @@
+{
+  "format": "isuer.quizzes",
+  "version": 1,
+  "exportedAt": "2026-10-14T12:00:00",
+  "quizzes": [
+    {
+      "name": "Как вам «Моя Академия»?",
+      "description": null,
+      "completionMessage": "Спасибо! Читаем каждый отзыв 💙",
+      "groups": [],
+      "recurrence": "monthly",
+      "startDate": null,
+      "endDate": null,
+      "published": true,
+      "questions": [
+        {"label": "Как вам «Моя Академия» в этом месяце?", "description": null, "type": "RATING", "required": true, "scale": 5, "answers": []},
+        {"label": "Что нравится? Похвалите нас 🙂", "description": null, "type": "TEXT", "required": false, "scale": null, "answers": []},
+        {"label": "Что бесит или работает не так? Поругайте — исправим", "description": null, "type": "TEXT", "required": false, "scale": null, "answers": []}
+      ]
+    }
+  ]
+}

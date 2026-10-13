@@ -285,6 +285,110 @@ mc admin info myminio                      # состояние хранилищ
 | контейнер healthy, но расписание не парсится | слетел вебхук после перезапуска `app` → `bash minio-manual-init-webhook.sh` |
 | `docker pull minio/minio` отвечает `401` | так и должно быть, Hub закрыт — образ берётся локально |
 
+## Опросы с обратной связью
+
+`/api/v1/quizzes` — опросы для студентов: клиенты (приложение, боты) показывают открытые
+опросы и отправляют анкеты, администратор создаёт опросы и смотрит итоги. Все запросы — с
+ключом доступа в `Authorization: Bearer …`. Административные ручки принимают служебный ключ
+`schedule.admin.token` в теле (`{"token": {"token": "Bearer <admin>"}}` в publish/edit,
+`{"token": "Bearer <admin>"}` в остальных) либо токен диспетчера из кабинета ИСУЭР в заголовке
+`X-User-Token: Bearer <jwt>` (`AdminAccess`, роль `dispatcher`).
+Таблицы (`quiz_table`, `question_table`, `answer_table`, `submission_table`,
+`application_table`, `quiz_group_table`) и новые колонки (`quiz_table.recurrence`,
+`submission_table.period`) создаёт `ddl-auto=update`, новых ключей настроек нет.
+
+| Метод и путь | Кто | Что делает |
+|---|---|---|
+| `GET /search?group=&respondent=` | клиент | открытые сейчас опросы: для всех и для группы; с `respondent` — без уже пройденных (ежемесячные — без пройденных в этом месяце) |
+| `GET /{id}` | клиент | опрос с вопросами (черновик → 404) |
+| `POST /submit` | клиент | анкета; ответ — `{quizId, message}` с благодарностью из опроса |
+| `POST /publish` | админ | создать опрос (`published: false` — черновик) → 201 |
+| `PATCH /edit/{id}` | админ | правка; `null`-поля не меняются; вопросы — только пока нет ответов (иначе 409) |
+| `DELETE /remove/{id}` | админ | удалить опрос вместе с анкетами |
+| `POST /admin/search` | админ | все опросы, включая черновики и завершённые |
+| `POST /{id}/results?group=&period=` | админ | итоги: доли вариантов, распределение и средняя оценка, свободные ответы; `period=yyyy-MM` — только анкеты месяца |
+| `POST /admin/export` | админ | выгрузить опросы в переносимый JSON |
+| `POST /admin/import?draft=` | админ | создать опросы из такого JSON (всё или ничего) |
+
+Типы вопросов: `SINGLE` и `MULTIPLE` (варианты в `answers`, минимум два), `TEXT`
+(до 2000 символов), `RATING` (оценка `1..scale`, `scale` 2–10, по умолчанию 5).
+`required` по умолчанию `true`. Даты — `yyyy-MM-dd` (начало/конец дня) или
+`yyyy-MM-ddTHH:mm` по Москве, пустая граница — без ограничения. Статус опроса
+(`draft`, `scheduled`, `active`, `closed`) считается из `published` и дат.
+
+```json
+POST /api/v1/quizzes/publish
+{
+  "token": {"token": "Bearer <admin>"},
+  "name": "Как вам новое расписание?",
+  "completionMessage": "Спасибо! Учтём к следующему семестру.",
+  "groups": ["24-СПО-ИСиП-01"],
+  "endDate": "2026-10-31",
+  "recurrence": null,
+  "questions": [
+    {"label": "Удобно ли смотреть расписание?", "type": "SINGLE", "answers": [{"label": "Да"}, {"label": "Нет"}]},
+    {"label": "Оцените приложение", "type": "RATING", "scale": 5},
+    {"label": "Что улучшить?", "type": "TEXT", "required": false}
+  ]
+}
+
+POST /api/v1/quizzes/submit
+{
+  "quizId": 1, "respondent": "tg:934458920", "group": "24-СПО-ИСиП-01",
+  "answers": [
+    {"questionId": 2, "answerId": 3},
+    {"questionId": 5, "value": "4"},
+    {"questionId": 6, "value": "Пуш за 10 минут до пары"}
+  ]
+}
+```
+
+Для `MULTIPLE` — по строке на каждый выбранный вариант. `respondent` — устойчивый id
+клиента (`tg:<id>`, `max:<id>`, `android:<uuid>`, `ios:<uuid>`): повторная анкета → 409. В базе лежит
+только SHA-256 от пары «опрос + respondent», поэтому из итогов не узнать, кто что ответил.
+Ошибки анкеты (нет ответа на обязательный вопрос, чужой вариант, оценка вне шкалы,
+опрос не для этой группы) → 400 с текстом, который можно показать пользователю;
+опрос завершён или ещё не начался → 409.
+
+### Повтор раз в месяц
+
+`recurrence` в `QuizRequest`/`QuizResponse`: `null` — опрос проходят один раз, `"monthly"` —
+раз в каждом календарном месяце по Москве (регистр не важен, другое значение → 400).
+При правке `null` — не менять, `""` — снова сделать опрос разовым. В `QuizResponse` ещё
+`period`: у monthly — текущий месяц (`"2026-10"`), иначе `null`. У monthly-опроса в хеш
+респондента входит месяц (`respondent@yyyy-MM`), а в анкете хранится `period`: `search`
+прячет опрос, только если на него ответили в текущем месяце, `submit` даёт 409 лишь при повторе
+в том же месяце, итоги можно смотреть по месяцу (`?period=2026-10`). У разовых опросов хеш
+прежний, старые анкеты продолжают ловить повтор.
+
+### Экспорт и импорт
+
+Описание опросов без id вопросов/вариантов и без анкет — для переноса между стендами.
+
+```json
+POST /api/v1/quizzes/admin/export
+{"token": "Bearer <admin>", "ids": [1, 2]}          // ids пусто или нет — все опросы
+
+→ {"format": "isuer.quizzes", "version": 1, "exportedAt": "2026-10-14T12:00:00",
+   "quizzes": [{"name": "…", "description": null, "completionMessage": "…", "groups": [],
+                "recurrence": "monthly", "startDate": null, "endDate": null, "published": true,
+                "questions": [{"label": "…", "description": null, "type": "SINGLE", "required": true,
+                               "scale": null, "answers": [{"label": "Да"}, {"label": "Нет"}]}]}]}
+```
+
+`POST /api/v1/quizzes/admin/import?draft=true|false` принимает тот же документ плюс
+`"token": "Bearer <admin>"` и отвечает `{"quizzes": [созданные QuizResponse]}`. Опросы всегда
+создаются заново; всё или ничего — при первой же ошибке ничего не сохраняется и приходит 400
+с текстом «Опрос N: причина» (N с единицы). Чужой `format` или `version` ≠ 1 → 400.
+`draft=true` — все опросы импортируются черновиками. Опрос по умолчанию «Как вам «Моя
+Академия»?» лежит в [`docs/quizzes/feedback-monthly.json`](docs/quizzes/feedback-monthly.json):
+
+```bash
+jq '. + {token: "Bearer <admin>"}' docs/quizzes/feedback-monthly.json |
+  curl -X POST "$BASE/api/v1/quizzes/admin/import?draft=false" \
+       -H "Authorization: Bearer <access>" -H "Content-Type: application/json" -d @-
+```
+
 ## URL
 
 ### Адреса для production (пример: myimsit.ru)
