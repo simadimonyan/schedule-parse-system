@@ -22,6 +22,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Синхронизация со сторонним сервером расписания (rasp.imsit.ru, приложение в MAX).
@@ -64,15 +66,22 @@ public class MaxService {
             7, "18.10-19.40"
     );
 
-    private static final Map<String, Integer> lessonTimeMap = Map.of(
-            "08.00-09.30", 1,
-            "09.40-11.10", 2,
-            "11.30-13.00", 3,
-            "13.10-14.40", 4,
-            "14.50-16.20", 5,
-            "16.30-18.00", 6,
-            "18.10-19.40", 7
+    /**
+     * Номер пары по времени начала. Очная отдаёт в data-time интервал «08.00-09.30»,
+     * заочная — только начало и в другом виде: «11:30:00», «8:00». Поэтому сверяется
+     * одно начало, приведённое к «08.00».
+     */
+    private static final Map<String, Integer> lessonStartMap = Map.of(
+            "08.00", 1,
+            "09.40", 2,
+            "11.30", 3,
+            "13.10", 4,
+            "14.50", 5,
+            "16.30", 6,
+            "18.10", 7
     );
+
+    private static final Pattern LESSON_START = Pattern.compile("^(\\d{1,2})[.:](\\d{2})");
 
     private static final Map<DayOfWeek, String> dayWeekMap = Map.of(
             DayOfWeek.MONDAY, "Понедельник",
@@ -84,10 +93,16 @@ public class MaxService {
             DayOfWeek.SUNDAY, "Воскресенье"
     );
 
+    /** Очная пишет тип сокращением, заочная — словом со строчной буквы. */
     private static final Map<String, String> lessonTypeMap = Map.of(
             "л", "Лекция",
             "лаб", "Лабораторная",
-            "пр", "Практика"
+            "пр", "Практика",
+            "занятие", "Занятие",
+            "вводное занятие", "Вводное занятие",
+            "зачет", "Зачёт",
+            "зачёт", "Зачёт",
+            "экзамен", "Экзамен"
     );
 
     @Autowired
@@ -341,7 +356,7 @@ public class MaxService {
                 cards++;
 
                 String time = card.attr("data-time").trim();
-                Integer lessonCount = lessonTimeMap.get(time);
+                Integer lessonCount = lessonNumber(time);
                 if (lessonCount == null) {
                     log.warn("[{}] [{}] Неизвестное время пары: «{}» — пара пропущена", studyForm, group.getName(), time);
                     skipped++;
@@ -349,7 +364,7 @@ public class MaxService {
                 }
 
                 String subject = card.attr("data-subject").trim();
-                String lessonType = lessonTypeMap.getOrDefault(card.attr("data-type").trim(), card.attr("data-type").trim());
+                String lessonType = lessonType(card.attr("data-type"));
                 String auditory = card.attr("data-room").trim();
                 // у онлайн-пары аудитории нет: вместо неё ссылка на курс в ЕИОС
                 String roomUrl = card.attr("data-room-url").trim();
@@ -385,7 +400,8 @@ public class MaxService {
                 savable.setLessonType(lessonType);
                 savable.setAuditory(auditory);
                 savable.setEiosLink(roomUrl);
-                savable.setTeacher(persistenceService.getOrPersistTeacher(teacher));
+                // у части пар преподаватель не назначен: пустого преподавателя в базе не заводим
+                savable.setTeacher(teacher.isEmpty() ? null : persistenceService.getOrPersistTeacher(teacher));
 
                 unique.put(key, savable);
                 log.debug("[{}] [{}] Пара: неделя={}, день={}, дата={}, время={}, предмет={}, тип={}, ауд={}, преп={}",
@@ -440,6 +456,23 @@ public class MaxService {
         }
 
         return days;
+    }
+
+    /** Номер пары по data-time в любом из форматов сервера, null — если начало не совпало ни с одной парой. */
+    static Integer lessonNumber(String time) {
+        Matcher matcher = LESSON_START.matcher(time.trim());
+        if (!matcher.find()) return null;
+
+        String start = String.format("%02d.%s", Integer.parseInt(matcher.group(1)), matcher.group(2));
+        return lessonStartMap.get(start);
+    }
+
+    /** Тип пары по data-type; незнакомый тип остаётся как есть, но с заглавной буквы. */
+    static String lessonType(String value) {
+        String type = value.trim();
+        String known = lessonTypeMap.get(type.toLowerCase(Locale.ROOT));
+        if (known != null) return known;
+        return type.isEmpty() ? type : type.substring(0, 1).toUpperCase(Locale.ROOT) + type.substring(1);
     }
 
     private Integer parseWeek(String value) {
