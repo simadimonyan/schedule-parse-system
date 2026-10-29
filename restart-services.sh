@@ -95,6 +95,13 @@ docker container prune -f
 docker image prune -af
 docker builder prune -af
 
+# Анонимные тома, брошенные снесёнными контейнерами (VOLUME в образах hyperdx-ui —
+# /var/lib/clickhouse, certbot — /var/lib/letsencrypt): compose down их не удаляет,
+# и за два перезапуска в день они съели ~9 ГБ диска. С Docker 23 `volume prune`
+# без --all трогает только анонимные — именованные (память сторожа) остаются.
+echo "Removing dangling anonymous volumes..."
+docker volume prune -f || true
+
 # Restore local MinIO image (prune above wipes it, а с Docker Hub он уже не тянется)
 echo "Loading local MinIO image..."
 bash minio-image.sh load
